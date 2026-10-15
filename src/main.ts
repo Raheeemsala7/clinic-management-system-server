@@ -2,7 +2,7 @@ import { NestFactory, Reflector } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
-import * as helmet from 'helmet';
+import helmet from 'helmet';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
@@ -17,7 +17,7 @@ async function bootstrap() {
   const nodeEnv = configService.get<string>('nodeEnv', 'development');
 
   // ─── Security ───────────────────────────────────────────────────────────────
-  app.use((helmet as unknown as typeof helmet.default)());
+  app.use(helmet());
 
   app.enableCors({
     origin: corsOrigins,
