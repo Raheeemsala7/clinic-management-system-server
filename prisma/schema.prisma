@@ -1,0 +1,429 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ──────────────────────────────────────────────────────────────────
+
+enum Role {
+  ADMIN
+  DOCTOR
+  RECEPTION
+}
+
+enum AppointmentSource {
+  SCHEDULED
+  WALK_IN
+}
+
+enum AppointmentType {
+  CONSULTATION
+  FOLLOW_UP
+}
+
+enum AppointmentStatus {
+  BOOKED
+  WAITING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum VisitStatus {
+  OPEN
+  CLOSED
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  WALLET
+}
+
+enum PaymentKind {
+  CONSULTATION
+  FOLLOW_UP
+  OTHER
+}
+
+enum PaymentStatus {
+  RECORDED
+  VOIDED
+}
+
+enum ExpenseStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum DoctorAvailabilityStatus {
+  AVAILABLE
+  WITH_PATIENT
+  BREAK
+}
+
+// ─── Users & Auth ────────────────────────────────────────────────────────────
+
+model User {
+  id           String    @id @default(uuid())
+  name         String
+  username     String    @unique
+  passwordHash String
+  role         Role
+  isActive     Boolean   @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+
+  refreshTokens     RefreshToken[]
+  createdPatients   Patient[]       @relation("PatientCreatedBy")
+  appointments      Appointment[]   @relation("DoctorAppointments")
+  createdAppointments Appointment[] @relation("AppointmentCreatedBy")
+  visits            Visit[]
+  prescriptions     Prescription[]
+  prescriptionTemplates PrescriptionTemplate[]
+  uploadedAttachments   Attachment[]
+  receivedPayments  Payment[]       @relation("PaymentReceivedBy")
+  voidedPayments    Payment[]       @relation("PaymentVoidedBy")
+  recordedExpenses  Expense[]       @relation("ExpenseRecordedBy")
+  reviewedExpenses  Expense[]       @relation("ExpenseReviewedBy")
+  dailyClosings     DailyClosing[]
+  auditLogs         AuditLog[]
+  doctorStatus      DoctorStatus?
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id         String    @id @default(uuid())
+  userId     String
+  tokenHash  String    @unique
+  family     String    // used to revoke entire family on reuse
+  expiresAt  DateTime
+  revokedAt  DateTime?
+  userAgent  String?
+  ip         String?
+  createdAt  DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([family])
+  @@map("refresh_tokens")
+}
+
+// ─── Patients ────────────────────────────────────────────────────────────────
+
+model Patient {
+  id                  String    @id @default(uuid())
+  fullName            String
+  searchName          String    // Arabic-normalized lowercase for search
+  phone               String
+  gender              String    // 'MALE' | 'FEMALE'
+  dateOfBirth         DateTime?
+  address             String?
+  // Medical fields – DOCTOR / ADMIN only
+  allergies           String[]  @default([])
+  chronicConditions   String[]  @default([])
+  generalNotes        String?
+  createdById         String
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  deletedAt           DateTime?
+
+  createdBy    User          @relation("PatientCreatedBy", fields: [createdById], references: [id])
+  appointments Appointment[]
+  visits       Visit[]
+  prescriptions Prescription[]
+  attachments  Attachment[]
+
+  @@index([phone])
+  @@index([searchName])
+  @@map("patients")
+}
+
+// ─── Appointments & Queue ─────────────────────────────────────────────────────
+
+model Appointment {
+  id              String            @id @default(uuid())
+  patientId       String
+  doctorId        String
+  clinicDate      String            // YYYY-MM-DD in clinic timezone
+  source          AppointmentSource
+  scheduledAt     DateTime?
+  type            AppointmentType
+  status          AppointmentStatus @default(BOOKED)
+  queueNumber     Int
+  queueOrder      Int
+  postponedCount  Int               @default(0)
+  arrivedAt       DateTime?
+  startedAt       DateTime?
+  completedAt     DateTime?
+  cancelledAt     DateTime?
+  createdById     String
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  patient   Patient  @relation(fields: [patientId], references: [id])
+  doctor    User     @relation("DoctorAppointments", fields: [doctorId], references: [id])
+  createdBy User     @relation("AppointmentCreatedBy", fields: [createdById], references: [id])
+  visit     Visit?
+  payments  Payment[]
+
+  @@index([clinicDate, doctorId, status])
+  @@index([patientId])
+  @@map("appointments")
+}
+
+// ─── Visits ───────────────────────────────────────────────────────────────────
+
+model Visit {
+  id            String      @id @default(uuid())
+  appointmentId String      @unique
+  patientId     String
+  doctorId      String
+  complaint     String?
+  diagnosis     String?
+  notes         String?
+  instructions  String?
+  followUpDate  DateTime?
+  status        VisitStatus @default(OPEN)
+  closedAt      DateTime?
+  version       Int         @default(1)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  appointment   Appointment    @relation(fields: [appointmentId], references: [id])
+  patient       Patient        @relation(fields: [patientId], references: [id])
+  doctor        User           @relation(fields: [doctorId], references: [id])
+  prescriptions Prescription[]
+  attachments   Attachment[]
+
+  @@index([patientId])
+  @@map("visits")
+}
+
+// ─── Prescriptions ────────────────────────────────────────────────────────────
+
+model Prescription {
+  id            String    @id @default(uuid())
+  visitId       String
+  patientId     String
+  doctorId      String
+  versionNumber Int       @default(1)
+  supersedesId  String?   // points to the previous version
+  notes         String?
+  printedAt     DateTime?
+  createdAt     DateTime  @default(now())
+
+  visit        Visit              @relation(fields: [visitId], references: [id])
+  patient      Patient            @relation(fields: [patientId], references: [id])
+  doctor       User               @relation(fields: [doctorId], references: [id])
+  items        PrescriptionItem[]
+  supersedes   Prescription?      @relation("PrescriptionVersions", fields: [supersedesId], references: [id])
+  supersededBy Prescription[]     @relation("PrescriptionVersions")
+
+  @@index([visitId])
+  @@index([patientId])
+  @@map("prescriptions")
+}
+
+model PrescriptionItem {
+  id             String @id @default(uuid())
+  prescriptionId String
+  drugName       String
+  dose           String
+  frequency      String
+  duration       String
+  instructions   String?
+  sortOrder      Int    @default(0)
+
+  prescription Prescription @relation(fields: [prescriptionId], references: [id])
+
+  @@index([prescriptionId])
+  @@map("prescription_items")
+}
+
+// ─── Drug catalog ─────────────────────────────────────────────────────────────
+
+model Drug {
+  id         String   @id @default(uuid())
+  name       String   @unique // stored lowercase
+  usageCount Int      @default(0)
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("drugs")
+}
+
+// ─── Prescription Templates ───────────────────────────────────────────────────
+
+model PrescriptionTemplate {
+  id        String   @id @default(uuid())
+  doctorId  String
+  name      String
+  notes     String?
+  items     Json     // PrescriptionItem[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  doctor User @relation(fields: [doctorId], references: [id])
+
+  @@map("prescription_templates")
+}
+
+// ─── Attachments ──────────────────────────────────────────────────────────────
+
+model Attachment {
+  id           String    @id @default(uuid())
+  visitId      String
+  patientId    String
+  uploadedById String
+  fileName     String
+  mimeType     String
+  sizeBytes    Int
+  storageKey   String
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+
+  visit      Visit   @relation(fields: [visitId], references: [id])
+  patient    Patient @relation(fields: [patientId], references: [id])
+  uploadedBy User    @relation(fields: [uploadedById], references: [id])
+
+  @@index([visitId])
+  @@map("attachments")
+}
+
+// ─── Payments ─────────────────────────────────────────────────────────────────
+
+model Payment {
+  id            String        @id @default(uuid())
+  appointmentId String
+  patientId     String
+  amount        Decimal       @db.Decimal(10, 2)
+  method        PaymentMethod
+  kind          PaymentKind
+  status        PaymentStatus @default(RECORDED)
+  voidReason    String?
+  voidedById    String?
+  receivedById  String
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  appointment Appointment @relation(fields: [appointmentId], references: [id])
+  receivedBy  User        @relation("PaymentReceivedBy", fields: [receivedById], references: [id])
+  voidedBy    User?       @relation("PaymentVoidedBy", fields: [voidedById], references: [id])
+
+  @@index([createdAt])
+  @@index([appointmentId])
+  @@map("payments")
+}
+
+// ─── Expenses ─────────────────────────────────────────────────────────────────
+
+model ExpenseCategory {
+  id       String    @id @default(uuid())
+  name     String    @unique
+  isActive Boolean   @default(true)
+
+  expenses Expense[]
+
+  @@map("expense_categories")
+}
+
+model Expense {
+  id              String        @id @default(uuid())
+  categoryId      String
+  amount          Decimal       @db.Decimal(10, 2)
+  description     String
+  spentAt         DateTime
+  recordedById    String
+  status          ExpenseStatus @default(PENDING)
+  reviewedById    String?
+  reviewedAt      DateTime?
+  rejectionReason String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  category   ExpenseCategory @relation(fields: [categoryId], references: [id])
+  recordedBy User            @relation("ExpenseRecordedBy", fields: [recordedById], references: [id])
+  reviewedBy User?           @relation("ExpenseReviewedBy", fields: [reviewedById], references: [id])
+
+  @@index([spentAt])
+  @@index([recordedById])
+  @@map("expenses")
+}
+
+// ─── Daily Closing ────────────────────────────────────────────────────────────
+
+model DailyClosing {
+  id           String   @id @default(uuid())
+  clinicDate   String   @unique // YYYY-MM-DD
+  expectedCash Decimal  @db.Decimal(10, 2)
+  actualCash   Decimal  @db.Decimal(10, 2)
+  difference   Decimal  @db.Decimal(10, 2)
+  notes        String?
+  closedById   String
+  closedAt     DateTime @default(now())
+  reopenedAt   DateTime?
+  reopenedById String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  closedBy User @relation(fields: [closedById], references: [id])
+
+  @@map("daily_closings")
+}
+
+// ─── Doctor Status ────────────────────────────────────────────────────────────
+
+model DoctorStatus {
+  doctorId  String                   @id
+  status    DoctorAvailabilityStatus @default(AVAILABLE)
+  updatedAt DateTime                 @updatedAt
+
+  doctor User @relation(fields: [doctorId], references: [id])
+
+  @@map("doctor_status")
+}
+
+// ─── Audit Log ────────────────────────────────────────────────────────────────
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  userId     String
+  action     String   // CREATE | UPDATE | DELETE | VOID | APPROVE | REOPEN | LOGIN | LOGIN_FAILED | READ
+  entityType String
+  entityId   String?
+  before     Json?
+  after      Json?
+  ip         String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+// ─── Settings ─────────────────────────────────────────────────────────────────
+
+model Setting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+
+  @@map("settings")
+}
