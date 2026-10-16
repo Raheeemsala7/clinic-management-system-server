@@ -65,6 +65,8 @@ async function bootstrap() {
     SwaggerModule.setup('docs', app, document, {
       swaggerOptions: { persistAuthorization: true },
     });
+    // Also serve raw JSON for openapi-typescript code generation
+    app.getHttpAdapter().get('/docs-json', (_req: unknown, res: { json: (d: unknown) => void }) => res.json(document));
   }
 
   await app.listen(port);

@@ -8,38 +8,60 @@ Single-doctor clinic management system built with NestJS, PostgreSQL/Prisma, and
 
 ### Prerequisites
 - Node.js 20+
-- PostgreSQL 15+ (or Docker)
-- npm
+- pnpm (used in this repo) or npm
 
-### 1. Clone and install
+### 1. Install dependencies
 ```bash
-npm install
+pnpm install
+# or: npm install
 ```
 
 ### 2. Configure environment
 ```bash
 cp .env.example .env
-# Edit .env with your values (minimum: DATABASE_URL, JWT secrets)
+# Open server/.env and fill in DATABASE_URL, DIRECT_URL, and the JWT secrets.
+# Read the seeded credentials from server/.env after running db:seed.
 ```
 
-### 3. Start database (Docker)
+### 3. Run migrations (requires DIRECT_URL to be set)
 ```bash
-docker-compose up postgres -d
+npm run db:migrate
 ```
 
-### 4. Run migrations and seed
+### 4. Seed the database
 ```bash
-npx prisma migrate dev
-npx ts-node prisma/seed.ts
+npm run db:seed
+# Credentials are written to server/.env — read them there. Never echoed here.
 ```
 
-### 5. Start the server
+### 5. Start the development server
 ```bash
 npm run start:dev
 ```
 
-API: http://localhost:3000/api/v1  
-Swagger: http://localhost:3000/docs
+API:     http://localhost:4000/api/v1  
+Swagger: http://localhost:4000/docs  
+OpenAPI JSON (for type generation): http://localhost:4000/docs-json
+
+---
+
+## Neon PostgreSQL Notes
+
+Neon provides two connection strings:
+
+| String | Host contains | Used for |
+|--------|---------------|----------|
+| `DATABASE_URL` | `-pooler` in hostname | Running application (pooled) |
+| `DIRECT_URL` | no `-pooler` | Prisma migrations and seed only |
+
+**Important:** If your Neon connection string contains `channel_binding=require`, **remove that parameter** and keep only `sslmode=require`. Example:
+
+```
+# Bad:  postgresql://user:pw@host/db?sslmode=require&channel_binding=require
+# Good: postgresql://user:pw@host/db?sslmode=require
+```
+
+Neon's free tier **cold-starts** after inactivity. The server automatically retries the first connection once (3 s delay) to handle this.
 
 ---
 
@@ -50,14 +72,14 @@ Swagger: http://localhost:3000/docs
 | `npm run start:dev` | Development server with hot-reload |
 | `npm run build` | Compile TypeScript to `dist/` |
 | `npm run start:prod` | Production server from `dist/` |
-| `npm test` | Unit tests with coverage |
-| `npm run test:e2e` | End-to-end tests (requires test DB) |
+| `npm run db:migrate` | Run Prisma migrations (needs `DIRECT_URL`) |
+| `npm run db:seed` | Seed the database |
+| `npm run db:migrate:deploy` | Apply migrations in production (no prompt) |
+| `npm run db:studio` | Open Prisma Studio (visual DB browser) |
+| `npm run test` | Unit tests |
 | `npm run test:cov` | Unit tests + coverage report |
-| `npx prisma migrate dev` | Apply pending migrations (dev) |
-| `npx prisma migrate deploy` | Apply migrations (production) |
-| `npx prisma studio` | Visual DB browser |
-| `npx ts-node prisma/seed.ts` | Seed the database |
-| `./scripts/backup.sh` | Backup the database |
+| `npm run test:e2e` | End-to-end tests (requires test DB) |
+| `npm run prisma:generate` | Regenerate Prisma client after schema changes |
 
 ---
 
@@ -80,7 +102,7 @@ src/
 ├── reports/           # Financial reports (admin only)
 ├── audit/             # Audit log
 ├── settings/          # Clinic settings
-├── realtime/          # Socket.IO gateway
+├── realtime/          # Socket.IO gateway + socket tickets
 └── common/            # Guards, filters, decorators, utils
 ```
 
@@ -108,7 +130,6 @@ src/
 | Payments (void) | ✅ | ❌ | ❌ |
 | Expenses (create) | ✅ | ❌ | ✅ |
 | Expenses (approve/reject) | ✅ | ❌ | ❌ |
-| Expenses (read all) | ✅ | ❌ | own today |
 | Daily closing (submit) | ✅ | ❌ | ✅ |
 | Daily closing (preview/reopen) | ✅ | ❌ | ❌ |
 | Reports | ✅ | ❌ | ❌ |
@@ -119,11 +140,19 @@ src/
 
 ## Realtime Events (Socket.IO)
 
-Connect to `ws://localhost:3000` with the access token in the handshake:
+Two auth methods for the Socket.IO handshake:
+
+**Bearer token (server-to-server):**
 ```js
-const socket = io('http://localhost:3000', {
-  auth: { token: '<accessToken>' }
-});
+const socket = io('http://localhost:4000', { auth: { token: '<accessToken>' } });
+```
+
+**One-time ticket (browser — token never reaches the client):**
+```js
+// 1. Server Action calls POST /api/v1/auth/socket-ticket → { ticket, expiresInSeconds: 30 }
+// 2. Browser connects with the ticket
+const socket = io('http://localhost:4000', { auth: { ticket: '<ticket>' } });
+// The ticket is consumed on first use; request a new one on every reconnect.
 ```
 
 | Event | Direction | Payload | Recipients |
@@ -135,40 +164,12 @@ const socket = io('http://localhost:3000', {
 
 ---
 
-## Data Backup and Restore
+## Database Backup and Restore
 
-### Backup
 ```bash
+# Backup
 ./scripts/backup.sh ./backups
-```
 
-### Restore
-```bash
+# Restore
 pg_restore -d "$DATABASE_URL" --clean --if-exists ./backups/clinic_backup_<timestamp>.dump
 ```
-
----
-
-## Environment Variables
-
-See `.env.example` for all variables with documentation.
-
-Key variables:
-- `DATABASE_URL` — PostgreSQL connection string
-- `JWT_ACCESS_SECRET` — minimum 32 chars
-- `JWT_REFRESH_SECRET` — minimum 32 chars
-- `CLINIC_TIMEZONE` — IANA timezone (default: `Africa/Cairo`)
-- `STORAGE_DRIVER` — `local` or `s3`
-- `CORS_ORIGINS` — comma-separated allowed origins
-
----
-
-## API Documentation
-
-Swagger UI is available at `/docs` in non-production environments.
-
-All endpoints follow:
-- Base path: `/api/v1`
-- Pagination: `?page=1&pageSize=20` → `{ data: [], meta: { page, pageSize, total, totalPages } }`
-- Errors: `{ error: { code: "STRING_CODE", message: "...", details?: any } }`
-- Dates: ISO 8601 UTC strings; `clinicDate` is `YYYY-MM-DD`

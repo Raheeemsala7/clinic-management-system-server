@@ -3,6 +3,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { RealtimeGateway } from './realtime.gateway';
 import { RealtimeService } from './realtime.service';
+import { TicketStoreService } from './ticket-store.service';
 
 @Module({
   imports: [
@@ -14,7 +15,7 @@ import { RealtimeService } from './realtime.service';
       }),
     }),
   ],
-  providers: [RealtimeGateway, RealtimeService],
-  exports: [RealtimeService],
+  providers: [RealtimeGateway, RealtimeService, TicketStoreService],
+  exports: [RealtimeService, TicketStoreService],
 })
 export class RealtimeModule {}

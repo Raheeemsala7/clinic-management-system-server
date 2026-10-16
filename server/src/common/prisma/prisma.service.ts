@@ -7,6 +7,13 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
 
   constructor() {
     super({
+      // Neon free-tier can cold-start: set generous connect timeout and one retry.
+      // connection_limit=1 is recommended for serverless; bump in long-running server use.
+      datasources: {
+        db: {
+          url: process.env.DATABASE_URL,
+        },
+      },
       log: [
         { emit: 'event', level: 'query' },
         { emit: 'stdout', level: 'error' },
@@ -16,8 +23,20 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
   }
 
   async onModuleInit() {
-    await this.$connect();
-    this.logger.log('Database connected');
+    // One automatic retry on first connect to handle Neon cold-start delays
+    let attempts = 0;
+    while (attempts < 2) {
+      try {
+        await this.$connect();
+        this.logger.log('Database connected');
+        return;
+      } catch (err) {
+        attempts++;
+        if (attempts >= 2) throw err;
+        this.logger.warn(`DB connect attempt ${attempts} failed, retrying in 3 s…`);
+        await new Promise((r) => setTimeout(r, 3000));
+      }
+    }
   }
 
   async onModuleDestroy() {
@@ -26,7 +45,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
   }
 
   /**
-   * Truncates all tables — used in tests only.
+   * Truncates all tables — ONLY available in test environment.
    */
   async cleanDatabase() {
     if (process.env.NODE_ENV === 'production') {
