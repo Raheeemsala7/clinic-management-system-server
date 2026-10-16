@@ -1,11 +1,20 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsString, IsOptional, IsArray, MaxLength } from 'class-validator';
 
+export class TemplateItemDto {
+  drugName!: string;
+  dose!: string;
+  frequency!: string;
+  duration!: string;
+  instructions?: string;
+  sortOrder?: number;
+}
+
 export class CreateTemplateDto {
   @ApiProperty()
   @IsString()
   @MaxLength(128)
-  name: string;
+  name!: string;
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -14,5 +23,5 @@ export class CreateTemplateDto {
 
   @ApiProperty()
   @IsArray()
-  items: unknown[];
+  items!: TemplateItemDto[];
 }

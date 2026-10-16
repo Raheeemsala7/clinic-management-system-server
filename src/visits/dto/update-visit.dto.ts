@@ -30,5 +30,5 @@ export class UpdateVisitDto {
   @ApiProperty({ description: 'Current version for optimistic locking' })
   @IsInt()
   @Min(1)
-  version: number;
+  version!: number;
 }

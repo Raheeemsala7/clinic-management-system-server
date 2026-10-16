@@ -5,5 +5,5 @@ export class CreateCategoryDto {
   @ApiProperty()
   @IsString()
   @MaxLength(64)
-  name: string;
+  name!: string;
 }

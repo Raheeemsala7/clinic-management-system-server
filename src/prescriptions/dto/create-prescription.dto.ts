@@ -5,19 +5,19 @@ import { Type } from 'class-transformer';
 export class PrescriptionItemDto {
   @ApiProperty()
   @IsString()
-  drugName: string;
+  drugName!: string;
 
   @ApiProperty()
   @IsString()
-  dose: string;
+  dose!: string;
 
   @ApiProperty()
   @IsString()
-  frequency: string;
+  frequency!: string;
 
   @ApiProperty()
   @IsString()
-  duration: string;
+  duration!: string;
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -41,5 +41,5 @@ export class CreatePrescriptionDto {
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => PrescriptionItemDto)
-  items: PrescriptionItemDto[];
+  items!: PrescriptionItemDto[];
 }

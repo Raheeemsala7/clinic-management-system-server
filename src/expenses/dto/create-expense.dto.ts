@@ -5,20 +5,20 @@ import { Type } from 'class-transformer';
 export class CreateExpenseDto {
   @ApiProperty()
   @IsUUID()
-  categoryId: string;
+  categoryId!: string;
 
   @ApiProperty()
   @Type(() => Number)
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
-  amount: number;
+  amount!: number;
 
   @ApiProperty()
   @IsString()
   @MaxLength(512)
-  description: string;
+  description!: string;
 
   @ApiProperty({ description: 'ISO 8601 date the expense was incurred' })
   @IsISO8601()
-  spentAt: string;
+  spentAt!: string;
 }

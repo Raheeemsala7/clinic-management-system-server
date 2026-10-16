@@ -9,5 +9,5 @@ export enum DoctorStatusInput {
 export class SetDoctorStatusDto {
   @ApiProperty({ enum: DoctorStatusInput })
   @IsEnum(DoctorStatusInput)
-  status: DoctorStatusInput;
+  status!: DoctorStatusInput;
 }

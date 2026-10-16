@@ -5,5 +5,5 @@ export class RejectExpenseDto {
   @ApiProperty()
   @IsString()
   @MaxLength(512)
-  reason: string;
+  reason!: string;
 }

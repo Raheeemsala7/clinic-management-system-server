@@ -17,16 +17,16 @@ export class CreatePatientDto {
   @ApiProperty()
   @IsString()
   @MaxLength(256)
-  fullName: string;
+  fullName!: string;
 
   @ApiProperty()
   @IsString()
   @MaxLength(20)
-  phone: string;
+  phone!: string;
 
   @ApiProperty({ enum: Gender })
   @IsEnum(Gender)
-  gender: Gender;
+  gender!: Gender;
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -39,7 +39,7 @@ export class CreatePatientDto {
   @MaxLength(512)
   address?: string;
 
-  // Medical fields — DOCTOR/ADMIN only (reception attempting to set these returns 403)
+  // Medical fields — DOCTOR/ADMIN only
   @ApiPropertyOptional({ type: [String] })
   @IsOptional()
   @IsArray()

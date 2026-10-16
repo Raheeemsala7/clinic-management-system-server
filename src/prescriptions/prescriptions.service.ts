@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from 'src/common/prisma/prisma.service';
 import { AuditService } from 'src/audit/audit.service';
 import { SettingsService } from 'src/settings/settings.service';
@@ -15,7 +16,12 @@ export class PrescriptionsService {
     private settingsService: SettingsService,
   ) {}
 
-  async createForVisit(visitId: string, dto: CreatePrescriptionDto, actor: JwtPayload, ip?: string) {
+  async createForVisit(
+    visitId: string,
+    dto: CreatePrescriptionDto,
+    actor: JwtPayload,
+    ip?: string,
+  ) {
     const visit = await this.prisma.visit.findUnique({ where: { id: visitId } });
     if (!visit) throw new NotFoundException('Visit not found');
 
@@ -49,7 +55,7 @@ export class PrescriptionsService {
       include: { items: { orderBy: { sortOrder: 'asc' } } },
     });
 
-    // Upsert drug catalog for each drug name
+    // Upsert drug catalog for every drug name used
     await Promise.all(
       dto.items.map((item) =>
         this.prisma.drug.upsert({
@@ -92,12 +98,14 @@ export class PrescriptionsService {
       entityId: id,
     });
 
-    // Compute patient age
+    // Compute patient age from dateOfBirth
     let age: number | null = null;
     if (prescription.patient.dateOfBirth) {
       const now = new Date();
       const dob = new Date(prescription.patient.dateOfBirth);
       age = now.getFullYear() - dob.getFullYear();
+      const m = now.getMonth() - dob.getMonth();
+      if (m < 0 || (m === 0 && now.getDate() < dob.getDate())) age--;
     }
 
     return {
@@ -118,7 +126,7 @@ export class PrescriptionsService {
     const prescription = await this.prisma.prescription.findUnique({ where: { id } });
     if (!prescription) throw new NotFoundException('Prescription not found');
 
-    // Only set printedAt on first print
+    // Only record the first print time
     const updated = await this.prisma.prescription.update({
       where: { id },
       data: { printedAt: prescription.printedAt ?? new Date() },
@@ -165,7 +173,8 @@ export class PrescriptionsService {
         doctorId: actor.sub,
         name: dto.name,
         notes: dto.notes ?? null,
-        items: dto.items,
+        // Cast to Prisma's InputJsonValue — dto.items is a plain array
+        items: dto.items as unknown as Prisma.InputJsonValue,
       },
     });
   }
@@ -173,6 +182,7 @@ export class PrescriptionsService {
   async deleteTemplate(id: string, actor: JwtPayload) {
     const template = await this.prisma.prescriptionTemplate.findUnique({ where: { id } });
     if (!template) throw new NotFoundException('Template not found');
+    // Doctors can only delete their own templates
     if (template.doctorId !== actor.sub) {
       throw new NotFoundException('Template not found');
     }

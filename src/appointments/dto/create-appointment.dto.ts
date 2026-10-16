@@ -5,19 +5,19 @@ import { AppointmentSource, AppointmentType } from '@prisma/client';
 export class CreateAppointmentDto {
   @ApiProperty()
   @IsUUID()
-  patientId: string;
+  patientId!: string;
 
   @ApiProperty()
   @IsUUID()
-  doctorId: string;
+  doctorId!: string;
 
   @ApiProperty({ enum: AppointmentSource })
   @IsEnum(AppointmentSource)
-  source: AppointmentSource;
+  source!: AppointmentSource;
 
   @ApiProperty({ enum: AppointmentType })
   @IsEnum(AppointmentType)
-  type: AppointmentType;
+  type!: AppointmentType;
 
   @ApiPropertyOptional({ description: 'ISO 8601 datetime, required for SCHEDULED' })
   @IsOptional()

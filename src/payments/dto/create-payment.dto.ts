@@ -8,13 +8,13 @@ export class CreatePaymentDto {
   @Type(() => Number)
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
-  amount: number;
+  amount!: number;
 
   @ApiProperty({ enum: PaymentMethod })
   @IsEnum(PaymentMethod)
-  method: PaymentMethod;
+  method!: PaymentMethod;
 
   @ApiProperty({ enum: PaymentKind })
   @IsEnum(PaymentKind)
-  kind: PaymentKind;
+  kind!: PaymentKind;
 }

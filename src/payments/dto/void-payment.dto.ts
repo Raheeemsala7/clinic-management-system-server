@@ -5,5 +5,5 @@ export class VoidPaymentDto {
   @ApiProperty()
   @IsString()
   @MaxLength(512)
-  reason: string;
+  reason!: string;
 }

@@ -7,7 +7,7 @@ export class CreateClosingDto {
   @Type(() => Number)
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
-  actualCash: number;
+  actualCash!: number;
 
   @ApiPropertyOptional()
   @IsOptional()

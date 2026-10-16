@@ -5,11 +5,11 @@ export class LoginDto {
   @ApiProperty({ example: 'admin' })
   @IsString()
   @MaxLength(64)
-  username: string;
+  username!: string;
 
   @ApiProperty({ example: 'Admin@12345' })
   @IsString()
   @MinLength(8)
   @MaxLength(128)
-  password: string;
+  password!: string;
 }
