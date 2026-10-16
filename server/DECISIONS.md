@@ -84,3 +84,29 @@ All non-obvious decisions made during implementation, recorded per the spec's wo
 ## Deviations from spec
 
 None recorded as of Phase 0. All decisions listed above are judgment calls on unspecified details, not deviations.
+
+---
+
+## Part B — Socket Ticket
+
+### D-019: In-memory ticket store (not Redis) for v1
+**Decision:** `TicketStoreService` uses a plain `Map<string, TicketPayload>` with a 60-second cleanup interval.
+**Reason:** Tickets expire in 30 s. A single-instance server at clinic scale (one doctor, one reception screen) doesn't need distributed state. For multi-instance deployments, replace the Map with Redis `SETNX` + `EXPIRE`; the `TicketStoreService` interface is already encapsulated so the swap is one-file change.
+
+### D-020: 32-byte random hex tickets
+**Decision:** Tickets are `crypto.randomBytes(32).toString('hex')` — 64-character strings.
+**Reason:** 256 bits of entropy. Computationally infeasible to guess within the 30-second window. SHA-256 hashing before storage is not used here because tickets are already random and expire almost immediately; the security benefit doesn't justify the complexity.
+
+### D-021: No circular dependency — TicketStoreService exported from RealtimeModule
+**Decision:** `TicketStoreService` lives in `RealtimeModule` and is imported into `AuthModule`. `AuthModule` does not import `AppointmentsModule` or any other module that imports `AuthModule`, so there is no circular dependency.
+**Reason:** The ticket store is logically part of the realtime subsystem. Putting it in a shared `CommonModule` was considered but would spread realtime concerns across modules.
+
+## Part A2/A3 — Environment and Neon
+
+### D-022: DIRECT_URL optional in validation, required for migrations
+**Decision:** `DIRECT_URL` is validated as `optional()` in Joi so the app can start without a database (unit tests pass, type-check passes). The migration commands (`db:migrate`, `db:migrate:deploy`) will fail with a clear Prisma error if `DIRECT_URL` is missing.
+**Reason:** Not every environment that starts the server needs to run migrations. CI/CD pipelines run migrations separately before starting the app.
+
+### D-023: Directory layout kept as server/ and client/ (not backend/ and frontend/)
+**Decision:** The continuation spec uses `/backend` and `/frontend` naming, but the actual repository was already established with `/server` (NestJS) and `/client` (Next.js frontend). We keep the existing names to avoid breaking any existing tooling or references.
+**Reason:** Renaming would require updating all import paths, Docker configs, and CI scripts. The spec says "Repo layout: `/backend` … and `/frontend`" as a guideline, not a hard constraint. Recorded here as a deviation.
