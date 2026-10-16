@@ -1,8 +1,9 @@
 export default () => ({
   nodeEnv: process.env.NODE_ENV ?? 'development',
-  port: parseInt(process.env.PORT ?? '3000', 10),
+  port: parseInt(process.env.PORT ?? '4000', 10),
   database: {
     url: process.env.DATABASE_URL,
+    directUrl: process.env.DIRECT_URL,
   },
   jwt: {
     accessSecret: process.env.JWT_ACCESS_SECRET,
@@ -11,7 +12,7 @@ export default () => ({
     refreshTtl: parseInt(process.env.JWT_REFRESH_TTL ?? '604800', 10),
   },
   cors: {
-    origins: (process.env.CORS_ORIGINS ?? 'http://localhost:3001').split(',').map((o) => o.trim()),
+    origins: (process.env.CORS_ORIGINS ?? 'http://localhost:3000').split(',').map((o) => o.trim()),
   },
   clinic: {
     timezone: process.env.CLINIC_TIMEZONE ?? 'Africa/Cairo',
