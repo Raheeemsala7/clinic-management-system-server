@@ -19,8 +19,10 @@
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true,
     "strict": true,
+    "isolatedModules": true,
     "paths": {
       "src/*": ["src/*"]
     }
-  }
+  },
+  "exclude": ["node_modules", "dist", "prisma"]
 }
