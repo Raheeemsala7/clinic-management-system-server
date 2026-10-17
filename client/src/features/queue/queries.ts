@@ -11,6 +11,7 @@ export interface QueueEntry {
   postponedCount: number;
   patientId: string;
   patientName: string;
+  visitId?: string | null;
   waitingMinutes: number | null;
 }
 

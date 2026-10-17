@@ -164,7 +164,7 @@ export function DoctorPatientsView({
                     >
                       <Link href={`/doctor/patients/${patient.id}`}>
                         <FileText className="size-3.5" />
-                        الملف الطبي
+                        زيارات وتقرير المريض
                       </Link>
                     </Button>
                   </div>

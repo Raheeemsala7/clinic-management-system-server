@@ -1,8 +1,9 @@
-﻿import { requireRole } from '@/lib/session';
+import { requireRole } from '@/lib/session';
 import { api } from '@/lib/api/client';
 import { ar } from '@/messages/ar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { formatMoney, todayClinicDate } from '@/lib/utils';
+import { formatMoney, formatDate, todayClinicDate } from '@/lib/utils';
+import { BarChart3, TrendingUp, TrendingDown, DollarSign, Users, Calendar, Wallet } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,133 +17,218 @@ interface SummaryReport {
   avgPerVisit: string;
 }
 
-export default async function AdminReportsPage({
-  searchParams,
-}: {
-  searchParams: { from?: string; to?: string };
-}) {
+interface AdminReportsPageProps {
+  searchParams?: Promise<{ from?: string; to?: string }>;
+}
+
+export default async function AdminReportsPage({ searchParams }: AdminReportsPageProps) {
   await requireRole(['ADMIN']);
 
   const today = todayClinicDate();
-  const from = searchParams.from ?? today.slice(0, 7) + '-01';
-  const to = searchParams.to ?? today;
+  const resolved = searchParams ? await searchParams : undefined;
+  const from = resolved?.from ?? today.slice(0, 7) + '-01';
+  const to = resolved?.to ?? today;
+
+  const defaultSummary: SummaryReport = {
+    from,
+    to,
+    income: '0',
+    expenses: '0',
+    net: '0',
+    visitCount: 0,
+    avgPerVisit: '0.00',
+  };
 
   const [summary, byDay, byCategory, byMethod] = await Promise.all([
-    api.get<SummaryReport>(`/reports/summary?from=${from}&to=${to}`),
-    api.get<Array<{ day: string; total: string }>>(`/reports/income-by-day?from=${from}&to=${to}`),
-    api.get<Array<{ category: string; total: string }>>(`/reports/expenses-by-category?from=${from}&to=${to}`),
-    api.get<Array<{ method: string; total: string; count: string }>>(`/reports/payments-by-method?from=${from}&to=${to}`),
+    api.get<SummaryReport>(`/reports/summary?from=${from}&to=${to}`).catch(() => defaultSummary),
+    api.get<Array<{ day: string; total: string }>>(`/reports/income-by-day?from=${from}&to=${to}`).catch(() => []),
+    api.get<Array<{ category: string; total: string }>>(`/reports/expenses-by-category?from=${from}&to=${to}`).catch(() => []),
+    api.get<Array<{ method: string; total: string; count: string }>>(`/reports/payments-by-method?from=${from}&to=${to}`).catch(() => []),
   ]);
 
+  const netNumber = parseFloat(summary.net || '0');
+
   const metrics = [
-    { label: ar.reports.income, value: formatMoney(summary.income) },
-    { label: ar.reports.expenses, value: formatMoney(summary.expenses) },
-    { label: ar.reports.net, value: formatMoney(summary.net), highlight: parseFloat(summary.net) >= 0 },
-    { label: ar.reports.visits, value: String(summary.visitCount) },
-    { label: ar.reports.avgPerVisit, value: formatMoney(summary.avgPerVisit) },
+    { label: ar.reports.income, value: formatMoney(summary.income), icon: TrendingUp, color: 'text-emerald-600 bg-emerald-50' },
+    { label: ar.reports.expenses, value: formatMoney(summary.expenses), icon: TrendingDown, color: 'text-red-600 bg-red-50' },
+    {
+      label: ar.reports.net,
+      value: formatMoney(summary.net),
+      highlight: netNumber >= 0,
+      icon: DollarSign,
+      color: netNumber >= 0 ? 'text-primary bg-primary/10' : 'text-destructive bg-destructive/10',
+    },
+    { label: ar.reports.visits, value: String(summary.visitCount), icon: Users, color: 'text-blue-600 bg-blue-50' },
+    { label: ar.reports.avgPerVisit, value: formatMoney(summary.avgPerVisit), icon: Wallet, color: 'text-amber-600 bg-amber-50' },
   ];
 
   return (
     <div className="space-y-6">
       {/* Date filter */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <h1 className="text-2xl font-bold">{ar.reports.title}</h1>
+      <div className="flex items-center justify-between flex-wrap gap-4 bg-card p-4 rounded-xl border shadow-sm">
+        <div>
+          <h1 className="text-2xl font-bold flex items-center gap-2">
+            <BarChart3 className="size-6 text-primary" />
+            {ar.reports.title}
+          </h1>
+          <p className="text-xs text-muted-foreground mt-1">
+            تقرير الإيرادات والمصروفات وصافي الأرباح للفترة المحددة
+          </p>
+        </div>
+
         <form method="GET" className="flex gap-2 items-center flex-wrap">
-          <label className="text-sm">{ar.reports.from}</label>
-          <input type="date" name="from" defaultValue={from} className="h-10 rounded-md border px-2 text-sm" />
-          <label className="text-sm">{ar.reports.to}</label>
-          <input type="date" name="to" defaultValue={to} className="h-10 rounded-md border px-2 text-sm" />
-          <button type="submit" className="h-10 px-4 rounded-md bg-primary text-primary-foreground text-sm">
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
+            <Calendar className="size-3.5 text-primary" />
+            <span>{ar.reports.from}:</span>
+          </div>
+          <input
+            type="date"
+            name="from"
+            defaultValue={from}
+            className="h-9 rounded-md border border-input bg-background px-2.5 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground ms-2">
+            <span>{ar.reports.to}:</span>
+          </div>
+          <input
+            type="date"
+            name="to"
+            defaultValue={to}
+            className="h-9 rounded-md border border-input bg-background px-2.5 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+
+          <button
+            type="submit"
+            className="h-9 px-4 rounded-md bg-primary text-primary-foreground text-xs font-bold hover:bg-primary/90 transition-colors shadow-sm ms-2"
+          >
             {ar.reports.apply}
           </button>
         </form>
       </div>
 
-      {/* Summary cards */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        {metrics.map((m) => (
-          <Card key={m.label}>
-            <CardHeader className="pb-1 pt-4 px-4">
-              <CardTitle className="text-xs text-muted-foreground">{m.label}</CardTitle>
-            </CardHeader>
-            <CardContent className="px-4 pb-4">
-              <p className={`text-xl font-bold ${m.highlight === false ? 'text-destructive' : ''}`}>
-                {m.value}
-              </p>
-            </CardContent>
-          </Card>
-        ))}
+      {/* Summary KPI Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3.5">
+        {metrics.map((m) => {
+          const Icon = m.icon;
+          return (
+            <Card key={m.label} className="shadow-sm">
+              <CardHeader className="pb-1 pt-3.5 px-4 flex flex-row items-center justify-between space-y-0">
+                <CardTitle className="text-xs font-semibold text-muted-foreground">{m.label}</CardTitle>
+                <div className={`size-8 rounded-lg flex items-center justify-center ${m.color}`}>
+                  <Icon className="size-4" />
+                </div>
+              </CardHeader>
+              <CardContent className="px-4 pb-3.5">
+                <p className={`text-xl font-black mt-1 ${m.highlight === false ? 'text-destructive' : 'text-foreground'}`}>
+                  {m.value}
+                </p>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
-      {/* Income by day */}
-      <section>
-        <h2 className="text-lg font-semibold mb-3">{ar.reports.incomeByDay}</h2>
-        <div className="rounded-lg border overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-muted/40">
-              <tr>
-                <th className="px-4 py-2 text-start">{ar.common.date}</th>
-                <th className="px-4 py-2 text-start">{ar.reports.income}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {byDay.map((row) => (
-                <tr key={row.day} className="border-t hover:bg-muted/20">
-                  <td className="px-4 py-2">{row.day}</td>
-                  <td className="px-4 py-2 font-medium">{formatMoney(row.total)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Income by day */}
+        <section className="space-y-3">
+          <h2 className="text-base font-bold text-foreground flex items-center gap-2">
+            <TrendingUp className="size-4 text-emerald-600" />
+            {ar.reports.incomeByDay}
+          </h2>
+          <Card className="shadow-sm overflow-hidden border">
+            {byDay.length === 0 ? (
+              <p className="p-8 text-center text-xs text-muted-foreground">لا توجد إيرادات مسجلة في هذه الفترة</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted/40 border-b">
+                    <tr>
+                      <th className="px-4 py-2.5 text-start text-xs font-bold text-muted-foreground">{ar.common.date}</th>
+                      <th className="px-4 py-2.5 text-start text-xs font-bold text-muted-foreground">{ar.reports.income}</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {byDay.map((row) => (
+                      <tr key={row.day} className="hover:bg-muted/20 transition-colors">
+                        <td className="px-4 py-2.5 font-mono text-xs text-muted-foreground">{row.day}</td>
+                        <td className="px-4 py-2.5 font-bold text-emerald-600 text-sm">{formatMoney(row.total)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </Card>
+        </section>
 
-      {/* Expenses by category */}
-      <section>
-        <h2 className="text-lg font-semibold mb-3">{ar.reports.expensesByCategory}</h2>
-        <div className="rounded-lg border overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-muted/40">
-              <tr>
-                <th className="px-4 py-2 text-start">{ar.expenses.category}</th>
-                <th className="px-4 py-2 text-start">{ar.common.amount}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {byCategory.map((row) => (
-                <tr key={row.category} className="border-t hover:bg-muted/20">
-                  <td className="px-4 py-2">{row.category}</td>
-                  <td className="px-4 py-2 font-medium">{formatMoney(row.total)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
+        {/* Expenses by category */}
+        <section className="space-y-3">
+          <h2 className="text-base font-bold text-foreground flex items-center gap-2">
+            <TrendingDown className="size-4 text-red-600" />
+            {ar.reports.expensesByCategory}
+          </h2>
+          <Card className="shadow-sm overflow-hidden border">
+            {byCategory.length === 0 ? (
+              <p className="p-8 text-center text-xs text-muted-foreground">لا توجد مصروفات مسجلة في هذه الفترة</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted/40 border-b">
+                    <tr>
+                      <th className="px-4 py-2.5 text-start text-xs font-bold text-muted-foreground">{ar.expenses.category}</th>
+                      <th className="px-4 py-2.5 text-start text-xs font-bold text-muted-foreground">{ar.common.amount}</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {byCategory.map((row) => (
+                      <tr key={row.category} className="hover:bg-muted/20 transition-colors">
+                        <td className="px-4 py-2.5 font-medium text-xs text-foreground">{row.category}</td>
+                        <td className="px-4 py-2.5 font-bold text-red-600 text-sm">{formatMoney(row.total)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </Card>
+        </section>
+      </div>
 
       {/* Payments by method */}
-      <section>
-        <h2 className="text-lg font-semibold mb-3">{ar.reports.paymentsByMethod}</h2>
-        <div className="rounded-lg border overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-muted/40">
-              <tr>
-                <th className="px-4 py-2 text-start">{ar.payments.method}</th>
-                <th className="px-4 py-2 text-start">{ar.common.amount}</th>
-                <th className="px-4 py-2 text-start">ط§ظ„ط¹ط¯ط¯</th>
-              </tr>
-            </thead>
-            <tbody>
-              {byMethod.map((row) => (
-                <tr key={row.method} className="border-t hover:bg-muted/20">
-                  <td className="px-4 py-2">{ar.payments[row.method as keyof typeof ar.payments] ?? row.method}</td>
-                  <td className="px-4 py-2 font-medium">{formatMoney(row.total)}</td>
-                  <td className="px-4 py-2">{row.count}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      <section className="space-y-3">
+        <h2 className="text-base font-bold text-foreground flex items-center gap-2">
+          <Wallet className="size-4 text-primary" />
+          {ar.reports.paymentsByMethod}
+        </h2>
+        <Card className="shadow-sm overflow-hidden border">
+          {byMethod.length === 0 ? (
+            <p className="p-8 text-center text-xs text-muted-foreground">لا توجد مدفوعات مسجلة في هذه الفترة</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-muted/40 border-b">
+                  <tr>
+                    <th className="px-4 py-2.5 text-start text-xs font-bold text-muted-foreground">{ar.payments.method}</th>
+                    <th className="px-4 py-2.5 text-start text-xs font-bold text-muted-foreground">{ar.common.amount}</th>
+                    <th className="px-4 py-2.5 text-start text-xs font-bold text-muted-foreground">العدد</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {byMethod.map((row) => (
+                    <tr key={row.method} className="hover:bg-muted/20 transition-colors">
+                      <td className="px-4 py-2.5 font-semibold text-xs text-foreground">
+                        {ar.payments[row.method as keyof typeof ar.payments] ?? row.method}
+                      </td>
+                      <td className="px-4 py-2.5 font-bold text-foreground text-sm">{formatMoney(row.total)}</td>
+                      <td className="px-4 py-2.5 font-mono text-xs text-muted-foreground">{row.count}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </Card>
       </section>
     </div>
   );

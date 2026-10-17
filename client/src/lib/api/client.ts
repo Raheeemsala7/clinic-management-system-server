@@ -1,5 +1,6 @@
 import 'server-only';
 import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 import { ar } from '@/messages/ar';
 import {
   ACCESS_COOKIE,
@@ -124,6 +125,19 @@ async function request<T>(
     } catch {
       // non-JSON error body
     }
+
+    // If still 401 after refresh attempt, and this is NOT a login attempt:
+    if (res.status === 401 && !path.startsWith('/auth/login')) {
+      try {
+        jar.delete(ACCESS_COOKIE);
+        jar.delete(REFRESH_COOKIE);
+        jar.delete(SESSION_COOKIE);
+      } catch {
+        // Read-only cookie context in render
+      }
+      redirect('/login?expired=1');
+    }
+
     throw parseError(data, res.status);
   }
 

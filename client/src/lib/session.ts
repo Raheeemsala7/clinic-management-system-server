@@ -37,6 +37,13 @@ export async function getSession(): Promise<{ user: SessionUser } | null> {
   const jar = await cookies();
   const raw = jar.get(SESSION_COOKIE)?.value;
   if (!raw) return null;
+
+  // A session without any access or refresh token is orphaned / expired.
+  const hasToken = Boolean(jar.get(ACCESS_COOKIE)?.value || jar.get(REFRESH_COOKIE)?.value);
+  if (!hasToken) {
+    return null;
+  }
+
   try {
     const parsed = JSON.parse(raw) as Partial<SessionUser>;
     if (!parsed?.id || !parsed?.role) return null;

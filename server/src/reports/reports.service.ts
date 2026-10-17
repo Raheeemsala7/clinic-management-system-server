@@ -37,9 +37,9 @@ export class ReportsService {
     return {
       from,
       to,
-      income,
-      expenses: exp,
-      net,
+      income: income.toString(),
+      expenses: exp.toString(),
+      net: net.toString(),
       visitCount,
       avgPerVisit,
     };
@@ -47,42 +47,42 @@ export class ReportsService {
 
   async getIncomeByDay(from: string, to: string) {
     const result = await this.prisma.$queryRaw<Array<{ day: string; total: string }>>`
-      SELECT a.clinic_date as day, COALESCE(SUM(p.amount), 0) as total
+      SELECT a."clinicDate" as day, COALESCE(SUM(p.amount), 0)::text as total
       FROM payments p
-      JOIN appointments a ON p.appointment_id = a.id
+      JOIN appointments a ON p."appointmentId" = a.id
       WHERE p.status = 'RECORDED'
-        AND a.clinic_date >= ${from}
-        AND a.clinic_date <= ${to}
-      GROUP BY a.clinic_date
-      ORDER BY a.clinic_date ASC
+        AND a."clinicDate" >= ${from}
+        AND a."clinicDate" <= ${to}
+      GROUP BY a."clinicDate"
+      ORDER BY a."clinicDate" ASC
     `;
-    return result;
+    return result.map((r) => ({ day: String(r.day), total: String(r.total) }));
   }
 
   async getExpensesByCategory(from: string, to: string) {
     const result = await this.prisma.$queryRaw<Array<{ category: string; total: string }>>`
-      SELECT ec.name as category, COALESCE(SUM(e.amount), 0) as total
+      SELECT ec.name as category, COALESCE(SUM(e.amount), 0)::text as total
       FROM expenses e
-      JOIN expense_categories ec ON e.category_id = ec.id
+      JOIN expense_categories ec ON e."categoryId" = ec.id
       WHERE e.status = 'APPROVED'
-        AND e.spent_at >= ${new Date(`${from}T00:00:00.000Z`)}
-        AND e.spent_at <= ${new Date(`${to}T23:59:59.999Z`)}
+        AND e."spentAt" >= ${new Date(`${from}T00:00:00.000Z`)}
+        AND e."spentAt" <= ${new Date(`${to}T23:59:59.999Z`)}
       GROUP BY ec.name
       ORDER BY total DESC
     `;
-    return result;
+    return result.map((r) => ({ category: String(r.category), total: String(r.total) }));
   }
 
   async getPaymentsByMethod(from: string, to: string) {
-    const result = await this.prisma.$queryRaw<Array<{ method: string; total: string; count: string }>>`
-      SELECT p.method, COALESCE(SUM(p.amount), 0) as total, COUNT(*) as count
+    const result = await this.prisma.$queryRaw<Array<{ method: string; total: string; count: string | number | bigint }>>`
+      SELECT p.method, COALESCE(SUM(p.amount), 0)::text as total, COUNT(*)::text as count
       FROM payments p
-      JOIN appointments a ON p.appointment_id = a.id
+      JOIN appointments a ON p."appointmentId" = a.id
       WHERE p.status = 'RECORDED'
-        AND a.clinic_date >= ${from}
-        AND a.clinic_date <= ${to}
+        AND a."clinicDate" >= ${from}
+        AND a."clinicDate" <= ${to}
       GROUP BY p.method
     `;
-    return result;
+    return result.map((r) => ({ method: String(r.method), total: String(r.total), count: String(r.count) }));
   }
 }

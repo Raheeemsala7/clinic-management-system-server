@@ -1,4 +1,4 @@
-﻿import { requireRole } from '@/lib/session';
+import { requireRole } from '@/lib/session';
 import { api } from '@/lib/api/client';
 import { DoctorTodayScreen } from './doctor-today-screen';
 import { ar } from '@/messages/ar';
@@ -34,10 +34,14 @@ export default async function DoctorTodayPage() {
   let currentVisit: Visit | null = null;
   if (inProgress) {
     try {
-      // Get appointment to find visitId
-      const appt = await api.get<{ visit?: { id: string } }>(`/appointments/${inProgress.id}`);
-      if (appt.visit?.id) {
-        currentVisit = await api.get<Visit>(`/visits/${appt.visit.id}`);
+      if (inProgress.visitId) {
+        currentVisit = await api.get<Visit>(`/visits/${inProgress.visitId}`);
+      } else {
+        // Fallback: get appointment to find visitId
+        const appt = await api.get<{ visit?: { id: string } }>(`/appointments/${inProgress.id}`);
+        if (appt.visit?.id) {
+          currentVisit = await api.get<Visit>(`/visits/${appt.visit.id}`);
+        }
       }
     } catch {
       // Visit may not exist yet

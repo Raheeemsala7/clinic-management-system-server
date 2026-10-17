@@ -88,3 +88,20 @@ export async function rejectExpenseAction(
     return { success: false, error: ar.errors.INTERNAL_SERVER_ERROR };
   }
 }
+
+export async function rejectExpenseDirectAction(
+  expenseId: string,
+  reason?: string,
+): Promise<ExpenseActionResult> {
+  await requireRole(['ADMIN']);
+  try {
+    await api.post(`/expenses/${expenseId}/reject`, {
+      reason: reason || 'تم الرفض بواسطة الإدارة',
+    });
+    revalidatePath('/admin/expenses');
+    return { success: true };
+  } catch (err) {
+    if (err instanceof ApiError) return { success: false, error: err.arabicMessage };
+    return { success: false, error: ar.errors.INTERNAL_SERVER_ERROR };
+  }
+}

@@ -33,6 +33,9 @@ export class QueueService {
         patient: {
           select: { id: true, fullName: true, gender: true, dateOfBirth: true },
         },
+        visit: {
+          select: { id: true },
+        },
       },
     });
 
@@ -47,6 +50,7 @@ export class QueueService {
       postponedCount: appt.postponedCount,
       patientId: appt.patient.id,
       patientName: appt.patient.fullName,
+      visitId: appt.visit?.id ?? null,
       waitingMinutes: appt.arrivedAt
         ? Math.floor((now.getTime() - appt.arrivedAt.getTime()) / 60000)
         : null,

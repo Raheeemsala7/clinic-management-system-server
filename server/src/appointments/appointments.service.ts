@@ -194,6 +194,7 @@ export class AppointmentsService {
           },
         },
         doctor: { select: { id: true, name: true } },
+        visit: true,
       },
     });
     if (!appointment) throw new NotFoundException('Appointment not found');

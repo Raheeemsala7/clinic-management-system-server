@@ -92,7 +92,7 @@ export default async function VisitPage({ params }: { params: Promise<{ id: stri
               >
                 <Link href={`/doctor/patients/${visit.patientId}`}>
                   <FileText className="size-3.5" />
-                  الملف الطبي
+                  زيارات وتقرير المريض
                 </Link>
               </Button>
 

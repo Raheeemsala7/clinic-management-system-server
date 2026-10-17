@@ -160,19 +160,33 @@ export function DoctorTodayScreen({
               )}
 
               <div className="flex gap-2 flex-wrap pt-1">
-                {currentVisit && (
+                {currentVisit ? (
                   <Button asChild size="default" className="bg-primary hover:bg-primary/95 text-primary-foreground font-semibold gap-1.5 shadow-sm">
                     <Link href={`/doctor/visits/${currentVisit.id}`}>
                       كتابة الفحص والروشتة 🩺
                     </Link>
                   </Button>
+                ) : inProgressEntry.visitId ? (
+                  <Button asChild size="default" className="bg-primary hover:bg-primary/95 text-primary-foreground font-semibold gap-1.5 shadow-sm">
+                    <Link href={`/doctor/visits/${inProgressEntry.visitId}`}>
+                      كتابة الفحص والروشتة 🩺
+                    </Link>
+                  </Button>
+                ) : (
+                  <Button asChild size="default" className="bg-primary hover:bg-primary/95 text-primary-foreground font-semibold gap-1.5 shadow-sm">
+                    <Link href={`/doctor/patients/${inProgressEntry.patientId}`}>
+                      فتح الزيارة والكشف 🩺
+                    </Link>
+                  </Button>
                 )}
-                <Button asChild variant="outline" size="default" className="gap-1.5 font-bold">
+
+                <Button asChild variant="outline" size="default" className="gap-1.5 font-bold border-primary/30 text-primary hover:bg-primary/10">
                   <Link href={`/doctor/patients/${inProgressEntry.patientId}`}>
                     <FileText className="size-4" />
-                    الملف الطبي
+                    زيارات وتقرير المريض
                   </Link>
                 </Button>
+
                 <Button
                   variant="default"
                   size="default"
@@ -263,18 +277,33 @@ export function DoctorTodayScreen({
                         </div>
                       </div>
 
-                      {!inProgressEntry && entry.status === 'WAITING' && (
+                      <div className="flex items-center gap-1.5 shrink-0">
                         <Button
+                          asChild
                           size="sm"
-                          variant="outline"
-                          className="h-8 text-xs border-emerald-300 text-emerald-800 hover:bg-emerald-50 shrink-0 gap-1"
-                          onClick={() => handleStartPatient(entry.id)}
-                          disabled={isPending}
+                          variant="ghost"
+                          className="h-8 text-xs text-primary hover:bg-primary/10 gap-1 font-semibold"
+                          title="زيارات وتقرير المريض"
                         >
-                          <Play className="size-3 fill-emerald-800" />
-                          ابدأ الكشف
+                          <Link href={`/doctor/patients/${entry.patientId}`}>
+                            <FileText className="size-3.5" />
+                            زيارات وتقرير المريض
+                          </Link>
                         </Button>
-                      )}
+
+                        {!inProgressEntry && entry.status === 'WAITING' && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-8 text-xs border-emerald-300 text-emerald-800 hover:bg-emerald-50 shrink-0 gap-1 font-semibold"
+                            onClick={() => handleStartPatient(entry.id)}
+                            disabled={isPending}
+                          >
+                            <Play className="size-3 fill-emerald-800" />
+                            ابدأ الكشف
+                          </Button>
+                        )}
+                      </div>
                     </li>
                   ))}
               </ul>

@@ -8,17 +8,23 @@ import type { PaginatedResult, PatientBasic } from '@/features/patients/queries'
 
 export const dynamic = 'force-dynamic';
 
-export default async function ReceptionPatientsPage({
-  searchParams,
-}: {
-  searchParams: { q?: string; page?: string };
-}) {
+interface ReceptionPatientsPageProps {
+  searchParams?: Promise<{ q?: string; page?: string }>;
+}
+
+export default async function ReceptionPatientsPage({ searchParams }: ReceptionPatientsPageProps) {
   await requireRole(['RECEPTION', 'ADMIN']);
 
-  const q = searchParams.q ?? '';
-  const page = Number(searchParams.page) || 1;
+  const resolved = searchParams ? await searchParams : {};
+  const q = resolved.q ?? '';
+  const page = Number(resolved.page) || 1;
   const params = new URLSearchParams({ q, page: String(page), pageSize: '20' });
-  const result = await api.get<PaginatedResult<PatientBasic>>(`/patients?${params}`);
+  const result = await api
+    .get<PaginatedResult<PatientBasic>>(`/patients?${params}`)
+    .catch(() => ({
+      data: [],
+      meta: { page: 1, pageSize: 20, total: 0, totalPages: 1 },
+    }));
 
   return (
     <div className="space-y-4">
