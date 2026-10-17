@@ -15,7 +15,7 @@ import { TicketStoreService } from './ticket-store.service';
       }),
     }),
   ],
-  providers: [RealtimeGateway, RealtimeService, TicketStoreService],
+  providers: [RealtimeService, TicketStoreService],
   exports: [RealtimeService, TicketStoreService],
 })
 export class RealtimeModule {}
