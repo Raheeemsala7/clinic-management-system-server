@@ -51,12 +51,28 @@ async function bootstrapServer(): Promise<Express> {
 
   app.setGlobalPrefix('api/v1');
 
-  await app.init();
-  cachedServer = expressApp;
-  return cachedServer;
+  try {
+    await app.init();
+    cachedServer = expressApp;
+    return cachedServer;
+  } catch (error) {
+    console.error('NestJS app.init() failed:', error);
+    throw error;
+  }
 }
 
 export default async function handler(req: Request, res: Response) {
-  const server = await bootstrapServer();
-  return server(req, res);
+  try {
+    const server = await bootstrapServer();
+    return server(req, res);
+  } catch (error: any) {
+    console.error('Serverless function invocation error:', error);
+    return res.status(500).json({
+      error: {
+        code: 'FUNCTION_INVOCATION_FAILED',
+        message: error?.message || 'Serverless function failed to initialize',
+        details: process.env.NODE_ENV !== 'production' ? error?.stack : undefined,
+      },
+    });
+  }
 }
