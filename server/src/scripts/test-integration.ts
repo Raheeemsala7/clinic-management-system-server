@@ -362,6 +362,38 @@ async function runIntegrationTests() {
     summaryRes.data,
   );
 
+  // 25. Doctor Working Shifts available slots filtering (Sunday: 08:00-12:00 and 16:00-21:00)
+  const slotsSun = await request(`/doctor-schedule/${docId}/available-slots?date=2026-10-18`, {
+    headers: { Authorization: `Bearer ${docToken}` },
+  });
+  const sunSlotTimes = slotsSun.data?.slots?.map((s: any) => s.startTime) || [];
+  assert(
+    slotsSun.status === 200 &&
+      slotsSun.data.isWorkingDay === true &&
+      sunSlotTimes.includes('08:00') &&
+      sunSlotTimes.includes('11:30') &&
+      sunSlotTimes.includes('16:00') &&
+      sunSlotTimes.includes('20:30') &&
+      !sunSlotTimes.includes('12:00') &&
+      !sunSlotTimes.includes('13:00') &&
+      !sunSlotTimes.includes('15:30'),
+    '25. Doctor available slots ONLY include active shift hours and completely exclude unavailable break hours (12:00-16:00)',
+    { count: sunSlotTimes.length, sample: sunSlotTimes.slice(0, 5) },
+  );
+
+  // 26. Doctor Off-Day available slots filtering (Friday: Off day)
+  const slotsFri = await request(`/doctor-schedule/${docId}/available-slots?date=2026-10-23`, {
+    headers: { Authorization: `Bearer ${docToken}` },
+  });
+  assert(
+    slotsFri.status === 200 &&
+      slotsFri.data.isWorkingDay === false &&
+      Array.isArray(slotsFri.data.slots) &&
+      slotsFri.data.slots.length === 0,
+    '26. Doctor off-day (Friday) returns isWorkingDay: false and 0 slots',
+    slotsFri.data,
+  );
+
   console.log('\n====================================================');
   console.log(`🎉 TEST SUMMARY: ${passedTests} / ${totalTests} tests passed (${Math.round((passedTests / totalTests) * 100)}%)`);
   console.log('====================================================');
@@ -372,6 +404,7 @@ async function runIntegrationTests() {
   } else {
     process.exit(1);
   }
+
 }
 
 runIntegrationTests().catch((err) => {

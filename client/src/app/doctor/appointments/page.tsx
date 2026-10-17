@@ -2,7 +2,10 @@ import { requireRole } from '@/lib/session';
 import { api } from '@/lib/api/client';
 import { todayClinicDate } from '@/lib/utils';
 import { AppointmentCalendar, type CalendarAppointment } from '@/components/appointments/appointment-calendar';
-import { CalendarDays } from 'lucide-react';
+import { type AvailableSlotsResponse } from '@/features/doctor-schedule/actions';
+import { CalendarDays, Settings } from 'lucide-react';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,9 +24,14 @@ export default async function DoctorAppointmentsPage({ searchParams }: DoctorApp
   queryParams.set('date', selectedDate);
   queryParams.set('doctorId', session.id);
 
-  const appointmentsRes = await api
-    .get<{ data: CalendarAppointment[] }>(`/appointments?${queryParams.toString()}`)
-    .catch(() => ({ data: [] }));
+  const [appointmentsRes, scheduleRes] = await Promise.all([
+    api
+      .get<{ data: CalendarAppointment[] }>(`/appointments?${queryParams.toString()}`)
+      .catch(() => ({ data: [] })),
+    api
+      .get<AvailableSlotsResponse>(`/doctor-schedule/${session.id}/available-slots?date=${encodeURIComponent(selectedDate)}`)
+      .catch(() => null),
+  ]);
 
   const doctorSelf = [
     {
@@ -42,9 +50,15 @@ export default async function DoctorAppointmentsPage({ searchParams }: DoctorApp
             جدول مواعيدي والتقويم
           </h1>
           <p className="text-sm text-muted-foreground">
-            متابعة جدول المرضى والحجوزات بالساعة لكل يوم
+            متابعة جدول المرضى والحجوزات بالساعة وفقاً لفترات عملك الأسبوعية
           </p>
         </div>
+        <Link href="/doctor/schedule">
+          <Button variant="outline" size="sm" className="gap-2">
+            <Settings className="size-4" />
+            تعديل أوقات العمل
+          </Button>
+        </Link>
       </div>
 
       <AppointmentCalendar
@@ -53,7 +67,9 @@ export default async function DoctorAppointmentsPage({ searchParams }: DoctorApp
         currentDoctorId={session.id}
         userRole="DOCTOR"
         initialDate={selectedDate}
+        initialScheduleData={scheduleRes}
       />
     </div>
   );
 }
+

@@ -3,6 +3,7 @@ import { api } from '@/lib/api/client';
 import { todayClinicDate } from '@/lib/utils';
 import { getDoctors } from '@/lib/doctor';
 import { AppointmentCalendar, type CalendarAppointment } from '@/components/appointments/appointment-calendar';
+import { type AvailableSlotsResponse } from '@/features/doctor-schedule/actions';
 import { CalendarDays } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
@@ -29,6 +30,13 @@ export default async function ReceptionAppointmentsPage({ searchParams }: Recept
     getDoctors().catch(() => []),
   ]);
 
+  const targetDoctorId = resolved.doctorId || doctors[0]?.id;
+  const scheduleRes = targetDoctorId
+    ? await api
+        .get<AvailableSlotsResponse>(`/doctor-schedule/${targetDoctorId}/available-slots?date=${encodeURIComponent(selectedDate)}`)
+        .catch(() => null)
+    : null;
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-2">
@@ -49,7 +57,9 @@ export default async function ReceptionAppointmentsPage({ searchParams }: Recept
         currentDoctorId={resolved.doctorId}
         userRole="RECEPTION"
         initialDate={selectedDate}
+        initialScheduleData={scheduleRes}
       />
     </div>
   );
 }
+
