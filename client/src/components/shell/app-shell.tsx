@@ -26,35 +26,50 @@ export async function AppShell({ role, children }: AppShellProps) {
   const doctorStatus = await getPrimaryDoctorStatus();
 
   return (
-    <div className="min-h-screen lg:grid lg:grid-cols-[16rem_1fr]">
+    <div className="min-h-screen lg:grid lg:grid-cols-[16rem_1fr] bg-muted/20">
       {/* Desktop sidebar */}
-      <aside className="hidden border-e bg-card lg:block">
-        <div className="sticky top-0 flex h-screen flex-col gap-2 p-4">
-          <a href={homePathForRole(role)} className="mb-2 flex items-center gap-2 px-2 font-bold text-primary">
-            <Stethoscope className="size-6" aria-hidden="true" />
-            <span>{ar.common.appName}</span>
-          </a>
-          <NavLinks role={role} />
+      <aside className="hidden border-e bg-card lg:block shadow-xs">
+        <div className="sticky top-0 flex h-screen flex-col justify-between p-4">
+          <div className="space-y-4">
+            <a
+              href={homePathForRole(role)}
+              className="flex items-center gap-2.5 px-3 py-2 rounded-lg font-bold text-primary text-base hover:bg-primary/5 transition-colors"
+            >
+              <div className="size-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                <Stethoscope className="size-5 text-primary" aria-hidden="true" />
+              </div>
+              <span className="truncate">{ar.common.appName}</span>
+            </a>
+            <NavLinks role={role} />
+          </div>
+
+          <div className="p-3 rounded-lg border bg-muted/30 text-xs text-muted-foreground flex items-center justify-between">
+            <span>لوحة: {ar.roles[role]}</span>
+            <span className="font-mono text-[11px] opacity-70">v1.0</span>
+          </div>
         </div>
       </aside>
 
-      <div className="flex min-h-screen flex-col">
-        <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-          <div className="flex h-16 items-center justify-between gap-3 px-4">
+      <div className="flex min-h-screen flex-col min-w-0">
+        <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 shadow-xs">
+          <div className="flex h-16 items-center justify-between gap-3 px-3 sm:px-6">
             <div className="flex items-center gap-2">
               <MobileNav role={role} />
-              <a href={homePathForRole(role)} className="font-bold text-primary lg:hidden">
-                {ar.common.appName}
+              <a href={homePathForRole(role)} className="font-bold text-primary lg:hidden flex items-center gap-2">
+                <div className="size-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Stethoscope className="size-4" />
+                </div>
+                <span className="font-bold text-sm sm:text-base">{ar.common.appName}</span>
               </a>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               {doctorStatus && <DoctorStatusBadge status={doctorStatus.status} />}
               <UserMenu name={user.name} role={user.role} logoutAction={logoutAction} />
             </div>
           </div>
         </header>
 
-        <main className="flex-1 p-4 lg:p-6">{children}</main>
+        <main className="flex-1 p-3 sm:p-5 lg:p-6 w-full max-w-7xl mx-auto">{children}</main>
       </div>
     </div>
   );

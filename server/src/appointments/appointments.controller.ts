@@ -74,9 +74,9 @@ export class AppointmentsController {
   }
 
   @Post(':id/start')
-  @Roles(Role.ADMIN, Role.RECEPTION)
+  @Roles(Role.ADMIN, Role.DOCTOR, Role.RECEPTION)
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Let patient in [A,R]' })
+  @ApiOperation({ summary: 'Let patient in [A,D,R]' })
   async start(@Param('id') id: string, @CurrentUser() user: JwtPayload, @ReqIp() ip: string) {
     return this.service.transition(id, 'start', user, ip);
   }

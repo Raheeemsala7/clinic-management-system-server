@@ -1,9 +1,11 @@
-﻿import { requireRole } from '@/lib/session';
+import { requireRole } from '@/lib/session';
 import { api } from '@/lib/api/client';
 import { ar } from '@/messages/ar';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { formatMoney, formatDate } from '@/lib/utils';
+
+import { ExpenseForm } from './expense-form';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,60 +23,21 @@ export default async function ReceptionExpensesPage() {
   await requireRole(['RECEPTION', 'ADMIN']);
 
   const [expenses, categories] = await Promise.all([
-    api.get<{ data: Expense[] }>('/expenses'),
-    api.get<ExpenseCategory[]>('/expense-categories'),
+    api.get<{ data: Expense[] }>('/expenses').catch(() => ({ data: [] })),
+    api.get<ExpenseCategory[]>('/expense-categories').catch(() => []),
   ]);
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-bold">{ar.expenses.title}</h1>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <h1 className="text-2xl font-bold">{ar.expenses.title}</h1>
+        <p className="text-sm text-muted-foreground">تسجيل مصروفات العيادة ومتابعة حالة الاعتماد</p>
+      </div>
 
       {/* Add expense form */}
-      <Card>
-        <CardContent className="pt-4">
-          <form method="POST" action="/api/expenses/create" className="space-y-3">
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-sm font-medium mb-1">{ar.expenses.category}</label>
-                <select
-                  name="categoryId"
-                  required
-                  className="flex h-11 w-full rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                >
-                  <option value="">{ar.expenses.category}</option>
-                  {categories.map((c) => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">{ar.expenses.amount}</label>
-                <input
-                  name="amount"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  required
-                  className="flex h-11 w-full rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">{ar.expenses.description}</label>
-              <input
-                name="description"
-                type="text"
-                required
-                className="flex h-11 w-full rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-              />
-            </div>
-            <button
-              type="submit"
-              className="h-11 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90"
-            >
-              {ar.expenses.newExpense}
-            </button>
-          </form>
+      <Card className="shadow-sm border-2 border-primary/20">
+        <CardContent className="pt-5">
+          <ExpenseForm categories={categories} />
         </CardContent>
       </Card>
 

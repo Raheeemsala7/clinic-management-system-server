@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect, useRef, useTransition } from 'react';
 import { ar } from '@/messages/ar';
@@ -150,6 +150,23 @@ export function VisitEditor({ visit }: VisitEditorProps) {
             disabled={isClosed || isPending}
           />
         </div>
+
+        {!isClosed && (
+          <div className="flex items-center justify-between pt-2">
+            <span className="text-xs text-muted-foreground">
+              {saveStatus === 'saved' ? '✓ تم حفظ التغييرات تلقائياً' : 'يتم الحفظ التلقائي أثناء الكتابة'}
+            </span>
+            <Button
+              type="button"
+              onClick={triggerSave}
+              disabled={isPending}
+              size="sm"
+              className="gap-2 px-5 font-semibold"
+            >
+              حفظ الملاحظات الطبية
+            </Button>
+          </div>
+        )}
       </form>
 
       {/* Version conflict dialog */}
@@ -158,7 +175,7 @@ export function VisitEditor({ visit }: VisitEditorProps) {
           <DialogHeader>
             <DialogTitle>{ar.visits.conflictTitle}</DialogTitle>
             <DialogDescription>
-              طھظ… طھط­ط¯ظٹط« ط§ظ„ط²ظٹط§ط±ط© ظ…ظ† ط¬ظ‡ط§ط² ط¢ط®ط±. ظ…ط§ط°ط§ طھط±ظٹط¯ ط£ظ† طھظپط¹ظ„طں
+              {ar.visits.conflictDescription}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

@@ -1,4 +1,4 @@
-﻿import { requireRole } from '@/lib/session';
+import { requireRole } from '@/lib/session';
 import { api } from '@/lib/api/client';
 import { ar } from '@/messages/ar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -55,7 +55,7 @@ export default async function ReceptionPatientsPage({
                   <p className="font-medium truncate">{patient.fullName}</p>
                   <p className="text-sm text-muted-foreground">
                     {patient.phone}
-                    {patient.dateOfBirth && ` â€¢ ${computeAge(patient.dateOfBirth)} ${ar.patients.years}`}
+                    {patient.dateOfBirth && ` • ${computeAge(patient.dateOfBirth)} ${ar.patients.years}`}
                   </p>
                 </div>
                 <Badge variant="outline">

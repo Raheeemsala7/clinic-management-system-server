@@ -39,7 +39,7 @@ export async function arriveAction(appointmentId: string) {
 }
 
 export async function startAction(appointmentId: string) {
-  return transitionAppointment(appointmentId, 'start', ['ADMIN', 'RECEPTION']);
+  return transitionAppointment(appointmentId, 'start', ['ADMIN', 'DOCTOR', 'RECEPTION']);
 }
 
 export async function completeAction(appointmentId: string) {

@@ -115,17 +115,21 @@ export function DoctorPatientsView({
             return (
               <Card
                 key={patient.id}
-                className="shadow-sm hover:shadow-md transition-shadow cursor-pointer border-border hover:border-primary/40"
-                onClick={() => handleOpenMedicalFile(patient)}
+                className="shadow-sm hover:shadow-md transition-shadow border-border hover:border-primary/40 group"
               >
                 <CardContent className="p-4 flex items-center justify-between gap-4 flex-wrap">
-                  <div className="flex items-center gap-3.5 min-w-[240px]">
-                    <div className="size-11 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center shrink-0">
+                  <Link
+                    href={`/doctor/patients/${patient.id}`}
+                    className="flex items-center gap-3.5 min-w-[240px] flex-1 cursor-pointer"
+                  >
+                    <div className="size-11 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center shrink-0 group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
                       {patient.fullName.slice(0, 2)}
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <p className="font-semibold text-foreground text-base">{patient.fullName}</p>
+                        <p className="font-bold text-foreground text-base group-hover:text-primary transition-colors">
+                          {patient.fullName}
+                        </p>
                         <Badge variant="outline" className="text-xs font-normal">
                           {patient.gender === 'MALE' ? ar.patients.male : ar.patients.female}
                         </Badge>
@@ -149,22 +153,19 @@ export function DoctorPatientsView({
                         )}
                       </div>
                     </div>
-                  </div>
+                  </Link>
 
-                  <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                  <div className="flex items-center gap-2">
                     <Button
                       variant="outline"
                       size="sm"
-                      className="gap-1.5 text-xs text-primary border-primary/30 hover:bg-primary/10"
-                      onClick={() => handleOpenMedicalFile(patient)}
-                      disabled={isLoadingThis}
+                      asChild
+                      className="gap-1.5 text-xs font-bold text-primary border-primary/30 hover:bg-primary hover:text-primary-foreground transition-colors shadow-sm"
                     >
-                      {isLoadingThis ? (
-                        <Loader2 className="size-3.5 animate-spin" />
-                      ) : (
+                      <Link href={`/doctor/patients/${patient.id}`}>
                         <FileText className="size-3.5" />
-                      )}
-                      الملف الطبي
+                        الملف الطبي
+                      </Link>
                     </Button>
                   </div>
                 </CardContent>

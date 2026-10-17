@@ -57,3 +57,35 @@ export async function getPatientSummaryAction(patientId: string) {
     return null;
   }
 }
+
+export async function searchPatientsAction(query: string) {
+  await requireRole(['ADMIN', 'DOCTOR', 'RECEPTION']);
+  if (!query || query.trim().length === 0) return [];
+  try {
+    const res = await api.get<{ data: import('./queries').PatientBasic[] }>(
+      `/patients?q=${encodeURIComponent(query.trim())}&pageSize=10`,
+    );
+    return res.data ?? [];
+  } catch {
+    return [];
+  }
+}
+
+export async function createQuickPatientAction(data: {
+  fullName: string;
+  phone: string;
+  gender: 'MALE' | 'FEMALE';
+  dateOfBirth?: string;
+  address?: string;
+}) {
+  await requireRole(['ADMIN', 'DOCTOR', 'RECEPTION']);
+  try {
+    const patient = await api.post<import('./queries').PatientBasic>('/patients', data);
+    revalidatePath('/reception/patients');
+    revalidatePath('/admin/patients');
+    return { success: true, patient };
+  } catch (err) {
+    if (err instanceof ApiError) return { success: false, error: err.arabicMessage };
+    return { success: false, error: ar.errors.INTERNAL_SERVER_ERROR };
+  }
+}

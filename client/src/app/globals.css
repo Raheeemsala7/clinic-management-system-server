@@ -90,19 +90,42 @@
 /* ─── Print (A5 prescriptions) ──────────────────────────────────────────── */
 @media print {
   @page {
-    size: A5;
-    margin: 10mm;
+    size: A5 portrait;
+    margin: 8mm;
   }
 
   body {
-    background: #fff;
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  /* Hide everything on page except #printable-rx */
+  body * {
+    visibility: hidden;
+  }
+
+  #printable-rx,
+  #printable-rx * {
+    visibility: visible;
+  }
+
+  #printable-rx {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 6mm 8mm;
+    border: none !important;
+    box-shadow: none !important;
+    background: #ffffff !important;
+    z-index: 99999;
   }
 
   .no-print {
     display: none !important;
-  }
-
-  .print-area {
-    display: block !important;
   }
 }
