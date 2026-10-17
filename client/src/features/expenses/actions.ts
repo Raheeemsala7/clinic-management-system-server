@@ -27,7 +27,7 @@ export async function createExpenseAction(
   _prev: ExpenseActionResult,
   formData: FormData,
 ): Promise<ExpenseActionResult> {
-  requireRole(['ADMIN', 'RECEPTION']);
+  await requireRole(['ADMIN', 'RECEPTION']);
 
   const parsed = createExpenseSchema.safeParse({
     categoryId: formData.get('categoryId'),
@@ -53,7 +53,7 @@ export async function createExpenseAction(
 }
 
 export async function approveExpenseAction(expenseId: string): Promise<ExpenseActionResult> {
-  requireRole(['ADMIN']);
+  await requireRole(['ADMIN']);
   try {
     await api.post(`/expenses/${expenseId}/approve`);
     revalidatePath('/admin/expenses');
@@ -68,7 +68,7 @@ export async function rejectExpenseAction(
   _prev: ExpenseActionResult,
   formData: FormData,
 ): Promise<ExpenseActionResult> {
-  requireRole(['ADMIN']);
+  await requireRole(['ADMIN']);
 
   const parsed = reviewExpenseSchema.safeParse({
     expenseId: formData.get('expenseId'),

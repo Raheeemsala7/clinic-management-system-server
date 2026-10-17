@@ -1,4 +1,4 @@
-import { checkAuth } from '@/proxy';
+﻿import { requireRole } from '@/lib/session';
 import { api } from '@/lib/api/client';
 import { ar } from '@/messages/ar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,7 +21,7 @@ export default async function AdminReportsPage({
 }: {
   searchParams: { from?: string; to?: string };
 }) {
-  checkAuth(['ADMIN']);
+  await requireRole(['ADMIN']);
 
   const today = todayClinicDate();
   const from = searchParams.from ?? today.slice(0, 7) + '-01';
@@ -129,7 +129,7 @@ export default async function AdminReportsPage({
               <tr>
                 <th className="px-4 py-2 text-start">{ar.payments.method}</th>
                 <th className="px-4 py-2 text-start">{ar.common.amount}</th>
-                <th className="px-4 py-2 text-start">العدد</th>
+                <th className="px-4 py-2 text-start">ط§ظ„ط¹ط¯ط¯</th>
               </tr>
             </thead>
             <tbody>

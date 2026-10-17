@@ -21,7 +21,7 @@ export async function submitClosingAction(
   _prev: ClosingActionResult,
   formData: FormData,
 ): Promise<ClosingActionResult> {
-  requireRole(['ADMIN', 'RECEPTION']);
+  await requireRole(['ADMIN', 'RECEPTION']);
 
   const parsed = closingSchema.safeParse({
     actualCash: formData.get('actualCash'),
@@ -45,7 +45,7 @@ export async function submitClosingAction(
 }
 
 export async function reopenClosingAction(closingId: string): Promise<ClosingActionResult> {
-  requireRole(['ADMIN']);
+  await requireRole(['ADMIN']);
   try {
     await api.post(`/closing/${closingId}/reopen`);
     revalidatePath('/admin/closing');

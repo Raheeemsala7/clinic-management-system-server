@@ -3,13 +3,12 @@ import { cookies } from 'next/headers';
 
 /**
  * Route Handler: POST /api/auth/logout
- * Clears auth cookies and redirects to login.
+ * Best-effort backend logout, then clears auth cookies and redirects to login.
  */
-export async function POST() {
-  const jar = cookies();
+export async function POST(request: Request) {
+  const jar = await cookies();
   const accessToken = jar.get('access_token')?.value;
 
-  // Best-effort backend logout
   if (accessToken) {
     const apiBase = process.env.API_BASE_URL ?? 'http://localhost:4000/api/v1';
     try {
@@ -19,14 +18,13 @@ export async function POST() {
         cache: 'no-store',
       });
     } catch {
-      // Ignore — we clear cookies regardless
+      // Ignore — we clear cookies regardless.
     }
   }
 
-  // Clear all session cookies
   for (const name of ['access_token', 'refresh_token', 'session_user']) {
     jar.delete(name);
   }
 
-  return NextResponse.redirect(new URL('/login', process.env.NEXT_PUBLIC_SOCKET_URL ?? 'http://localhost:3000'));
+  return NextResponse.redirect(new URL('/login', request.url));
 }

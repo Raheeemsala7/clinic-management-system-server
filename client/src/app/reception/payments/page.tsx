@@ -1,4 +1,4 @@
-import { checkAuth } from '@/proxy';
+﻿import { requireRole } from '@/lib/session';
 import { api } from '@/lib/api/client';
 import { ar } from '@/messages/ar';
 import { Card, CardContent } from '@/components/ui/card';
@@ -18,7 +18,7 @@ interface Payment {
 }
 
 export default async function ReceptionPaymentsPage() {
-  checkAuth(['RECEPTION', 'ADMIN']);
+  await requireRole(['RECEPTION', 'ADMIN']);
 
   const today = todayClinicDate();
   const result = await api.get<PaginatedResult<Payment>>(`/payments?date=${today}`);
@@ -38,7 +38,7 @@ export default async function ReceptionPaymentsPage() {
                 <div className="flex-1">
                   <p className="font-semibold">{formatMoney(p.amount)}</p>
                   <p className="text-sm text-muted-foreground">
-                    {ar.payments[p.method]} • {ar.payments[p.kind]} • {formatTime(p.createdAt)}
+                    {ar.payments[p.method]} â€¢ {ar.payments[p.kind]} â€¢ {formatTime(p.createdAt)}
                   </p>
                 </div>
                 <Badge variant={p.status === 'VOIDED' ? 'destructive' : 'default'}>

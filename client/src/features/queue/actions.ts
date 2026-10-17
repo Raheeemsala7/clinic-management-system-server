@@ -18,7 +18,7 @@ async function transitionAppointment(
   action: string,
   allowedRoles: ('ADMIN' | 'DOCTOR' | 'RECEPTION')[],
 ): Promise<ActionResult> {
-  requireRole(allowedRoles);
+  await requireRole(allowedRoles);
   try {
     await api.post(`/appointments/${appointmentId}/${action}`);
     revalidatePath('/reception');

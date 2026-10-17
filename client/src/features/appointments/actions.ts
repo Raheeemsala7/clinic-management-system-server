@@ -24,7 +24,7 @@ export async function createAppointmentAction(
   _prev: AppointmentActionResult,
   formData: FormData,
 ): Promise<AppointmentActionResult> {
-  requireRole(['ADMIN', 'RECEPTION']);
+  await requireRole(['ADMIN', 'RECEPTION']);
 
   const parsed = createAppointmentSchema.safeParse({
     patientId: formData.get('patientId'),

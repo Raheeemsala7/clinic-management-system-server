@@ -1,4 +1,4 @@
-import { checkAuth } from '@/proxy';
+﻿import { requireRole } from '@/lib/session';
 import { api } from '@/lib/api/client';
 import { ar } from '@/messages/ar';
 import { Card, CardContent } from '@/components/ui/card';
@@ -18,7 +18,7 @@ interface Expense {
 }
 
 export default async function ReceptionExpensesPage() {
-  checkAuth(['RECEPTION', 'ADMIN']);
+  await requireRole(['RECEPTION', 'ADMIN']);
 
   const [expenses, categories] = await Promise.all([
     api.get<{ data: Expense[] }>('/expenses'),
@@ -89,7 +89,7 @@ export default async function ReceptionExpensesPage() {
                 <div className="flex-1">
                   <p className="font-medium">{e.description}</p>
                   <p className="text-sm text-muted-foreground">
-                    {formatMoney(e.amount)} • {formatDate(e.spentAt)}
+                    {formatMoney(e.amount)} â€¢ {formatDate(e.spentAt)}
                   </p>
                 </div>
                 <Badge

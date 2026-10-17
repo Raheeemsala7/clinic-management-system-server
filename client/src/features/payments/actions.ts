@@ -27,7 +27,7 @@ export async function createPaymentAction(
   _prev: PaymentActionResult,
   formData: FormData,
 ): Promise<PaymentActionResult> {
-  requireRole(['ADMIN', 'RECEPTION']);
+  await requireRole(['ADMIN', 'RECEPTION']);
 
   const parsed = createPaymentSchema.safeParse({
     appointmentId: formData.get('appointmentId'),
@@ -54,7 +54,7 @@ export async function voidPaymentAction(
   _prev: PaymentActionResult,
   formData: FormData,
 ): Promise<PaymentActionResult> {
-  requireRole(['ADMIN']);
+  await requireRole(['ADMIN']);
 
   const parsed = voidPaymentSchema.safeParse({
     paymentId: formData.get('paymentId'),

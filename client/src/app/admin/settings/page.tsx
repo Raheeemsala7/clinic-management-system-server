@@ -1,4 +1,4 @@
-import { checkAuth } from '@/proxy';
+﻿import { requireRole } from '@/lib/session';
 import { api } from '@/lib/api/client';
 import { ar } from '@/messages/ar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,7 +7,7 @@ import { SettingsForm } from './settings-form';
 export const dynamic = 'force-dynamic';
 
 export default async function AdminSettingsPage() {
-  checkAuth(['ADMIN']);
+  await requireRole(['ADMIN']);
 
   const settings = await api.get<Record<string, string>>('/settings');
 

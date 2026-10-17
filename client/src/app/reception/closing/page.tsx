@@ -1,4 +1,4 @@
-import { checkAuth } from '@/proxy';
+﻿import { requireRole } from '@/lib/session';
 import { api } from '@/lib/api/client';
 import { ar } from '@/messages/ar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,7 +15,7 @@ interface ClosingPreview {
 }
 
 export default async function ReceptionClosingPage() {
-  checkAuth(['RECEPTION', 'ADMIN']);
+  await requireRole(['RECEPTION', 'ADMIN']);
 
   const today = todayClinicDate();
   let preview: ClosingPreview | null = null;
@@ -50,11 +50,11 @@ export default async function ReceptionClosingPage() {
                 <span className="font-semibold">{formatMoney(preview.expectedCash)}</span>
               </div>
               <div className="flex justify-between text-muted-foreground">
-                <span>المدفوعات النقدية</span>
+                <span>ط§ظ„ظ…ط¯ظپظˆط¹ط§طھ ط§ظ„ظ†ظ‚ط¯ظٹط©</span>
                 <span>{formatMoney(preview.totalCashPayments)}</span>
               </div>
               <div className="flex justify-between text-muted-foreground">
-                <span>المصروفات المعتمدة</span>
+                <span>ط§ظ„ظ…طµط±ظˆظپط§طھ ط§ظ„ظ…ط¹طھظ…ط¯ط©</span>
                 <span>- {formatMoney(preview.totalApprovedExpenses)}</span>
               </div>
             </CardContent>

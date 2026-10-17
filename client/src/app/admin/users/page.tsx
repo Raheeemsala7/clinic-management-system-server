@@ -1,4 +1,4 @@
-import { checkAuth } from '@/proxy';
+﻿import { requireRole } from '@/lib/session';
 import { api } from '@/lib/api/client';
 import { ar } from '@/messages/ar';
 import { Card, CardContent } from '@/components/ui/card';
@@ -16,7 +16,7 @@ interface User {
 }
 
 export default async function AdminUsersPage() {
-  checkAuth(['ADMIN']);
+  await requireRole(['ADMIN']);
 
   const result = await api.get<{ data: User[] }>('/users');
 
@@ -39,7 +39,7 @@ export default async function AdminUsersPage() {
               <div className="flex-1">
                 <p className="font-medium">{user.name}</p>
                 <p className="text-sm text-muted-foreground">
-                  @{user.username} • {ar.roles[user.role]}
+                  @{user.username} â€¢ {ar.roles[user.role]}
                 </p>
               </div>
               <Badge variant={user.isActive ? 'default' : 'outline'}>

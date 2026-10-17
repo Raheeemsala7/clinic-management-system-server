@@ -76,6 +76,19 @@ export class UsersService {
     return buildPaginatedResult(data, total, page, pageSize);
   }
 
+  /**
+   * List active doctors. Exposed to every authenticated role because the
+   * frontend needs a doctorId for the single-doctor queue/doctor-status views.
+   * Returns only id + name (non-sensitive).
+   */
+  async findDoctors() {
+    return this.prisma.user.findMany({
+      where: { role: 'DOCTOR', isActive: true, deletedAt: null },
+      select: { id: true, name: true },
+      orderBy: { name: 'asc' },
+    });
+  }
+
   async findOne(id: string) {
     const user = await this.prisma.user.findUnique({
       where: { id },

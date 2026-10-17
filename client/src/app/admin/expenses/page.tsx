@@ -1,4 +1,4 @@
-import { checkAuth } from '@/proxy';
+﻿import { requireRole } from '@/lib/session';
 import { api } from '@/lib/api/client';
 import { ar } from '@/messages/ar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,7 +18,7 @@ interface Expense {
 }
 
 export default async function AdminExpensesPage() {
-  checkAuth(['ADMIN']);
+  await requireRole(['ADMIN']);
 
   const [pending, all] = await Promise.all([
     api.get<{ data: Expense[] }>('/expenses?status=PENDING'),
@@ -42,11 +42,11 @@ export default async function AdminExpensesPage() {
                   <div className="flex-1">
                     <p className="font-medium">{e.description}</p>
                     <p className="text-sm text-muted-foreground">
-                      {formatMoney(e.amount)} • {formatDate(e.spentAt)}
+                      {formatMoney(e.amount)} â€¢ {formatDate(e.spentAt)}
                     </p>
                   </div>
                   <div className="flex gap-2">
-                    <form action={approveExpenseAction.bind(null, e.id)}>
+                    <form action={async () => { await approveExpenseAction(e.id); }}>
                       <button
                         type="submit"
                         className="px-3 h-9 rounded-md bg-primary text-primary-foreground text-sm hover:bg-primary/90"
@@ -70,7 +70,7 @@ export default async function AdminExpensesPage() {
 
       {/* All expenses */}
       <section>
-        <h2 className="text-lg font-semibold mb-3">جميع المصروفات</h2>
+        <h2 className="text-lg font-semibold mb-3">{ar.expenses.allExpenses}</h2>
         <div className="space-y-2">
           {all.data.map((e) => (
             <Card key={e.id}>
@@ -78,7 +78,7 @@ export default async function AdminExpensesPage() {
                 <div className="flex-1">
                   <p>{e.description}</p>
                   <p className="text-sm text-muted-foreground">
-                    {formatMoney(e.amount)} • {formatDate(e.spentAt)}
+                    {formatMoney(e.amount)} â€¢ {formatDate(e.spentAt)}
                   </p>
                 </div>
                 <Badge

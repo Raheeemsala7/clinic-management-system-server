@@ -48,6 +48,13 @@ export class UsersController {
     return this.usersService.findAll(Number(page) || 1, Number(pageSize) || 20);
   }
 
+  @Get('doctors')
+  @Roles(Role.ADMIN, Role.DOCTOR, Role.RECEPTION)
+  @ApiOperation({ summary: 'List active doctors [ADMIN, DOCTOR, RECEPTION]' })
+  async findDoctors() {
+    return this.usersService.findDoctors();
+  }
+
   @Patch(':id')
   @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Update user [ADMIN]' })

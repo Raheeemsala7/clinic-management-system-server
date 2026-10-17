@@ -1,7 +1,7 @@
-import { checkAuth } from '@/proxy';
+﻿import { requireRole } from '@/lib/session';
 import { api } from '@/lib/api/client';
 import { ar } from '@/messages/ar';
-import { formatDate, formatTime } from '@/lib/utils';
+import { formatDateTime } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,7 +21,7 @@ export default async function AdminAuditPage({
 }: {
   searchParams: { userId?: string; entityType?: string; from?: string; to?: string; page?: string };
 }) {
-  checkAuth(['ADMIN']);
+  await requireRole(['ADMIN']);
 
   const params = new URLSearchParams();
   if (searchParams.userId) params.set('userId', searchParams.userId);
@@ -34,7 +34,7 @@ export default async function AdminAuditPage({
   const result = await api.get<{
     data: AuditLog[];
     meta: { total: number; page: number; totalPages: number };
-  }>(`/audit-logs?${params}`);
+  }>(`/audit-logs?${params.toString()}`);
 
   return (
     <div className="space-y-4">
@@ -55,7 +55,7 @@ export default async function AdminAuditPage({
         </button>
       </form>
 
-      <p className="text-sm text-muted-foreground">إجمالي: {result.meta.total} سجل</p>
+      <p className="text-sm text-muted-foreground">ط¥ط¬ظ…ط§ظ„ظٹ: {result.meta.total} ط³ط¬ظ„</p>
 
       <div className="rounded-lg border overflow-x-auto">
         <table className="w-full text-sm">
@@ -72,7 +72,7 @@ export default async function AdminAuditPage({
             {result.data.map((log) => (
               <tr key={log.id} className="border-t hover:bg-muted/10">
                 <td className="px-3 py-2 whitespace-nowrap text-muted-foreground">
-                  {formatDate(log.createdAt, 'D/M HH:mm')}
+                  {formatDateTime(log.createdAt)}
                 </td>
                 <td className="px-3 py-2">
                   <span className="font-medium">{log.user.name}</span>
@@ -84,7 +84,7 @@ export default async function AdminAuditPage({
                   {log.entityType}
                   {log.entityId && <span className="text-muted-foreground"> #{log.entityId.slice(0, 8)}</span>}
                 </td>
-                <td className="px-3 py-2 text-muted-foreground text-xs">{log.ip ?? '—'}</td>
+                <td className="px-3 py-2 text-muted-foreground text-xs">{log.ip ?? 'â€”'}</td>
               </tr>
             ))}
           </tbody>
@@ -93,3 +93,4 @@ export default async function AdminAuditPage({
     </div>
   );
 }
+

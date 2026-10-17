@@ -1,4 +1,4 @@
-import { checkAuth } from '@/proxy';
+﻿import { requireRole } from '@/lib/session';
 import { api } from '@/lib/api/client';
 import { DoctorTodayScreen } from './doctor-today-screen';
 import { ar } from '@/messages/ar';
@@ -20,7 +20,7 @@ interface Visit {
 }
 
 export default async function DoctorTodayPage() {
-  const user = checkAuth(['DOCTOR', 'ADMIN']);
+  const user = await requireRole(['DOCTOR', 'ADMIN']);
 
   const [queue, doctorStatus] = await Promise.all([
     api.get<QueueEntry[]>(`/queue/today?doctorId=${user.id}`),

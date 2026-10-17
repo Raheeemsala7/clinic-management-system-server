@@ -1,4 +1,4 @@
-import { checkAuth } from '@/proxy';
+﻿import { requireRole } from '@/lib/session';
 import { api } from '@/lib/api/client';
 import { ar } from '@/messages/ar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,7 +13,7 @@ export default async function ReceptionPatientsPage({
 }: {
   searchParams: { q?: string; page?: string };
 }) {
-  checkAuth(['RECEPTION', 'ADMIN']);
+  await requireRole(['RECEPTION', 'ADMIN']);
 
   const q = searchParams.q ?? '';
   const page = Number(searchParams.page) || 1;
@@ -55,7 +55,7 @@ export default async function ReceptionPatientsPage({
                   <p className="font-medium truncate">{patient.fullName}</p>
                   <p className="text-sm text-muted-foreground">
                     {patient.phone}
-                    {patient.dateOfBirth && ` • ${computeAge(patient.dateOfBirth)} ${ar.patients.years}`}
+                    {patient.dateOfBirth && ` â€¢ ${computeAge(patient.dateOfBirth)} ${ar.patients.years}`}
                   </p>
                 </div>
                 <Badge variant="outline">

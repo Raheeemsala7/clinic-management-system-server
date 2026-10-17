@@ -24,7 +24,7 @@ export async function createPatientAction(
   _prev: PatientActionResult,
   formData: FormData,
 ): Promise<PatientActionResult> {
-  requireRole(['ADMIN', 'DOCTOR', 'RECEPTION']);
+  await requireRole(['ADMIN', 'DOCTOR', 'RECEPTION']);
 
   const parsed = createPatientSchema.safeParse({
     fullName: formData.get('fullName'),

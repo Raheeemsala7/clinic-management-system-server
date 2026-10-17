@@ -1,4 +1,4 @@
-import { checkAuth } from '@/proxy';
+﻿import { requireRole } from '@/lib/session';
 import { api } from '@/lib/api/client';
 import { ar } from '@/messages/ar';
 import { Card, CardContent } from '@/components/ui/card';
@@ -22,7 +22,7 @@ export default async function AdminPaymentsPage({
 }: {
   searchParams: { date?: string; page?: string };
 }) {
-  checkAuth(['ADMIN']);
+  await requireRole(['ADMIN']);
 
   const params = new URLSearchParams();
   if (searchParams.date) params.set('date', searchParams.date);
@@ -54,7 +54,7 @@ export default async function AdminPaymentsPage({
       </div>
 
       <p className="text-sm text-muted-foreground">
-        إجمالي: {result.meta.total} دفعة
+        ط¥ط¬ظ…ط§ظ„ظٹ: {result.meta.total} ط¯ظپط¹ط©
       </p>
 
       <div className="space-y-2">
@@ -64,10 +64,10 @@ export default async function AdminPaymentsPage({
               <div className="flex-1">
                 <p className="font-semibold">{formatMoney(p.amount)}</p>
                 <p className="text-sm text-muted-foreground">
-                  {ar.payments[p.method]} • {ar.payments[p.kind]} • {formatTime(p.createdAt)}
+                  {ar.payments[p.method]} â€¢ {ar.payments[p.kind]} â€¢ {formatTime(p.createdAt)}
                 </p>
                 {p.voidReason && (
-                  <p className="text-xs text-destructive mt-0.5">سبب الإلغاء: {p.voidReason}</p>
+                  <p className="text-xs text-destructive mt-0.5">ط³ط¨ط¨ ط§ظ„ط¥ظ„ط؛ط§ط،: {p.voidReason}</p>
                 )}
               </div>
               <Badge variant={p.status === 'VOIDED' ? 'destructive' : 'default'}>

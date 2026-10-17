@@ -3,9 +3,9 @@ node_modules/
 
 # ─── Environment files (NEVER commit real secrets) ────────────────────────────
 .env
-.env.local
-.env.*.local
-# .env.example IS committed intentionally
+.env.*
+!.env.example
+# .env.example IS committed intentionally. All other .env / .env.* are ignored.
 
 # ─── Build outputs ────────────────────────────────────────────────────────────
 dist/

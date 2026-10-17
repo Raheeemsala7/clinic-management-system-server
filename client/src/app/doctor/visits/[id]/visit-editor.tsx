@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, useRef, useTransition } from 'react';
 import { ar } from '@/messages/ar';
@@ -84,9 +84,9 @@ export function VisitEditor({ visit }: VisitEditorProps) {
         {/* Save status */}
         <div className="flex items-center gap-2 text-xs text-muted-foreground h-5">
           {saveStatus === 'saving' && <span>{ar.common.saving}</span>}
-          {saveStatus === 'saved' && <span className="text-green-600">✓ {ar.common.saved}</span>}
+          {saveStatus === 'saved' && <span className="text-green-600">âœ“ {ar.common.saved}</span>}
           {saveStatus === 'conflict' && (
-            <span className="text-destructive">{ar.visits.versionConflict}</span>
+            <span className="text-destructive">{ar.visits.conflictTitle}</span>
           )}
           <span className="ms-auto">v{version}</span>
         </div>
@@ -156,9 +156,9 @@ export function VisitEditor({ visit }: VisitEditorProps) {
       <Dialog open={conflictOpen} onOpenChange={setConflictOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{ar.visits.versionConflict}</DialogTitle>
+            <DialogTitle>{ar.visits.conflictTitle}</DialogTitle>
             <DialogDescription>
-              تم تحديث الزيارة من جهاز آخر. ماذا تريد أن تفعل؟
+              طھظ… طھط­ط¯ظٹط« ط§ظ„ط²ظٹط§ط±ط© ظ…ظ† ط¬ظ‡ط§ط² ط¢ط®ط±. ظ…ط§ط°ط§ طھط±ظٹط¯ ط£ظ† طھظپط¹ظ„طں
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -169,7 +169,7 @@ export function VisitEditor({ visit }: VisitEditorProps) {
                 window.location.reload();
               }}
             >
-              {ar.visits.versionConflictReload}
+              {ar.visits.conflictReload}
             </Button>
             <Button
               onClick={() => {
@@ -177,7 +177,7 @@ export function VisitEditor({ visit }: VisitEditorProps) {
                 setSaveStatus('idle');
               }}
             >
-              {ar.visits.versionConflictKeep}
+              {ar.visits.conflictKeep}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -185,3 +185,6 @@ export function VisitEditor({ visit }: VisitEditorProps) {
     </>
   );
 }
+
+
+

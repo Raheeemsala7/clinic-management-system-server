@@ -1,4 +1,4 @@
-import { checkAuth } from '@/proxy';
+﻿import { requireRole } from '@/lib/session';
 import { api } from '@/lib/api/client';
 import { QueueBoard } from './queue-board';
 import { ar } from '@/messages/ar';
@@ -7,9 +7,9 @@ import type { QueueEntry, DoctorStatus } from '@/features/queue/queries';
 export const dynamic = 'force-dynamic';
 
 export default async function ReceptionHomePage() {
-  const user = checkAuth(['RECEPTION', 'ADMIN']);
+  const user = await requireRole(['RECEPTION', 'ADMIN']);
 
-  // Fetch the doctor to get doctorId (single doctor in v1 — first DOCTOR user)
+  // Fetch the doctor to get doctorId (single doctor in v1 â€” first DOCTOR user)
   const usersResult = await api.get<{ data: Array<{ id: string; role: string }> }>('/users');
   const doctor = usersResult.data.find((u) => u.role === 'DOCTOR');
   const doctorId = doctor?.id ?? '';

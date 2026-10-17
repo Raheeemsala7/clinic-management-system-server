@@ -4,8 +4,7 @@ const nextConfig: NextConfig = {
   // All clinic data is private/user-specific — disable shared caching
   // See AGENTS.md caching rules: private data must never leak between sessions
   experimental: {
-    // Enable React 19 concurrent features
-    reactCompiler: false,
+    // React 19 concurrent features - compiler not used in v16 stable config here
   },
   // Proxy /api/realtime/ticket → backend (so browser never calls backend directly)
   async rewrites() {

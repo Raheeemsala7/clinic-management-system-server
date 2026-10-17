@@ -1,4 +1,4 @@
-import { checkAuth } from '@/proxy';
+﻿import { requireRole } from '@/lib/session';
 import { api } from '@/lib/api/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ar } from '@/messages/ar';
@@ -15,7 +15,7 @@ interface SummaryReport {
 }
 
 export default async function AdminDashboardPage() {
-  checkAuth(['ADMIN']);
+  await requireRole(['ADMIN']);
 
   const today = todayClinicDate();
   const monthStart = today.slice(0, 7) + '-01';
@@ -26,7 +26,7 @@ export default async function AdminDashboardPage() {
       `/reports/summary?from=${monthStart}&to=${today}`,
     );
   } catch {
-    // Summary may fail if no data — show zeros
+    // Summary may fail if no data â€” show zeros
   }
 
   const metrics = [

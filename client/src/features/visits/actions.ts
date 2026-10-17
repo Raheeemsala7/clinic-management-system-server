@@ -27,7 +27,7 @@ export async function autosaveVisitAction(
   _prev: VisitActionResult,
   formData: FormData,
 ): Promise<VisitActionResult> {
-  requireRole(['ADMIN', 'DOCTOR']);
+  await requireRole(['ADMIN', 'DOCTOR']);
 
   const parsed = autosaveSchema.safeParse({
     visitId: formData.get('visitId'),
@@ -55,7 +55,7 @@ export async function autosaveVisitAction(
 }
 
 export async function completeVisitAction(visitId: string): Promise<VisitActionResult> {
-  requireRole(['ADMIN', 'DOCTOR', 'RECEPTION']);
+  await requireRole(['ADMIN', 'DOCTOR', 'RECEPTION']);
   try {
     await api.post(`/appointments/${visitId}/complete`); // uses appointmentId
     revalidatePath('/doctor');

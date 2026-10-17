@@ -12,7 +12,7 @@ import { cookies } from 'next/headers';
  * Tokens never reach the browser.
  */
 export async function GET() {
-  const jar = cookies();
+  const jar = await cookies();
   const accessToken = jar.get('access_token')?.value;
 
   if (!accessToken) {
