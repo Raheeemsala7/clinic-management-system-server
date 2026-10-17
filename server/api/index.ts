@@ -49,6 +49,20 @@ async function bootstrapServer(): Promise<Express> {
     }),
   );
 
+  // Root health check for browser and Vercel preview
+  expressApp.get(['/', '/api'], (_req, res) => {
+    res.json({
+      status: 'ok',
+      service: 'Clinic Management API',
+      version: '1.0.0',
+      timestamp: new Date().toISOString(),
+      endpoints: {
+        health: '/api/v1/doctor-status',
+        docs: '/docs',
+      },
+    });
+  });
+
   app.setGlobalPrefix('api/v1');
 
   try {

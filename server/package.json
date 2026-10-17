@@ -100,7 +100,10 @@
   },
   "pnpm": {
     "onlyBuiltDependencies": [
-      "argon2"
+      "argon2",
+      "prisma",
+      "@prisma/client",
+      "@prisma/engines"
     ]
   },
   "jest": {
