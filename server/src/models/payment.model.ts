@@ -11,7 +11,8 @@ export interface IPayment extends Document {
   kind: 'CONSULTATION' | 'FOLLOW_UP' | 'OTHER';
   status: 'RECORDED' | 'VOIDED';
   voidReason?: string;
-  voidedById?: string;
+  paymentType?: 'FULL' | 'DEPOSIT' | 'REMAINING' | 'OTHER';
+  notes?: string;
   receivedById: string;
   createdAt: Date;
   updatedAt: Date;
@@ -25,6 +26,12 @@ const PaymentSchema = new Schema(
     amount: { type: Number, required: true },
     method: { type: String, enum: ['CASH', 'CARD', 'WALLET'], required: true },
     kind: { type: String, enum: ['CONSULTATION', 'FOLLOW_UP', 'OTHER'], required: true },
+    paymentType: {
+      type: String,
+      enum: ['FULL', 'DEPOSIT', 'REMAINING', 'OTHER'],
+      default: 'FULL',
+    },
+    notes: { type: String },
     status: { type: String, enum: ['RECORDED', 'VOIDED'], default: 'RECORDED' },
     voidReason: { type: String },
     voidedById: { type: String },

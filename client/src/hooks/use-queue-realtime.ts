@@ -1,10 +1,8 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback } from 'react';
-import { io, type Socket } from 'socket.io-client';
+import { useEffect, useRef, useState } from 'react';
 
-const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL ?? 'http://localhost:4000';
-const POLL_INTERVAL_MS = 5000; // fallback polling when disconnected
+const POLL_INTERVAL_MS = 5000; // polling interval for live queue updates
 
 export type ConnectionStatus = 'connecting' | 'connected' | 'disconnected';
 

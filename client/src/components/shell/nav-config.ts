@@ -25,6 +25,7 @@ export interface NavItem {
 export const NAV_ITEMS: Record<Role, NavItem[]> = {
   RECEPTION: [
     { href: '/reception', label: ar.nav.queue, icon: CalendarClock },
+    { href: '/reception/appointments', label: 'التقويم والمواعيد', icon: CalendarDays },
     { href: '/reception/patients', label: ar.nav.patients, icon: Users },
     { href: '/reception/payments', label: ar.nav.payments, icon: CreditCard },
     { href: '/reception/expenses', label: ar.nav.expenses, icon: ReceiptText },
@@ -32,6 +33,7 @@ export const NAV_ITEMS: Record<Role, NavItem[]> = {
   ],
   DOCTOR: [
     { href: '/doctor', label: ar.nav.today, icon: Stethoscope },
+    { href: '/doctor/appointments', label: 'جدول المواعيد', icon: CalendarDays },
     { href: '/doctor/patients', label: ar.nav.patients, icon: Users },
   ],
   ADMIN: [

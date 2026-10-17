@@ -34,6 +34,17 @@ export class AppointmentsController {
       );
       res.json(result);
     });
+
+  payRemaining = asyncHandler(async (req: Request, res: Response) => {
+    const ip = req.ip || req.socket.remoteAddress || '';
+    const result = await AppointmentsService.payRemaining(
+      req.params.id,
+      req.body,
+      { id: req.user!.id },
+      ip,
+    );
+    res.json(result);
+  });
 }
 
 export const appointmentsController = new AppointmentsController();

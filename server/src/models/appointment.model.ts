@@ -18,6 +18,15 @@ export interface IAppointment extends Document {
   startedAt?: Date;
   completedAt?: Date;
   cancelledAt?: Date;
+  startTime?: string;
+  endTime?: string;
+  totalAmount: number;
+  paidAmount: number;
+  remainingAmount: number;
+  paymentStatus: 'PAID' | 'PARTIAL' | 'UNPAID' | 'EXEMPT';
+  isExempt: boolean;
+  exemptionReason?: string;
+  notes?: string;
   createdById: string;
   createdAt: Date;
   updatedAt: Date;
@@ -31,6 +40,8 @@ const AppointmentSchema = new Schema(
     clinicDate: { type: String, required: true, index: true },
     source: { type: String, enum: ['SCHEDULED', 'WALK_IN'], required: true },
     scheduledAt: { type: Date },
+    startTime: { type: String },
+    endTime: { type: String },
     type: { type: String, enum: ['CONSULTATION', 'FOLLOW_UP'], required: true },
     status: {
       type: String,
@@ -45,6 +56,18 @@ const AppointmentSchema = new Schema(
     startedAt: { type: Date },
     completedAt: { type: Date },
     cancelledAt: { type: Date },
+    totalAmount: { type: Number, default: 0 },
+    paidAmount: { type: Number, default: 0 },
+    remainingAmount: { type: Number, default: 0 },
+    paymentStatus: {
+      type: String,
+      enum: ['PAID', 'PARTIAL', 'UNPAID', 'EXEMPT'],
+      default: 'UNPAID',
+      index: true,
+    },
+    isExempt: { type: Boolean, default: false },
+    exemptionReason: { type: String },
+    notes: { type: String },
     createdById: { type: String, required: true, ref: 'User' },
   },
   { timestamps: true, toJSON: transformOptions, toObject: transformOptions },

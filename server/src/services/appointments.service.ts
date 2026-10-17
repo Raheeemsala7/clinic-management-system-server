@@ -15,8 +15,8 @@ const TRANSITIONS: Record<string, string[]> = {
 
 export class AppointmentsService {
   static async createAppointment(dto: any, actor: { id: string }, ip = '') {
-    const { patientId, doctorId, source, type, scheduledAt } = dto;
-    const clinicDate = getTodayClinicDate();
+    const { patientId, doctorId, source, type, scheduledAt, startTime, endTime, notes } = dto;
+    const clinicDate = dto.clinicDate || getTodayClinicDate();
 
     if (!patientId || !doctorId || !source || !type) {
       throw new BadRequestError('patientId, doctorId, source, and type are required');
@@ -28,8 +28,8 @@ export class AppointmentsService {
     const patient = await Patient.findOne({ _id: patientId, deletedAt: null });
     if (!patient) throw new NotFoundError('Patient not found');
 
-    if (source === 'SCHEDULED' && !scheduledAt) {
-      throw new ConflictError('scheduledAt is required for SCHEDULED appointments', 'SCHEDULED_AT_REQUIRED');
+    if (source === 'SCHEDULED' && !scheduledAt && !startTime) {
+      throw new ConflictError('scheduledAt or startTime is required for SCHEDULED appointments', 'SCHEDULED_AT_REQUIRED');
     }
 
     const activeCount = await Appointment.countDocuments({
@@ -51,6 +51,34 @@ export class AppointmentsService {
     const initialStatus = source === 'WALK_IN' ? 'WAITING' : 'BOOKED';
     const now = new Date();
 
+    // Financial calculations
+    const isExempt = Boolean(dto.isExempt);
+    const exemptionReason = dto.exemptionReason || null;
+    let totalAmount = isExempt ? 0 : Math.max(0, Number(dto.totalAmount || 0));
+    let paidAmount = isExempt ? 0 : Math.max(0, Number(dto.paidAmount || 0));
+    if (paidAmount > totalAmount && totalAmount > 0) {
+      paidAmount = totalAmount;
+    }
+    const remainingAmount = isExempt ? 0 : Math.max(0, totalAmount - paidAmount);
+
+    let paymentStatus: 'PAID' | 'PARTIAL' | 'UNPAID' | 'EXEMPT' = 'UNPAID';
+    if (isExempt) {
+      paymentStatus = 'EXEMPT';
+    } else if (remainingAmount === 0 && totalAmount > 0) {
+      paymentStatus = 'PAID';
+    } else if (paidAmount > 0) {
+      paymentStatus = 'PARTIAL';
+    } else {
+      paymentStatus = 'UNPAID';
+    }
+
+    let parsedScheduledAt: Date | null = null;
+    if (scheduledAt) {
+      parsedScheduledAt = new Date(scheduledAt);
+    } else if (startTime && clinicDate) {
+      parsedScheduledAt = new Date(`${clinicDate}T${startTime}:00.000Z`);
+    }
+
     const appointment = await Appointment.create({
       patientId,
       doctorId,
@@ -58,43 +86,86 @@ export class AppointmentsService {
       source,
       type,
       status: initialStatus,
-      scheduledAt: scheduledAt ? new Date(scheduledAt) : null,
+      scheduledAt: parsedScheduledAt,
+      startTime: startTime || null,
+      endTime: endTime || null,
       queueNumber,
       queueOrder,
       arrivedAt: source === 'WALK_IN' ? now : null,
+      totalAmount,
+      paidAmount,
+      remainingAmount,
+      paymentStatus,
+      isExempt,
+      exemptionReason,
+      notes: notes || null,
       createdById: actor.id,
     });
+
+    // Automatically create a payment entry if any deposit or full amount was paid upfront
+    if (paidAmount > 0 && !isExempt) {
+      const { Payment } = await import('../models');
+      await Payment.create({
+        appointmentId: appointment.id,
+        patientId,
+        amount: paidAmount,
+        method: dto.paymentMethod || 'CASH',
+        kind: type === 'CONSULTATION' ? 'CONSULTATION' : 'FOLLOW_UP',
+        paymentType: paidAmount < totalAmount ? 'DEPOSIT' : 'FULL',
+        notes: paidAmount < totalAmount
+          ? `عربون حجز موعد - متبقي ${remainingAmount} ج.م`
+          : 'سداد كامل لقيمة الحجز',
+        receivedById: actor.id,
+        status: 'RECORDED',
+      });
+    }
 
     await logAudit({
       userId: actor.id,
       action: 'CREATE',
       entityType: 'Appointment',
       entityId: appointment.id,
-      after: { status: initialStatus, clinicDate, queueNumber },
+      after: {
+        status: initialStatus,
+        clinicDate,
+        queueNumber,
+        totalAmount,
+        paidAmount,
+        remainingAmount,
+        paymentStatus,
+        isExempt,
+      },
       ip,
     });
 
     return {
       ...appointment.toJSON(),
-      patient: { fullName: patient.fullName },
+      patient: { fullName: patient.fullName, phone: patient.phone },
+      doctor: { id: doctor.id, name: doctor.name },
     };
   }
 
   static async listAppointments(query: any) {
-    const { date, status, doctorId, page: pageQuery, pageSize: pageSizeQuery } = query;
+    const { date, from, to, status, doctorId, page: pageQuery, pageSize: pageSizeQuery } = query;
     const { skip, take, page, pageSize } = parsePagination({
       page: pageQuery,
       pageSize: pageSizeQuery,
     });
 
     const filter: any = {};
-    if (date) filter.clinicDate = date;
+    if (from || to) {
+      filter.clinicDate = {};
+      if (from) filter.clinicDate.$gte = from;
+      if (to) filter.clinicDate.$lte = to;
+    } else if (date) {
+      filter.clinicDate = date;
+    }
     if (status) filter.status = status;
     if (doctorId) filter.doctorId = doctorId;
 
     const [appointments, total] = await Promise.all([
       Appointment.find(filter)
-        .sort({ clinicDate: -1, queueOrder: 1 })
+        .sort({ clinicDate: -1, startTime: 1, queueOrder: 1 })
         .skip(skip)
         .limit(take),
       Appointment.countDocuments(filter),
@@ -118,6 +189,65 @@ export class AppointmentsService {
     );
 
     return buildPaginatedResult(populated, total, page, pageSize);
+  }
+
+  static async payRemaining(
+    appointmentId: string,
+    dto: { amount?: number; method?: 'CASH' | 'CARD' | 'WALLET'; notes?: string },
+    actor: { id: string },
+    ip = '',
+  ) {
+    const appt = await Appointment.findById(appointmentId);
+    if (!appt) throw new NotFoundError('Appointment not found');
+
+    if (appt.isExempt) {
+      throw new BadRequestError('هذا الموعد معفي من الرسوم');
+    }
+
+    if (appt.remainingAmount <= 0) {
+      throw new BadRequestError('المبلغ مدفوع بالكامل مسبقاً');
+    }
+
+    const payAmount = Number(dto.amount !== undefined ? dto.amount : appt.remainingAmount);
+    if (payAmount <= 0) {
+      throw new BadRequestError('المبلغ المدفوع يجب أن يكون أكبر من صفر');
+    }
+
+    appt.paidAmount = appt.paidAmount + payAmount;
+    appt.remainingAmount = Math.max(0, appt.totalAmount - appt.paidAmount);
+    appt.paymentStatus = appt.remainingAmount === 0 ? 'PAID' : 'PARTIAL';
+    await appt.save();
+
+    const { Payment } = await import('../models');
+    const payment = await Payment.create({
+      appointmentId: appt.id,
+      patientId: appt.patientId,
+      amount: payAmount,
+      method: dto.method || 'CASH',
+      kind: appt.type,
+      paymentType: 'REMAINING',
+      notes:
+        dto.notes ||
+        (appt.remainingAmount === 0
+          ? 'سداد كامل للمبلغ المتبقي'
+          : `سداد دفعة متبقية - باقي ${appt.remainingAmount} ج.م`),
+      receivedById: actor.id,
+      status: 'RECORDED',
+    });
+
+    await logAudit({
+      userId: actor.id,
+      action: 'CREATE',
+      entityType: 'Payment',
+      entityId: payment.id,
+      after: { amount: payAmount, remainingAmount: appt.remainingAmount, appointmentId: appt.id },
+      ip,
+    });
+
+    return {
+      appointment: appt.toJSON(),
+      payment: payment.toJSON(),
+    };
   }
 
   static async getAppointmentById(id: string) {

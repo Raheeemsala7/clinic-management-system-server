@@ -19,7 +19,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { ar } from '@/messages/ar';
-import { computeAge } from '@/lib/utils';
+import { computeAge, todayClinicDate } from '@/lib/utils';
 import {
   CalendarPlus,
   Search,
@@ -31,17 +31,59 @@ import {
   Phone,
   Calendar,
   Clock,
-  Sparkles,
+  Coins,
+  CreditCard,
+  Gift,
+  ArrowRight,
+  Receipt,
 } from 'lucide-react';
 import type { PatientBasic } from '@/features/patients/queries';
-import type { DoctorOption } from '@/lib/doctor';
 
 interface NewReceptionBookingDialogProps {
   doctorId: string;
   doctorName?: string;
+  defaultDate?: string;
+  defaultStartTime?: string;
+  defaultEndTime?: string;
+  triggerButton?: React.ReactNode;
 }
 
-export function NewReceptionBookingDialog({ doctorId, doctorName }: NewReceptionBookingDialogProps) {
+const COMMON_SLOTS = [
+  { start: '09:00', end: '09:30' },
+  { start: '09:30', end: '10:00' },
+  { start: '10:00', end: '10:30' },
+  { start: '10:30', end: '11:00' },
+  { start: '11:00', end: '11:30' },
+  { start: '11:30', end: '12:00' },
+  { start: '12:00', end: '12:30' },
+  { start: '13:00', end: '13:30' },
+  { start: '14:00', end: '14:30' },
+  { start: '15:00', end: '15:30' },
+  { start: '16:00', end: '16:30' },
+  { start: '17:00', end: '17:30' },
+  { start: '18:00', end: '18:30' },
+  { start: '19:00', end: '19:30' },
+  { start: '20:00', end: '20:30' },
+];
+
+const COMMON_FEES = [100, 150, 200, 250, 300, 400];
+
+const EXEMPTION_PRESETS = [
+  'حالة إنسانية / غير مقتدر',
+  'استشارة مجانية بعد كشف',
+  'توصية وإعفاء من الطبيب',
+  'طبيب زميل أو عائلة الطبيب',
+  'تأمين / رعاية خاصة',
+];
+
+export function NewReceptionBookingDialog({
+  doctorId,
+  doctorName,
+  defaultDate,
+  defaultStartTime,
+  defaultEndTime,
+  triggerButton,
+}: NewReceptionBookingDialogProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
@@ -63,14 +105,35 @@ export function NewReceptionBookingDialog({ doctorId, doctorName }: NewReception
   const [newDateOfBirth, setNewDateOfBirth] = useState('');
   const [newAddress, setNewAddress] = useState('');
 
-  // Appointment fields
+  // Appointment scheduling fields
+  const today = todayClinicDate();
+  const [clinicDate, setClinicDate] = useState(defaultDate || today);
   const [source, setSource] = useState<'WALK_IN' | 'SCHEDULED'>('WALK_IN');
   const [type, setType] = useState<'CONSULTATION' | 'FOLLOW_UP'>('CONSULTATION');
-  const [scheduledAt, setScheduledAt] = useState('');
+  const [startTime, setStartTime] = useState(defaultStartTime || '10:00');
+  const [endTime, setEndTime] = useState(defaultEndTime || '10:30');
+
+  // Pricing & Payment fields
+  const [isExempt, setIsExempt] = useState(false);
+  const [exemptionReason, setExemptionReason] = useState(EXEMPTION_PRESETS[0]);
+  const [totalAmount, setTotalAmount] = useState('200');
+  const [paidAmount, setPaidAmount] = useState('0');
+  const [paymentMethod, setPaymentMethod] = useState<'CASH' | 'CARD' | 'WALLET'>('CASH');
+  const [notes, setNotes] = useState('');
 
   // Status/Feedback
   const [error, setError] = useState<string | null>(null);
-  const [successInfo, setSuccessInfo] = useState<{ queueNumber?: number; patientName: string } | null>(null);
+  const [successInfo, setSuccessInfo] = useState<{
+    queueNumber?: number;
+    patientName: string;
+    paidAmount?: number;
+    remainingAmount?: number;
+  } | null>(null);
+
+  // Calculate dynamic financial values
+  const numTotal = isExempt ? 0 : Math.max(0, Number(totalAmount) || 0);
+  const numPaid = isExempt ? 0 : Math.min(numTotal, Math.max(0, Number(paidAmount) || 0));
+  const numRemaining = isExempt ? 0 : Math.max(0, numTotal - numPaid);
 
   // Debounced live search
   useEffect(() => {
@@ -100,7 +163,6 @@ export function NewReceptionBookingDialog({ doctorId, doctorName }: NewReception
   const handleStartNewPatient = () => {
     setSelectedPatient(null);
     setIsNewPatientMode(true);
-    // If search term looks like a phone, prefill it
     if (/^01\d{8,9}$/.test(searchTerm.trim())) {
       setNewPhone(searchTerm.trim());
     } else if (searchTerm.trim().length > 2) {
@@ -120,9 +182,17 @@ export function NewReceptionBookingDialog({ doctorId, doctorName }: NewReception
     setNewGender('MALE');
     setNewDateOfBirth('');
     setNewAddress('');
+    setClinicDate(defaultDate || today);
     setSource('WALK_IN');
     setType('CONSULTATION');
-    setScheduledAt('');
+    setStartTime(defaultStartTime || '10:00');
+    setEndTime(defaultEndTime || '10:30');
+    setIsExempt(false);
+    setExemptionReason(EXEMPTION_PRESETS[0]);
+    setTotalAmount('200');
+    setPaidAmount('0');
+    setPaymentMethod('CASH');
+    setNotes('');
     setError(null);
     setSuccessInfo(null);
   };
@@ -134,10 +204,9 @@ export function NewReceptionBookingDialog({ doctorId, doctorName }: NewReception
     let patientIdToBook = selectedPatient?.id;
     let patientNameToDisplay = selectedPatient?.fullName ?? '';
 
-    // If in new patient mode, create the patient first
     if (isNewPatientMode) {
       if (!newFullName.trim() || !newPhone.trim()) {
-        setError('يرجى إدخال اسم العميل ورقم الهاتف');
+        setError('يرجى إدخال اسم المريض ورقم الهاتف');
         return;
       }
 
@@ -157,15 +226,13 @@ export function NewReceptionBookingDialog({ doctorId, doctorName }: NewReception
 
         patientIdToBook = createRes.patient.id;
         patientNameToDisplay = createRes.patient.fullName;
-
-        // Proceed to book
         await makeBooking(patientIdToBook, patientNameToDisplay);
       });
       return;
     }
 
     if (!patientIdToBook) {
-      setError('يرجى اختيار عميل أو تسجيل عميل جديد');
+      setError('يرجى اختيار مريض أو تسجيل مريض جديد');
       return;
     }
 
@@ -180,18 +247,33 @@ export function NewReceptionBookingDialog({ doctorId, doctorName }: NewReception
     formData.set('doctorId', doctorId);
     formData.set('source', source);
     formData.set('type', type);
-    if (source === 'SCHEDULED' && scheduledAt) {
-      formData.set('scheduledAt', scheduledAt);
+    formData.set('clinicDate', clinicDate);
+    formData.set('startTime', startTime);
+    formData.set('endTime', endTime);
+    formData.set('scheduledAt', `${clinicDate}T${startTime}:00.000Z`);
+
+    // Financial data
+    formData.set('isExempt', isExempt ? 'true' : 'false');
+    if (isExempt) {
+      formData.set('exemptionReason', exemptionReason);
     }
+    formData.set('totalAmount', String(numTotal));
+    formData.set('paidAmount', String(numPaid));
+    formData.set('paymentMethod', paymentMethod);
+    if (notes) formData.set('notes', notes);
 
     const res = await createAppointmentAction({ success: false }, formData);
     if (res.success) {
-      setSuccessInfo({ patientName });
+      setSuccessInfo({
+        patientName,
+        paidAmount: numPaid,
+        remainingAmount: numRemaining,
+      });
       router.refresh();
       setTimeout(() => {
         setOpen(false);
         resetAll();
-      }, 1500);
+      }, 1600);
     } else {
       setError(res.error ?? ar.errors.generic);
     }
@@ -206,345 +288,547 @@ export function NewReceptionBookingDialog({ doctorId, doctorName }: NewReception
       }}
     >
       <DialogTrigger asChild>
-        <Button size="lg" className="gap-2 bg-primary shadow-md hover:bg-primary/95 text-primary-foreground font-semibold">
-          <CalendarPlus className="size-5" />
-          حجز موعد / تسجيل مريض
-        </Button>
+        {triggerButton ?? (
+          <Button size="lg" className="gap-2 bg-primary shadow-md hover:bg-primary/95 text-primary-foreground font-semibold">
+            <CalendarPlus className="size-5" />
+            حجز موعد / تسجيل مريض
+          </Button>
+        )}
       </DialogTrigger>
 
-      <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader className="border-b pb-3">
           <div className="flex items-center gap-2">
             <div className="size-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold">
               <CalendarPlus className="size-5" />
             </div>
             <div>
-              <DialogTitle className="text-xl font-bold">حجز موعد جديد</DialogTitle>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                فحص العميل (جديد أم قديم) وتأكيد الإضافة لقائمة الانتظار
-                {doctorName && ` مع ${doctorName}`}
-              </p>
+              <DialogTitle className="text-xl font-bold">حجز موعد جديد وتحديد الرسوم</DialogTitle>
+              {doctorName && <p className="text-xs text-muted-foreground">الطبيب المختار: د. {doctorName}</p>}
             </div>
           </div>
         </DialogHeader>
 
+        {error && (
+          <Alert variant="destructive" className="mt-2">
+            <AlertCircle className="size-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+
         {successInfo ? (
-          <div className="py-8 text-center space-y-3">
-            <div className="size-14 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto">
-              <CheckCircle2 className="size-8" />
+          <div className="py-10 text-center space-y-3">
+            <CheckCircle2 className="size-16 text-emerald-500 mx-auto animate-bounce" />
+            <h3 className="text-xl font-bold text-foreground">تم تأكيد الحجز بنجاح!</h3>
+            <p className="text-muted-foreground">للمريض: <span className="font-semibold text-foreground">{successInfo.patientName}</span></p>
+            <div className="flex justify-center gap-4 text-sm font-mono pt-2">
+              <span className="px-3 py-1 bg-emerald-50 text-emerald-700 rounded-md border border-emerald-200">
+                المدفوع: {successInfo.paidAmount} ج.م
+              </span>
+              {(successInfo.remainingAmount ?? 0) > 0 && (
+                <span className="px-3 py-1 bg-amber-50 text-amber-700 rounded-md border border-amber-200">
+                  المتبقي: {successInfo.remainingAmount} ج.م
+                </span>
+              )}
             </div>
-            <h3 className="text-lg font-bold text-foreground">تم تسجيل الحجز بنجاح!</h3>
-            <p className="text-sm text-muted-foreground">
-              تم إدراج المريض <span className="font-semibold text-foreground">{successInfo.patientName}</span> في قائمة كشف اليوم.
-            </p>
           </div>
         ) : (
-          <form onSubmit={handleConfirmBooking} className="space-y-5 py-2">
-            {error && (
-              <Alert variant="destructive">
-                <AlertCircle className="size-4 shrink-0" />
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-
-            {/* STEP 1: Patient Search & Classification */}
+          <form onSubmit={handleConfirmBooking} className="space-y-5 pt-3">
+            {/* STEP 1: PATIENT SELECTION */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <Label className="text-sm font-bold flex items-center gap-1.5">
-                  <Search className="size-4 text-primary" />
-                  الخطوة 1: ابحث برقم الهاتف أو اسم المريض
+                  <UserCheck className="size-4 text-primary" />
+                  1. اختيار المريض
                 </Label>
                 {selectedPatient && (
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="h-7 text-xs text-primary hover:bg-primary/10"
-                    onClick={() => {
-                      setSelectedPatient(null);
-                      setIsNewPatientMode(false);
-                    }}
+                    className="text-xs text-primary h-7"
+                    onClick={() => setSelectedPatient(null)}
                   >
-                    تغيير العميل
+                    تغيير المريض
                   </Button>
                 )}
               </div>
 
-              {!selectedPatient && !isNewPatientMode && (
-                <>
-                  <div className="relative">
-                    <Search className="absolute start-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-                    <Input
-                      placeholder="أدخل رقم هاتف العميل (مثال: 010...) أو الاسم..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="ps-9 h-11 text-base shadow-inner"
-                      autoFocus
-                    />
-                    {isSearching && (
-                      <Loader2 className="absolute end-3 top-1/2 -translate-y-1/2 size-4 animate-spin text-muted-foreground" />
-                    )}
-                  </div>
-
-                  {/* Search Results Display */}
-                  {hasSearched && (
-                    <div className="space-y-2 pt-1">
-                      {searchResults.length > 0 ? (
-                        <div className="space-y-2">
-                          <p className="text-xs font-semibold text-emerald-700 flex items-center gap-1">
-                            <UserCheck className="size-3.5" />
-                            تم العثور على عملاء مسجلين مسبقاً (عميل قديم):
-                          </p>
-                          <div className="max-h-48 overflow-y-auto space-y-1.5 rounded-lg border p-1 bg-muted/20">
-                            {searchResults.map((p) => {
-                              const age = p.dateOfBirth ? computeAge(p.dateOfBirth) : null;
-                              return (
-                                <button
-                                  type="button"
-                                  key={p.id}
-                                  onClick={() => handleSelectExisting(p)}
-                                  className="w-full p-2.5 rounded-md border bg-card hover:bg-primary/5 hover:border-primary/50 text-start flex items-center justify-between gap-3 transition-colors group"
-                                >
-                                  <div>
-                                    <div className="flex items-center gap-2">
-                                      <span className="font-bold text-sm text-foreground group-hover:text-primary">
-                                        {p.fullName}
-                                      </span>
-                                      <Badge variant="outline" className="text-[10px] bg-emerald-50 text-emerald-800 border-emerald-300">
-                                        عميل قديم
-                                      </Badge>
-                                    </div>
-                                    <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5">
-                                      <span className="font-mono">{p.phone}</span>
-                                      {age !== null && <span>• {age} سنة</span>}
-                                      {p.address && <span>• {p.address}</span>}
-                                    </div>
-                                  </div>
-                                  <Button size="sm" type="button" variant="outline" className="h-8 text-xs shrink-0 group-hover:bg-primary group-hover:text-white">
-                                    اختيار للحجز
-                                  </Button>
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="rounded-lg border-2 border-dashed border-amber-300 bg-amber-50/70 p-4 text-center space-y-2.5">
-                          <p className="text-sm font-semibold text-amber-900">
-                            لم يتم العثور على أي عميل مسجل بهذا الرقم أو الاسم (عميل جديد)
-                          </p>
-                          <Button
-                            type="button"
-                            onClick={handleStartNewPatient}
-                            className="bg-amber-600 hover:bg-amber-700 text-white gap-2 shadow-sm"
-                          >
-                            <UserPlus className="size-4" />
-                            تسجيل هذا الشخص كـ «عميل جديد»
-                          </Button>
-                        </div>
+              {selectedPatient ? (
+                <div className="p-3 rounded-lg border-2 border-primary/20 bg-primary/5 flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <p className="font-bold text-foreground text-base">{selectedPatient.fullName}</p>
+                    <p className="text-xs text-muted-foreground font-mono flex items-center gap-2">
+                      <span>{selectedPatient.phone}</span>
+                      <span>•</span>
+                      <span>{selectedPatient.gender === 'MALE' ? 'ذكر' : 'أنثى'}</span>
+                      {selectedPatient.dateOfBirth && (
+                        <>
+                          <span>•</span>
+                          <span>{computeAge(selectedPatient.dateOfBirth)} سنة</span>
+                        </>
                       )}
-                    </div>
-                  )}
-
-                  {!hasSearched && (
-                    <div className="flex justify-end">
+                    </p>
+                  </div>
+                  <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30">
+                    مريض مسجل
+                  </Badge>
+                </div>
+              ) : isNewPatientMode ? (
+                <Card className="border-2 border-dashed border-primary/40 bg-muted/20">
+                  <CardContent className="pt-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-bold text-primary flex items-center gap-1">
+                        <UserPlus className="size-4" />
+                        تسجيل مريض جديد في النظام
+                      </p>
                       <Button
                         type="button"
                         variant="ghost"
                         size="sm"
-                        className="text-xs text-primary hover:bg-primary/10"
-                        onClick={handleStartNewPatient}
-                      >
-                        + تسجيل عميل جديد مباشرة
-                      </Button>
-                    </div>
-                  )}
-                </>
-              )}
-
-              {/* Display Chosen Existing Patient */}
-              {selectedPatient && (
-                <Card className="border-2 border-emerald-400 bg-emerald-50/50 shadow-sm">
-                  <CardContent className="p-3.5 flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <div className="size-10 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold">
-                        <UserCheck className="size-5" />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold text-foreground text-base">{selectedPatient.fullName}</span>
-                          <Badge className="bg-emerald-600 text-white text-xs">عميل قديم مسجل</Badge>
-                        </div>
-                        <p className="text-xs text-muted-foreground font-mono mt-0.5">
-                          {selectedPatient.phone}
-                          {selectedPatient.dateOfBirth && ` • ${computeAge(selectedPatient.dateOfBirth)} سنة`}
-                          {selectedPatient.address && ` • ${selectedPatient.address}`}
-                        </p>
-                      </div>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="h-8 text-xs border-emerald-300 text-emerald-800"
-                      onClick={() => setSelectedPatient(null)}
-                    >
-                      تغيير
-                    </Button>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* New Patient Form Mode */}
-              {isNewPatientMode && (
-                <Card className="border-2 border-primary/40 bg-primary/5 shadow-sm">
-                  <CardContent className="p-4 space-y-3">
-                    <div className="flex items-center justify-between border-b pb-2">
-                      <span className="font-bold text-sm text-primary flex items-center gap-1.5">
-                        <Sparkles className="size-4 text-primary" />
-                        بيانات العميل الجديد (سيتم حفظه في سجل العيادة)
-                      </span>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 text-xs text-muted-foreground"
+                        className="text-xs text-muted-foreground h-6"
                         onClick={() => setIsNewPatientMode(false)}
                       >
-                        إلغاء والعودة للبحث
+                        العودة للبحث
                       </Button>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div className="space-y-1">
-                        <Label htmlFor="newFullName" className="text-xs font-semibold">اسم المريض الكامل *</Label>
+                        <Label className="text-xs">الاسم بالكامل *</Label>
                         <Input
-                          id="newFullName"
-                          required
                           value={newFullName}
                           onChange={(e) => setNewFullName(e.target.value)}
-                          placeholder="مثال: محمد أحمد علي"
-                          className="h-9 bg-background text-sm"
+                          placeholder="مثال: أحمد محمد علي"
+                          required
                         />
                       </div>
-
                       <div className="space-y-1">
-                        <Label htmlFor="newPhone" className="text-xs font-semibold">رقم الهاتف *</Label>
+                        <Label className="text-xs">رقم الهاتف *</Label>
                         <Input
-                          id="newPhone"
-                          required
                           value={newPhone}
                           onChange={(e) => setNewPhone(e.target.value)}
-                          placeholder="01xxxxxxxxx"
+                          placeholder="01012345678"
                           dir="ltr"
-                          className="h-9 bg-background text-sm"
+                          required
                         />
                       </div>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       <div className="space-y-1">
-                        <Label htmlFor="newGender" className="text-xs font-semibold">الجنس *</Label>
+                        <Label className="text-xs">النوع</Label>
                         <select
-                          id="newGender"
                           value={newGender}
-                          onChange={(e) => setNewGender(e.target.value as 'MALE' | 'FEMALE')}
-                          className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                          onChange={(e) => setNewGender(e.target.value as any)}
+                          className="w-full h-10 px-3 text-sm rounded-md border border-input bg-background"
                         >
-                          <option value="MALE">{ar.patients.male}</option>
-                          <option value="FEMALE">{ar.patients.female}</option>
+                          <option value="MALE">ذكر</option>
+                          <option value="FEMALE">أنثى</option>
                         </select>
                       </div>
-
-                      <div className="space-y-1">
-                        <Label htmlFor="newDateOfBirth" className="text-xs">تاريخ الميلاد</Label>
+                      <div className="space-y-1 sm:col-span-2">
+                        <Label className="text-xs">تاريخ الميلاد (اختياري)</Label>
                         <Input
-                          id="newDateOfBirth"
                           type="date"
                           value={newDateOfBirth}
                           onChange={(e) => setNewDateOfBirth(e.target.value)}
-                          className="h-9 bg-background text-xs"
-                        />
-                      </div>
-
-                      <div className="space-y-1">
-                        <Label htmlFor="newAddress" className="text-xs">العنوان</Label>
-                        <Input
-                          id="newAddress"
-                          value={newAddress}
-                          onChange={(e) => setNewAddress(e.target.value)}
-                          placeholder="المنطقة أو المدينة"
-                          className="h-9 bg-background text-xs"
                         />
                       </div>
                     </div>
                   </CardContent>
                 </Card>
+              ) : (
+                <div className="space-y-2">
+                  <div className="relative">
+                    <Search className="absolute right-3 top-3 size-4 text-muted-foreground" />
+                    <Input
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      placeholder="ابحث برقم الهاتف أو الاسم..."
+                      className="pr-9"
+                    />
+                    {isSearching && (
+                      <Loader2 className="absolute left-3 top-3 size-4 text-muted-foreground animate-spin" />
+                    )}
+                  </div>
+
+                  {/* Search results dropdown */}
+                  {searchResults.length > 0 && (
+                    <div className="border rounded-md divide-y max-h-48 overflow-y-auto bg-background shadow-md">
+                      {searchResults.map((p) => (
+                        <div
+                          key={p.id}
+                          onClick={() => handleSelectExisting(p)}
+                          className="p-2.5 hover:bg-muted cursor-pointer flex items-center justify-between text-sm transition-colors"
+                        >
+                          <div>
+                            <p className="font-semibold">{p.fullName}</p>
+                            <p className="text-xs text-muted-foreground font-mono">{p.phone}</p>
+                          </div>
+                          <Button size="sm" variant="ghost" className="h-7 text-xs text-primary">
+                            اختيار
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {hasSearched && searchResults.length === 0 && !isSearching && (
+                    <div className="p-3 border rounded-md bg-muted/30 text-center space-y-2">
+                      <p className="text-xs text-muted-foreground">لم يتم العثور على مريض بهذا الاسم أو الرقم</p>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        className="text-xs gap-1.5"
+                        onClick={handleStartNewPatient}
+                      >
+                        <UserPlus className="size-3.5" />
+                        تسجيل كـ مريض جديد الآن
+                      </Button>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
 
-            {/* STEP 2: Appointment Details */}
-            {(selectedPatient || isNewPatientMode) && (
-              <div className="space-y-3 pt-2 border-t">
-                <Label className="text-sm font-bold flex items-center gap-1.5">
-                  <Calendar className="size-4 text-primary" />
-                  الخطوة 2: بيانات الموعد والكشف
-                </Label>
+            {/* STEP 2: APPOINTMENT TIME & DATE */}
+            <div className="space-y-3 pt-2 border-t">
+              <Label className="text-sm font-bold flex items-center gap-1.5">
+                <Calendar className="size-4 text-primary" />
+                2. الموعد والتوقيت
+              </Label>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="apptType" className="text-xs">نوع الكشف</Label>
-                    <select
-                      id="apptType"
-                      value={type}
-                      onChange={(e) => setType(e.target.value as 'CONSULTATION' | 'FOLLOW_UP')}
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label className="text-xs">تاريخ الكشف / الحجز</Label>
+                  <Input
+                    type="date"
+                    value={clinicDate}
+                    onChange={(e) => setClinicDate(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">نوع الحضور</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      type="button"
+                      variant={source === 'WALK_IN' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setSource('WALK_IN')}
                     >
-                      <option value="CONSULTATION">{ar.appointmentType.CONSULTATION} (كشف جديد)</option>
-                      <option value="FOLLOW_UP">{ar.appointmentType.FOLLOW_UP} (إعادة / استشارة)</option>
-                    </select>
+                      حضور فوري (طابور)
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={source === 'SCHEDULED' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setSource('SCHEDULED')}
+                    >
+                      حجز مسبق بموعد
+                    </Button>
                   </div>
+                </div>
+              </div>
 
-                  <div className="space-y-1.5">
-                    <Label htmlFor="apptSource" className="text-xs">حالة الحضور</Label>
-                    <select
-                      id="apptSource"
-                      value={source}
-                      onChange={(e) => setSource(e.target.value as 'WALK_IN' | 'SCHEDULED')}
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                    >
-                      <option value="WALK_IN">{ar.appointmentSource.WALK_IN} (المريض في العيادة الآن)</option>
-                      <option value="SCHEDULED">{ar.appointmentSource.SCHEDULED} (حجز مسبق بوقت)</option>
-                    </select>
+              {/* Time selection */}
+              <div className="space-y-2 bg-muted/20 p-3 rounded-lg border">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs flex items-center gap-1">
+                      <Clock className="size-3.5 text-primary" />
+                      من الساعة
+                    </Label>
+                    <Input
+                      type="time"
+                      value={startTime}
+                      onChange={(e) => setStartTime(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs flex items-center gap-1">
+                      <Clock className="size-3.5 text-primary" />
+                      إلى الساعة
+                    </Label>
+                    <Input
+                      type="time"
+                      value={endTime}
+                      onChange={(e) => setEndTime(e.target.value)}
+                    />
                   </div>
                 </div>
 
-                {source === 'SCHEDULED' && (
-                  <div className="space-y-1.5">
-                    <Label htmlFor="scheduledAt" className="text-xs">وقت الموعد المسبق</Label>
-                    <Input
-                      id="scheduledAt"
-                      type="datetime-local"
-                      value={scheduledAt}
-                      onChange={(e) => setScheduledAt(e.target.value)}
-                      className="h-10 text-sm"
-                    />
+                <div className="pt-1">
+                  <Label className="text-[11px] text-muted-foreground block mb-1">أوقات مقترحة سريعة:</Label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {COMMON_SLOTS.slice(0, 8).map((slot) => (
+                      <button
+                        key={slot.start}
+                        type="button"
+                        onClick={() => {
+                          setStartTime(slot.start);
+                          setEndTime(slot.end);
+                        }}
+                        className={`px-2 py-0.5 rounded text-xs border transition-colors ${
+                          startTime === slot.start
+                            ? 'bg-primary text-primary-foreground border-primary font-bold'
+                            : 'bg-background hover:bg-muted text-muted-foreground'
+                        }`}
+                      >
+                        {slot.start} - {slot.end}
+                      </button>
+                    ))}
                   </div>
-                )}
+                </div>
               </div>
-            )}
 
-            <DialogFooter className="gap-2 sm:gap-0 pt-3 border-t">
-              <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={isPending}>
-                {ar.common.cancel}
+              <div className="space-y-1">
+                <Label className="text-xs">نوع الكشف</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    type="button"
+                    variant={type === 'CONSULTATION' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setType('CONSULTATION')}
+                  >
+                    كشف أول مرة (جديد)
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={type === 'FOLLOW_UP' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setType('FOLLOW_UP')}
+                  >
+                    استشارة / إعادة كشف
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* STEP 3: FINANCIAL DETAILS & MANUAL FEES */}
+            <div className="space-y-3 pt-2 border-t">
+              <div className="flex items-center justify-between">
+                <Label className="text-sm font-bold flex items-center gap-1.5">
+                  <Coins className="size-4 text-emerald-600" />
+                  3. الرسوم والمدفوعات المالية
+                </Label>
+
+                {/* Exemption Switch */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const nextVal = !isExempt;
+                    setIsExempt(nextVal);
+                    if (nextVal) {
+                      setPaidAmount('0');
+                    }
+                  }}
+                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border transition-all ${
+                    isExempt
+                      ? 'bg-emerald-500 text-white border-emerald-600 shadow-sm'
+                      : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                  }`}
+                >
+                  <Gift className="size-3.5" />
+                  <span>{isExempt ? 'الكشف مجاني / معفي ✓' : 'إعفاء من الرسوم (مجاني)'}</span>
+                </button>
+              </div>
+
+              {isExempt ? (
+                <div className="p-3 bg-emerald-50/70 border border-emerald-200 rounded-lg space-y-2">
+                  <div className="flex items-center gap-2 text-emerald-800 text-xs font-bold">
+                    <Gift className="size-4 text-emerald-600" />
+                    <span>تم تحديد هذا الكشف كـ مجاني / معفي بالكامل من الرسوم</span>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs text-emerald-900">سبب الإعفاء:</Label>
+                    <select
+                      value={exemptionReason}
+                      onChange={(e) => setExemptionReason(e.target.value)}
+                      className="w-full h-9 px-3 text-xs rounded-md border border-emerald-300 bg-white"
+                    >
+                      {EXEMPTION_PRESETS.map((p) => (
+                        <option key={p} value={p}>{p}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3 bg-card p-3 rounded-lg border">
+                  {/* Total Amount Input */}
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs font-bold">إجمالي رسوم الكشف (ج.م) *</Label>
+                      <span className="text-[11px] text-muted-foreground">اكتب المبلغ بيدك أو اختر سريعاً</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="relative flex-1">
+                        <Input
+                          type="number"
+                          min="0"
+                          step="10"
+                          value={totalAmount}
+                          onChange={(e) => setTotalAmount(e.target.value)}
+                          className="font-bold text-base text-foreground font-mono"
+                          placeholder="مثال: 250"
+                          required
+                        />
+                        <span className="absolute left-3 top-2.5 text-xs text-muted-foreground font-bold">ج.م</span>
+                      </div>
+                      <div className="flex gap-1 overflow-x-auto">
+                        {COMMON_FEES.map((fee) => (
+                          <button
+                            key={fee}
+                            type="button"
+                            onClick={() => setTotalAmount(String(fee))}
+                            className={`px-2 py-1.5 text-xs rounded border transition-colors ${
+                              totalAmount === String(fee)
+                                ? 'bg-primary text-primary-foreground font-bold border-primary'
+                                : 'bg-muted hover:bg-muted/80 text-muted-foreground'
+                            }`}
+                          >
+                            {fee}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Partial Payment / Deposit Input */}
+                  <div className="space-y-1 pt-1">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs font-bold text-emerald-700">المبلغ المدفوع الآن (عربون أو كامل)</Label>
+                      <span className="text-[11px] text-muted-foreground">يمكن دفع جزء لحجز الموعد والباقي لاحقاً</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="relative flex-1">
+                        <Input
+                          type="number"
+                          min="0"
+                          max={numTotal}
+                          step="10"
+                          value={paidAmount}
+                          onChange={(e) => setPaidAmount(e.target.value)}
+                          className="font-bold text-base text-emerald-700 font-mono"
+                          placeholder="0"
+                        />
+                        <span className="absolute left-3 top-2.5 text-xs text-muted-foreground font-bold">ج.م</span>
+                      </div>
+                      <div className="flex gap-1">
+                        <button
+                          type="button"
+                          onClick={() => setPaidAmount(String(numTotal))}
+                          className="px-2.5 py-1.5 text-xs font-semibold rounded border bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
+                        >
+                          دفع كامل ({numTotal})
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setPaidAmount(String(Math.floor(numTotal / 2)))}
+                          className="px-2.5 py-1.5 text-xs font-semibold rounded border bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100"
+                        >
+                          دفع النصف ({Math.floor(numTotal / 2)})
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setPaidAmount('0')}
+                          className="px-2 py-1.5 text-xs rounded border bg-muted text-muted-foreground hover:bg-muted/80"
+                        >
+                          بدون دفع (0)
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Dynamic Summary Banner */}
+                  <div className="p-3 bg-muted/40 rounded-lg border grid grid-cols-3 gap-2 text-center text-xs">
+                    <div>
+                      <span className="text-muted-foreground block text-[11px]">إجمالي الكشف</span>
+                      <span className="font-bold text-foreground text-sm font-mono">{numTotal} ج.م</span>
+                    </div>
+                    <div className="border-x">
+                      <span className="text-emerald-700 block text-[11px] font-semibold">المدفوع (عربون)</span>
+                      <span className="font-bold text-emerald-700 text-sm font-mono">{numPaid} ج.م</span>
+                    </div>
+                    <div>
+                      <span className="text-amber-700 block text-[11px] font-semibold">المتبقي على المريض</span>
+                      <span className="font-bold text-amber-700 text-sm font-mono">{numRemaining} ج.م</span>
+                    </div>
+                  </div>
+
+                  {/* Payment Method */}
+                  {numPaid > 0 && (
+                    <div className="space-y-1 pt-1">
+                      <Label className="text-xs">طريقة دفع العربون / المبلغ</Label>
+                      <div className="grid grid-cols-3 gap-2">
+                        <Button
+                          type="button"
+                          variant={paymentMethod === 'CASH' ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setPaymentMethod('CASH')}
+                        >
+                          نقدي (كاش)
+                        </Button>
+                        <Button
+                          type="button"
+                          variant={paymentMethod === 'CARD' ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setPaymentMethod('CARD')}
+                        >
+                          بطاقة (فيزا)
+                        </Button>
+                        <Button
+                          type="button"
+                          variant={paymentMethod === 'WALLET' ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setPaymentMethod('WALLET')}
+                        >
+                          محفظة إلكترونية
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Booking Notes */}
+              <div className="space-y-1">
+                <Label className="text-xs">ملاحظات الحجز (اختياري)</Label>
+                <Input
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="مثال: مريض قادم من طرف د. عاصم / دفع 50 ج.م عربون وباقي 150 ج.م"
+                />
+              </div>
+            </div>
+
+            <DialogFooter className="pt-3 border-t flex items-center justify-between gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setOpen(false)}
+                disabled={isPending}
+              >
+                إلغاء
               </Button>
               <Button
                 type="submit"
-                disabled={isPending || (!selectedPatient && !isNewPatientMode)}
-                className="gap-2 px-6 font-semibold"
+                disabled={isPending}
+                className="gap-2 bg-primary text-primary-foreground font-bold px-6 shadow-md"
               >
-                {isPending && <Loader2 className="size-4 animate-spin" />}
-                {isNewPatientMode ? 'حفظ العميل وتأكيد الحجز ✓' : 'تأكيد الحجز وإضافة للانتظار ✓'}
+                {isPending ? (
+                  <>
+                    <Loader2 className="size-4 animate-spin" />
+                    جاري الحجز والتسجيل...
+                  </>
+                ) : (
+                  <>
+                    <span>تأكيد الحجز</span>
+                    <ArrowRight className="size-4 rotate-180" />
+                  </>
+                )}
               </Button>
             </DialogFooter>
           </form>

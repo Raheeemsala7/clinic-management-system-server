@@ -72,12 +72,42 @@ export class PaymentsService {
       Payment.countDocuments(paymentFilter),
     ]);
 
+    const { Patient, User } = await import('../models');
     const populated = await Promise.all(
       payments.map(async (p) => {
-        const appointment = await Appointment.findById(p.appointmentId).select('clinicDate type');
+        const [appointment, patient, receivedBy] = await Promise.all([
+          Appointment.findById(p.appointmentId).select(
+            'clinicDate type startTime endTime totalAmount paidAmount remainingAmount paymentStatus isExempt exemptionReason doctorId',
+          ),
+          Patient.findById(p.patientId).select('id fullName phone'),
+          User.findById(p.receivedById).select('id name username'),
+        ]);
+
+        let doctor = null;
+        if (appointment?.doctorId) {
+          doctor = await User.findById(appointment.doctorId).select('id name');
+        }
+
         return {
           ...p.toJSON(),
-          appointment: appointment ? { clinicDate: appointment.clinicDate, type: appointment.type } : null,
+          patient: patient ? { id: patient.id, fullName: patient.fullName, phone: patient.phone } : null,
+          doctor: doctor ? { id: doctor.id, name: doctor.name } : null,
+          receivedBy: receivedBy ? { id: receivedBy.id, name: receivedBy.name, username: receivedBy.username } : null,
+          appointment: appointment
+            ? {
+                id: appointment.id,
+                clinicDate: appointment.clinicDate,
+                type: appointment.type,
+                startTime: appointment.startTime || null,
+                endTime: appointment.endTime || null,
+                totalAmount: appointment.totalAmount,
+                paidAmount: appointment.paidAmount,
+                remainingAmount: appointment.remainingAmount,
+                paymentStatus: appointment.paymentStatus,
+                isExempt: appointment.isExempt,
+                exemptionReason: appointment.exemptionReason || null,
+              }
+            : null,
         };
       }),
     );
