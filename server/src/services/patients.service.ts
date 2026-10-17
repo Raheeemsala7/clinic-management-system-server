@@ -17,7 +17,7 @@ function filterForReception(patient: any) {
 
 export class PatientsService {
   static async createPatient(dto: any, actor: { id: string; role: string }, ip = '') {
-    const { fullName, phone, gender, dateOfBirth, address, allergies, chronicConditions, generalNotes } = dto;
+    const { fullName, phone, gender, dateOfBirth, age, address, allergies, chronicConditions, generalNotes } = dto;
 
     if (!fullName || !phone || !gender) {
       throw new BadRequestError('fullName, phone, and gender are required');
@@ -31,12 +31,25 @@ export class PatientsService {
       }
     }
 
+    let parsedAge: number | undefined = undefined;
+    if (age !== undefined && age !== null && age !== '') {
+      parsedAge = Number(age);
+    } else if (dateOfBirth) {
+      const dob = new Date(dateOfBirth);
+      const now = new Date();
+      let a = now.getFullYear() - dob.getFullYear();
+      const m = now.getMonth() - dob.getMonth();
+      if (m < 0 || (m === 0 && now.getDate() < dob.getDate())) a--;
+      parsedAge = a >= 0 ? a : undefined;
+    }
+
     const patient = await Patient.create({
       fullName,
       searchName: normalizeArabic(fullName),
       phone,
       gender,
-      dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
+      age: parsedAge,
+      dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : (parsedAge !== undefined ? new Date(new Date().getFullYear() - parsedAge, 0, 1) : null),
       address: address || null,
       allergies: allergies || [],
       chronicConditions: chronicConditions || [],
@@ -116,6 +129,9 @@ export class PatientsService {
     }
     if (dto.phone !== undefined) patient.phone = dto.phone;
     if (dto.gender !== undefined) patient.gender = dto.gender;
+    if (dto.age !== undefined) {
+      patient.age = dto.age !== null && dto.age !== '' ? Number(dto.age) : undefined;
+    }
     if (dto.dateOfBirth !== undefined) {
       patient.dateOfBirth = dto.dateOfBirth ? new Date(dto.dateOfBirth) : null;
     }
@@ -200,8 +216,8 @@ export class PatientsService {
       Prescription.findOne({ patientId }).sort({ createdAt: -1 }),
     ]);
 
-    let age: number | null = null;
-    if (patient.dateOfBirth) {
+    let age: number | null = (patient as any).age ?? null;
+    if (age === null && patient.dateOfBirth) {
       const now = new Date();
       const dob = new Date(patient.dateOfBirth);
       age = now.getFullYear() - dob.getFullYear();

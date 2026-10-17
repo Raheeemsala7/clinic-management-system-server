@@ -33,7 +33,8 @@ export const NAV_ITEMS: Record<Role, NavItem[]> = {
   ],
   DOCTOR: [
     { href: '/doctor', label: ar.nav.today, icon: Stethoscope },
-    { href: '/doctor/appointments', label: 'جدول المواعيد', icon: CalendarDays },
+    { href: '/doctor/appointments', label: 'التقويم والمواعيد', icon: CalendarDays },
+    { href: '/doctor/schedule', label: 'أوقات العمل الأسبوعية', icon: CalendarClock },
     { href: '/doctor/patients', label: ar.nav.patients, icon: Users },
   ],
   ADMIN: [

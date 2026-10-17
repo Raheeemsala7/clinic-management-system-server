@@ -16,6 +16,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { ar } from '@/messages/ar';
+import { computeAge } from '@/lib/utils';
 import { UserPlus, Loader2 } from 'lucide-react';
 
 export function NewPatientDialog() {
@@ -23,6 +24,8 @@ export function NewPatientDialog() {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [age, setAge] = useState('');
+  const [dob, setDob] = useState('');
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -88,14 +91,43 @@ export function NewPatientDialog() {
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="dateOfBirth">{ar.patients.dob}</Label>
-              <Input id="dateOfBirth" name="dateOfBirth" type="date" disabled={isPending} />
+              <Label htmlFor="age">العمر (بالسنوات) *</Label>
+              <Input
+                id="age"
+                name="age"
+                type="number"
+                min="0"
+                max="130"
+                required
+                value={age}
+                onChange={(e) => setAge(e.target.value)}
+                placeholder="مثال: 32"
+                disabled={isPending}
+              />
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="address">{ar.patients.address}</Label>
-              <Input id="address" name="address" placeholder="المدينة / المنطقة" disabled={isPending} />
+              <Label htmlFor="dateOfBirth">تاريخ الميلاد (اختياري)</Label>
+              <Input
+                id="dateOfBirth"
+                name="dateOfBirth"
+                type="date"
+                value={dob}
+                onChange={(e) => {
+                  setDob(e.target.value);
+                  if (e.target.value) {
+                    const calculated = computeAge(e.target.value);
+                    if (calculated !== null) setAge(String(calculated));
+                  }
+                }}
+                disabled={isPending}
+              />
             </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="address">{ar.patients.address}</Label>
+            <Input id="address" name="address" placeholder="المدينة / المنطقة" disabled={isPending} />
           </div>
 
           <DialogFooter className="gap-2 sm:gap-0 pt-2 border-t">

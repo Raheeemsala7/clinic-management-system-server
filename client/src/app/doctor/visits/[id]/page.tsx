@@ -26,6 +26,7 @@ export interface Visit {
   patient: {
     fullName: string;
     dateOfBirth: string | null;
+    age?: number | null;
     gender: string;
     allergies: string[];
     chronicConditions: string[];
@@ -43,7 +44,7 @@ export default async function VisitPage({ params }: { params: Promise<{ id: stri
   const { id } = await params;
 
   const visit = await api.get<Visit>(`/visits/${id}`);
-  const age = visit.patient.dateOfBirth ? computeAge(visit.patient.dateOfBirth) : null;
+  const age = computeAge(visit.patient.dateOfBirth, visit.patient.age);
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">

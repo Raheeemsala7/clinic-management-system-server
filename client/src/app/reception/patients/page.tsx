@@ -61,7 +61,7 @@ export default async function ReceptionPatientsPage({ searchParams }: ReceptionP
                   <p className="font-medium truncate">{patient.fullName}</p>
                   <p className="text-sm text-muted-foreground">
                     {patient.phone}
-                    {patient.dateOfBirth && ` • ${computeAge(patient.dateOfBirth)} ${ar.patients.years}`}
+                    {computeAge(patient.dateOfBirth, patient.age) !== null && ` • ${computeAge(patient.dateOfBirth, patient.age)} ${ar.patients.years}`}
                   </p>
                 </div>
                 <Badge variant="outline">

@@ -13,3 +13,4 @@ export * from './doctor-status.model';
 export * from './audit-log.model';
 export * from './setting.model';
 export * from './attachment.model';
+export * from './doctor-schedule.model';

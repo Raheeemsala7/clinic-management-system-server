@@ -3,6 +3,7 @@ import { getTodayClinicDate } from '../utils/clinic-date';
 import { parsePagination, buildPaginatedResult } from '../utils/pagination';
 import { NotFoundError, ConflictError, BadRequestError } from '../utils/errors';
 import { logAudit } from '../utils/audit';
+import { DoctorScheduleService } from './doctor-schedule.service';
 
 const TRANSITIONS: Record<string, string[]> = {
   BOOKED: ['WAITING', 'CANCELLED', 'NO_SHOW'],
@@ -16,7 +17,12 @@ const TRANSITIONS: Record<string, string[]> = {
 export class AppointmentsService {
   static async createAppointment(dto: any, actor: { id: string }, ip = '') {
     const { patientId, doctorId, source, type, scheduledAt, startTime, endTime, notes } = dto;
-    const clinicDate = dto.clinicDate || getTodayClinicDate();
+    const today = getTodayClinicDate();
+    const clinicDate = dto.clinicDate || today;
+
+    if (clinicDate < today) {
+      throw new BadRequestError('لا يمكن حجز موعد في تاريخ ماضٍ');
+    }
 
     if (!patientId || !doctorId || !source || !type) {
       throw new BadRequestError('patientId, doctorId, source, and type are required');
@@ -28,8 +34,16 @@ export class AppointmentsService {
     const patient = await Patient.findOne({ _id: patientId, deletedAt: null });
     if (!patient) throw new NotFoundError('Patient not found');
 
-    if (source === 'SCHEDULED' && !scheduledAt && !startTime) {
-      throw new ConflictError('scheduledAt or startTime is required for SCHEDULED appointments', 'SCHEDULED_AT_REQUIRED');
+    if (source === 'SCHEDULED') {
+      if (!scheduledAt && !startTime) {
+        throw new ConflictError('scheduledAt or startTime is required for SCHEDULED appointments', 'SCHEDULED_AT_REQUIRED');
+      }
+
+      // Check doctor availability for the requested day
+      const slotsInfo = await DoctorScheduleService.getAvailableSlots(doctorId, clinicDate);
+      if (!slotsInfo.isWorkingDay) {
+        throw new BadRequestError(slotsInfo.message || 'الطبيب غير متاح في هذا التاريخ');
+      }
     }
 
     const activeCount = await Appointment.countDocuments({

@@ -60,8 +60,9 @@ export function formatDateTime(value: string | number | Date | null | undefined)
   return `${formatDate(d)} ${formatTime(d)}`;
 }
 
-/** Age in whole years from an ISO date of birth, as of now (clinic timezone day). */
-export function computeAge(dateOfBirth: string | null | undefined): number | null {
+/** Age in whole years from an ISO date of birth, or explicit age number. */
+export function computeAge(dateOfBirth?: string | null, explicitAge?: number | null): number | null {
+  if (typeof explicitAge === 'number' && !Number.isNaN(explicitAge)) return explicitAge;
   if (!dateOfBirth) return null;
   const dob = toDate(dateOfBirth);
   if (!dob) return null;

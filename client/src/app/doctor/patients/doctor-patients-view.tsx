@@ -57,7 +57,7 @@ export function DoctorPatientsView({
       setSelectedSummary({
         id: patient.id,
         fullName: patient.fullName,
-        age: patient.dateOfBirth ? computeAge(patient.dateOfBirth) : null,
+        age: computeAge(patient.dateOfBirth, patient.age),
         gender: patient.gender,
         allergies: [],
         chronicConditions: [],

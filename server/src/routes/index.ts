@@ -14,6 +14,7 @@ import closingRoutes from './closing.routes';
 import reportsRoutes from './reports.routes';
 import settingsRoutes from './settings.routes';
 import auditRoutes from './audit.routes';
+import doctorScheduleRoutes from './doctor-schedule.routes';
 
 const apiRouter = Router();
 
@@ -22,6 +23,7 @@ apiRouter.use('/auth', authRoutes);
 apiRouter.use('/users', usersRoutes);
 apiRouter.use('/patients', patientsRoutes);
 apiRouter.use('/appointments', appointmentsRoutes);
+apiRouter.use('/doctor-schedule', doctorScheduleRoutes);
 apiRouter.use('/visits', visitsRoutes);
 apiRouter.use('/drugs', drugsRoutes);
 apiRouter.use('/attachments', attachmentsRoutes);

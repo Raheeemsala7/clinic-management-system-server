@@ -79,7 +79,7 @@ export default async function AdminPatientsPage({ searchParams }: AdminPatientsP
           </div>
         ) : (
           result.data.map((patient) => {
-            const age = patient.dateOfBirth ? computeAge(patient.dateOfBirth) : null;
+            const age = computeAge(patient.dateOfBirth, patient.age);
             return (
               <Card key={patient.id} className="shadow-sm hover:shadow-md transition-shadow">
                 <CardContent className="p-4 flex items-center justify-between gap-4 flex-wrap">

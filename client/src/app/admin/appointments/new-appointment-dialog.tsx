@@ -71,6 +71,11 @@ export function NewAppointmentDialog({ doctors, recentPatients }: NewAppointment
       setError('يرجى اختيار مريض من القائمة');
       return;
     }
+    const today = todayClinicDate();
+    if (clinicDate < today) {
+      setError('لا يمكن حجز موعد في تاريخ ماضٍ، يرجى اختيار تاريخ اليوم أو موعد قادم');
+      return;
+    }
     setError(null);
 
     const formData = new FormData(e.currentTarget);
@@ -188,6 +193,7 @@ export function NewAppointmentDialog({ doctors, recentPatients }: NewAppointment
               <Input
                 type="date"
                 value={clinicDate}
+                min={todayClinicDate()}
                 onChange={(e) => setClinicDate(e.target.value)}
                 required
               />

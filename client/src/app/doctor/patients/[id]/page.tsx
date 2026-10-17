@@ -48,7 +48,7 @@ export default async function PatientProfilePage({ params }: PatientProfilePageP
     notFound();
   }
 
-  const age = patient.dateOfBirth ? computeAge(patient.dateOfBirth) : null;
+  const age = computeAge(patient.dateOfBirth, patient.age);
   const totalVisits = historyItems.length;
   const latestVisit = historyItems[0] ?? null;
 

@@ -10,6 +10,7 @@ const createPatientSchema = z.object({
   fullName: z.string().min(2, 'الاسم مطلوب'),
   phone: z.string().min(10, 'رقم الهاتف مطلوب'),
   gender: z.enum(['MALE', 'FEMALE']),
+  age: z.coerce.number().min(0, 'العمر يجب أن يكون 0 أو أكبر').max(130, 'العمر غير صالح'),
   dateOfBirth: z.string().optional(),
   address: z.string().optional(),
 });
@@ -30,6 +31,7 @@ export async function createPatientAction(
     fullName: formData.get('fullName'),
     phone: formData.get('phone'),
     gender: formData.get('gender'),
+    age: formData.get('age'),
     dateOfBirth: formData.get('dateOfBirth') || undefined,
     address: formData.get('address') || undefined,
   });
@@ -75,6 +77,7 @@ export async function createQuickPatientAction(data: {
   fullName: string;
   phone: string;
   gender: 'MALE' | 'FEMALE';
+  age: number;
   dateOfBirth?: string;
   address?: string;
 }) {

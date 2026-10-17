@@ -28,16 +28,17 @@ import {
   Loader2,
   CheckCircle2,
   AlertCircle,
-  Phone,
   Calendar,
   Clock,
   Coins,
-  CreditCard,
   Gift,
   ArrowRight,
-  Receipt,
 } from 'lucide-react';
 import type { PatientBasic } from '@/features/patients/queries';
+import {
+  getDoctorAvailableSlotsAction,
+  type AvailableSlotsResponse,
+} from '@/features/doctor-schedule/actions';
 
 interface NewReceptionBookingDialogProps {
   doctorId: string;
@@ -102,6 +103,7 @@ export function NewReceptionBookingDialog({
   const [newFullName, setNewFullName] = useState('');
   const [newPhone, setNewPhone] = useState('');
   const [newGender, setNewGender] = useState<'MALE' | 'FEMALE'>('MALE');
+  const [newAge, setNewAge] = useState('');
   const [newDateOfBirth, setNewDateOfBirth] = useState('');
   const [newAddress, setNewAddress] = useState('');
 
@@ -121,6 +123,10 @@ export function NewReceptionBookingDialog({
   const [paymentMethod, setPaymentMethod] = useState<'CASH' | 'CARD' | 'WALLET'>('CASH');
   const [notes, setNotes] = useState('');
 
+  // Doctor availability & Slots state
+  const [slotsData, setSlotsData] = useState<AvailableSlotsResponse | null>(null);
+  const [isLoadingSlots, setIsLoadingSlots] = useState(false);
+
   // Status/Feedback
   const [error, setError] = useState<string | null>(null);
   const [successInfo, setSuccessInfo] = useState<{
@@ -134,6 +140,24 @@ export function NewReceptionBookingDialog({
   const numTotal = isExempt ? 0 : Math.max(0, Number(totalAmount) || 0);
   const numPaid = isExempt ? 0 : Math.min(numTotal, Math.max(0, Number(paidAmount) || 0));
   const numRemaining = isExempt ? 0 : Math.max(0, numTotal - numPaid);
+
+  // Live fetch available slots when date or doctor changes
+  useEffect(() => {
+    if (!doctorId || !clinicDate || !open) return;
+    let isCancelled = false;
+    setIsLoadingSlots(true);
+
+    getDoctorAvailableSlotsAction(doctorId, clinicDate).then((res) => {
+      if (!isCancelled) {
+        setSlotsData(res);
+        setIsLoadingSlots(false);
+      }
+    });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [doctorId, clinicDate, open]);
 
   // Debounced live search
   useEffect(() => {
@@ -171,6 +195,16 @@ export function NewReceptionBookingDialog({
     setError(null);
   };
 
+  const handleDateOfBirthChange = (dob: string) => {
+    setNewDateOfBirth(dob);
+    if (dob) {
+      const calculated = computeAge(dob);
+      if (calculated !== null) {
+        setNewAge(String(calculated));
+      }
+    }
+  };
+
   const resetAll = () => {
     setSearchTerm('');
     setSearchResults([]);
@@ -180,6 +214,7 @@ export function NewReceptionBookingDialog({
     setNewFullName('');
     setNewPhone('');
     setNewGender('MALE');
+    setNewAge('');
     setNewDateOfBirth('');
     setNewAddress('');
     setClinicDate(defaultDate || today);
@@ -201,6 +236,16 @@ export function NewReceptionBookingDialog({
     e.preventDefault();
     setError(null);
 
+    if (clinicDate < today) {
+      setError('لا يمكن حجز موعد في تاريخ ماضٍ، يرجى اختيار تاريخ اليوم أو موعد مستقبلي');
+      return;
+    }
+
+    if (source === 'SCHEDULED' && slotsData && !slotsData.isWorkingDay) {
+      setError(slotsData.message || 'الطبيب غير متاح في هذا التاريخ (إجازة أسبوعية)');
+      return;
+    }
+
     let patientIdToBook = selectedPatient?.id;
     let patientNameToDisplay = selectedPatient?.fullName ?? '';
 
@@ -210,11 +255,18 @@ export function NewReceptionBookingDialog({
         return;
       }
 
+      const parsedAge = Number(newAge);
+      if (!newAge || Number.isNaN(parsedAge) || parsedAge < 0 || parsedAge > 130) {
+        setError('يرجى إدخال عمر المريض بشكل صحيح (إجباري)');
+        return;
+      }
+
       startTransition(async () => {
         const createRes = await createQuickPatientAction({
           fullName: newFullName.trim(),
           phone: newPhone.trim(),
           gender: newGender,
+          age: parsedAge,
           dateOfBirth: newDateOfBirth || undefined,
           address: newAddress || undefined,
         });
@@ -427,12 +479,25 @@ export function NewReceptionBookingDialog({
                           <option value="FEMALE">أنثى</option>
                         </select>
                       </div>
-                      <div className="space-y-1 sm:col-span-2">
-                        <Label className="text-xs">تاريخ الميلاد (اختياري)</Label>
+                      <div className="space-y-1">
+                        <Label className="text-xs font-semibold text-primary">العمر (بالسنوات) *</Label>
+                        <Input
+                          type="number"
+                          min="0"
+                          max="130"
+                          value={newAge}
+                          onChange={(e) => setNewAge(e.target.value)}
+                          placeholder="مثال: 32"
+                          className="font-medium"
+                          required
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs text-muted-foreground">تاريخ الميلاد (اختياري)</Label>
                         <Input
                           type="date"
                           value={newDateOfBirth}
-                          onChange={(e) => setNewDateOfBirth(e.target.value)}
+                          onChange={(e) => handleDateOfBirthChange(e.target.value)}
                         />
                       </div>
                     </div>
@@ -502,13 +567,15 @@ export function NewReceptionBookingDialog({
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <Label className="text-xs">تاريخ الكشف / الحجز</Label>
+                  <Label className="text-xs font-semibold">تاريخ الكشف / الحجز *</Label>
                   <Input
                     type="date"
                     value={clinicDate}
+                    min={today}
                     onChange={(e) => setClinicDate(e.target.value)}
                     required
                   />
+                  <p className="text-[10px] text-muted-foreground">لا يمكن حجز مواعيد في تواريخ ماضية</p>
                 </div>
                 <div className="space-y-1">
                   <Label className="text-xs">نوع الحضور</Label>
@@ -533,56 +600,146 @@ export function NewReceptionBookingDialog({
                 </div>
               </div>
 
-              {/* Time selection */}
-              <div className="space-y-2 bg-muted/20 p-3 rounded-lg border">
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <Label className="text-xs flex items-center gap-1">
-                      <Clock className="size-3.5 text-primary" />
-                      من الساعة
-                    </Label>
-                    <Input
-                      type="time"
-                      value={startTime}
-                      onChange={(e) => setStartTime(e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs flex items-center gap-1">
-                      <Clock className="size-3.5 text-primary" />
-                      إلى الساعة
-                    </Label>
-                    <Input
-                      type="time"
-                      value={endTime}
-                      onChange={(e) => setEndTime(e.target.value)}
-                    />
-                  </div>
+              {/* Doctor Availability & Slot Selector */}
+              {isLoadingSlots ? (
+                <div className="flex items-center gap-2 p-3 text-xs text-muted-foreground bg-muted/30 rounded-lg border">
+                  <Loader2 className="size-4 animate-spin text-primary" />
+                  <span>جارٍ فحص جدول الطبيب والمواعيد المتاحة ليوم {clinicDate}...</span>
                 </div>
+              ) : slotsData && !slotsData.isWorkingDay ? (
+                <div className="p-3.5 rounded-lg border border-amber-300 bg-amber-50 dark:bg-amber-950/30 text-amber-900 dark:text-amber-200 text-xs space-y-1.5">
+                  <div className="flex items-center gap-2 font-bold text-sm">
+                    <AlertCircle className="size-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                    <span>{slotsData.message || `الطبيب غير متاح في هذا اليوم (${slotsData.dayName})`}</span>
+                  </div>
+                  <p className="text-[11px] text-amber-800/90 dark:text-amber-300/90">
+                    هذا اليوم عطلة أسبوعية محددة في جدول الطبيب. يرجى اختيار تاريخ عمل آخر لحجز الموعد.
+                  </p>
+                </div>
+              ) : slotsData && slotsData.isWorkingDay ? (
+                <div className="space-y-2 bg-primary/5 p-3 rounded-lg border border-primary/20">
+                  <div className="flex items-center justify-between gap-2 flex-wrap text-xs">
+                    <span className="font-bold text-foreground flex items-center gap-1.5">
+                      <Clock className="size-3.5 text-primary" />
+                      المواعيد المتاحة من جدول الطبيب ({slotsData.dayName}):
+                    </span>
+                    <span className="text-[11px] text-muted-foreground">
+                      <span className="text-emerald-600 dark:text-emerald-400 font-semibold">{slotsData.availableCount} متاح</span>
+                      {' • '}
+                      <span>{slotsData.bookedCount} محجوز</span>
+                    </span>
+                  </div>
 
-                <div className="pt-1">
-                  <Label className="text-[11px] text-muted-foreground block mb-1">أوقات مقترحة سريعة:</Label>
-                  <div className="flex flex-wrap gap-1.5">
-                    {COMMON_SLOTS.slice(0, 8).map((slot) => (
-                      <button
-                        key={slot.start}
-                        type="button"
-                        onClick={() => {
-                          setStartTime(slot.start);
-                          setEndTime(slot.end);
-                        }}
-                        className={`px-2 py-0.5 rounded text-xs border transition-colors ${
-                          startTime === slot.start
-                            ? 'bg-primary text-primary-foreground border-primary font-bold'
-                            : 'bg-background hover:bg-muted text-muted-foreground'
-                        }`}
-                      >
-                        {slot.start} - {slot.end}
-                      </button>
-                    ))}
+                  {slotsData.slots.length === 0 ? (
+                    <p className="text-xs text-muted-foreground p-2 bg-muted/40 rounded">
+                      لا توجد فترات عمل محددة للطبيب في هذا اليوم
+                    </p>
+                  ) : (
+                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-1.5 max-h-48 overflow-y-auto p-1.5 border rounded-md bg-background">
+                      {slotsData.slots.map((slot) => {
+                        const isSelected = startTime === slot.startTime;
+
+                        if (slot.isBooked) {
+                          return (
+                            <div
+                              key={slot.startTime}
+                              className="p-1.5 rounded text-center border bg-muted/50 text-muted-foreground cursor-not-allowed opacity-60 text-xs flex flex-col items-center justify-center select-none"
+                              title="هذا الموعد محجوز مسبقاً لمريض آخر"
+                            >
+                              <span className="font-mono line-through text-[11px]">{slot.startTime}</span>
+                              <span className="text-[9px] text-destructive font-semibold">محجوز</span>
+                            </div>
+                          );
+                        }
+
+                        if (slot.isPast) {
+                          return (
+                            <div
+                              key={slot.startTime}
+                              className="p-1.5 rounded text-center border bg-muted/30 text-muted-foreground/60 cursor-not-allowed opacity-50 text-xs flex flex-col items-center justify-center select-none"
+                              title="هذا الوقت انقضى اليوم"
+                            >
+                              <span className="font-mono text-[11px]">{slot.startTime}</span>
+                              <span className="text-[9px]">انقضى</span>
+                            </div>
+                          );
+                        }
+
+                        return (
+                          <button
+                            key={slot.startTime}
+                            type="button"
+                            onClick={() => {
+                              setStartTime(slot.startTime);
+                              setEndTime(slot.endTime);
+                            }}
+                            className={`p-1.5 rounded text-center border text-xs transition-all flex flex-col items-center justify-center ${
+                              isSelected
+                                ? 'bg-primary text-primary-foreground border-primary shadow-sm font-bold scale-[1.02]'
+                                : 'bg-background hover:bg-primary/10 hover:border-primary/50 text-foreground'
+                            }`}
+                          >
+                            <span className="font-mono font-medium">{slot.startTime}</span>
+                            <span className="text-[9px] opacity-75">إلى {slot.endTime}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {/* Manual time selector for fine tuning */}
+                  <div className="pt-2 border-t mt-2">
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div>
+                        <Label className="text-[11px] text-muted-foreground">الوقت المختار (من):</Label>
+                        <Input
+                          type="time"
+                          value={startTime}
+                          onChange={(e) => setStartTime(e.target.value)}
+                          className="h-8 font-mono text-xs"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-[11px] text-muted-foreground">الوقت المختار (إلى):</Label>
+                        <Input
+                          type="time"
+                          value={endTime}
+                          onChange={(e) => setEndTime(e.target.value)}
+                          className="h-8 font-mono text-xs"
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
+              ) : (
+                /* Fallback if slots data not yet available */
+                <div className="space-y-2 bg-muted/20 p-3 rounded-lg border">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Label className="text-xs flex items-center gap-1">
+                        <Clock className="size-3.5 text-primary" />
+                        من الساعة
+                      </Label>
+                      <Input
+                        type="time"
+                        value={startTime}
+                        onChange={(e) => setStartTime(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs flex items-center gap-1">
+                        <Clock className="size-3.5 text-primary" />
+                        إلى الساعة
+                      </Label>
+                      <Input
+                        type="time"
+                        value={endTime}
+                        onChange={(e) => setEndTime(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <div className="space-y-1">
                 <Label className="text-xs">نوع الكشف</Label>

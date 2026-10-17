@@ -43,6 +43,7 @@ interface AppointmentItem {
     fullName: string;
     phone: string;
     gender: string;
+    age?: number | null;
     dateOfBirth: string | null;
   };
   doctor: {

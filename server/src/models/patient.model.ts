@@ -8,6 +8,7 @@ export interface IPatient extends Document {
   searchName: string;
   phone: string;
   gender: 'MALE' | 'FEMALE';
+  age?: number;
   dateOfBirth?: Date;
   address?: string;
   allergies: string[];
@@ -26,6 +27,7 @@ const PatientSchema = new Schema(
     searchName: { type: String, required: true, index: true },
     phone: { type: String, required: true, index: true },
     gender: { type: String, enum: ['MALE', 'FEMALE'], required: true },
+    age: { type: Number },
     dateOfBirth: { type: Date },
     address: { type: String },
     allergies: { type: [String], default: [] },

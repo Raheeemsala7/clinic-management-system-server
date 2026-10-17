@@ -6,6 +6,7 @@ export interface PatientBasic {
   fullName: string;
   phone: string;
   gender: string;
+  age?: number | null;
   dateOfBirth: string | null;
   address: string | null;
   createdAt: string;
