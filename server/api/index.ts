@@ -17,7 +17,12 @@ async function bootstrapServer(): Promise<Express> {
     logger: ['error', 'warn', 'log'],
   });
 
-  app.use(helmet());
+  expressApp.disable('x-powered-by');
+  app.use(
+    helmet({
+      hidePoweredBy: false,
+    }),
+  );
 
   app.enableCors({
     origin: (origin, callback) => {
