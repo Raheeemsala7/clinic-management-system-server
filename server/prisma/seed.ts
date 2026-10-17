@@ -1,4 +1,4 @@
-import { PrismaClient, Role, AppointmentSource, AppointmentType, AppointmentStatus, VisitStatus } from '@prisma/client';
+import { PrismaClient, Role, AppointmentSource, AppointmentType, AppointmentStatus, VisitStatus, Patient } from '@prisma/client';
 import * as argon2 from 'argon2';
 import { faker } from '@faker-js/faker';
 
@@ -92,7 +92,7 @@ async function main() {
     'رانيا محمد', 'حسام الدين', 'شيماء وليد', 'زياد عمر', 'نهال حسني',
   ];
 
-  const patients = [];
+  const patients: Patient[] = [];
   for (let i = 0; i < 20; i++) {
     const name = arabicNames[i];
     const patient = await prisma.patient.create({

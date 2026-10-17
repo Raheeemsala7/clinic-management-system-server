@@ -16,7 +16,12 @@ export interface DoctorStatusValue {
 /** Active doctors. Cached per-request so multiple components share one call. */
 export const getDoctors = cache(async (): Promise<DoctorOption[]> => {
   try {
-    return await api.get<DoctorOption[]>('/users/doctors');
+    const res = await api.get<DoctorOption[] | { data: DoctorOption[] }>('/users/doctors');
+    if (Array.isArray(res)) return res;
+    if (res && typeof res === 'object' && 'data' in res && Array.isArray((res as { data: DoctorOption[] }).data)) {
+      return (res as { data: DoctorOption[] }).data;
+    }
+    return [];
   } catch {
     return [];
   }

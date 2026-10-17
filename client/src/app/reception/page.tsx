@@ -1,5 +1,6 @@
-﻿import { requireRole } from '@/lib/session';
-import { api } from '@/lib/api/client';
+import { requireRole } from '@/lib/session';
+import { getPrimaryDoctor } from '@/lib/doctor';
+import { getTodayQueue, getDoctorStatus } from '@/features/queue/queries';
 import { QueueBoard } from './queue-board';
 import { ar } from '@/messages/ar';
 import type { QueueEntry, DoctorStatus } from '@/features/queue/queries';
@@ -9,19 +10,26 @@ export const dynamic = 'force-dynamic';
 export default async function ReceptionHomePage() {
   const user = await requireRole(['RECEPTION', 'ADMIN']);
 
-  // Fetch the doctor to get doctorId (single doctor in v1 â€” first DOCTOR user)
-  const usersResult = await api.get<{ data: Array<{ id: string; role: string }> }>('/users');
-  const doctor = usersResult.data.find((u) => u.role === 'DOCTOR');
+  // Fetch the doctor to get doctorId (single doctor in v1 — first DOCTOR user)
+  const doctor = await getPrimaryDoctor();
   const doctorId = doctor?.id ?? '';
 
-  const [queue, doctorStatus] = await Promise.all([
-    doctorId
-      ? api.get<QueueEntry[]>(`/queue/today?doctorId=${doctorId}`)
-      : Promise.resolve<QueueEntry[]>([]),
-    doctorId
-      ? api.get<DoctorStatus>(`/doctor-status?doctorId=${doctorId}`)
-      : Promise.resolve<DoctorStatus>({ doctorId: '', status: 'AVAILABLE', updatedAt: '' }),
-  ]);
+  let queue: QueueEntry[] = [];
+  let doctorStatus: DoctorStatus = { doctorId: '', status: 'AVAILABLE', updatedAt: '' };
+
+  if (doctorId) {
+    const [queueResult, statusResult] = await Promise.allSettled([
+      getTodayQueue(doctorId),
+      getDoctorStatus(doctorId),
+    ]);
+
+    if (queueResult.status === 'fulfilled') {
+      queue = queueResult.value ?? [];
+    }
+    if (statusResult.status === 'fulfilled') {
+      doctorStatus = statusResult.value ?? { doctorId, status: 'AVAILABLE', updatedAt: '' };
+    }
+  }
 
   return (
     <div className="space-y-4">
