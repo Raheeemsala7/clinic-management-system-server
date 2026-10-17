@@ -24,6 +24,7 @@ async function transitionAppointment(
     revalidatePath('/reception');
     revalidatePath('/doctor');
     revalidatePath('/admin');
+    revalidatePath('/admin/appointments');
     return { success: true };
   } catch (err) {
     if (err instanceof ApiError) {

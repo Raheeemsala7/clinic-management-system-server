@@ -48,6 +48,25 @@ export class ClosingService {
     };
   }
 
+  async getClosing(date: string) {
+    return this.prisma.dailyClosing.findUnique({
+      where: { clinicDate: date },
+      include: {
+        closedBy: { select: { id: true, name: true, username: true } },
+      },
+    });
+  }
+
+  async getHistory(limit = 30) {
+    return this.prisma.dailyClosing.findMany({
+      orderBy: { clinicDate: 'desc' },
+      take: limit,
+      include: {
+        closedBy: { select: { id: true, name: true, username: true } },
+      },
+    });
+  }
+
   async close(dto: CreateClosingDto, actor: JwtPayload, ip?: string) {
     const tz = this.configService.get<string>('clinic.timezone', 'Africa/Cairo');
     const today = getTodayClinicDate(tz);

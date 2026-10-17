@@ -1,4 +1,4 @@
-﻿import { requireRole } from '@/lib/session';
+import { requireRole } from '@/lib/session';
 import { api } from '@/lib/api/client';
 import { ar } from '@/messages/ar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,10 +22,16 @@ export default async function ReceptionClosingPage() {
   let alreadyClosed = false;
 
   try {
-    preview = await api.get<ClosingPreview>(`/closing/preview?date=${today}`);
-  } catch (err: unknown) {
-    const code = (err as { code?: string }).code;
-    if (code === 'ALREADY_CLOSED') alreadyClosed = true;
+    const [p, s] = await Promise.all([
+      api.get<ClosingPreview>(`/closing/preview?date=${today}`).catch(() => null),
+      api.get<{ id: string; reopenedAt: string | null } | null>(`/closing/status?date=${today}`).catch(() => null),
+    ]);
+    preview = p;
+    if (s && !s.reopenedAt) {
+      alreadyClosed = true;
+    }
+  } catch {
+    // fallback
   }
 
   return (
@@ -50,11 +56,11 @@ export default async function ReceptionClosingPage() {
                 <span className="font-semibold">{formatMoney(preview.expectedCash)}</span>
               </div>
               <div className="flex justify-between text-muted-foreground">
-                <span>ط§ظ„ظ…ط¯ظپظˆط¹ط§طھ ط§ظ„ظ†ظ‚ط¯ظٹط©</span>
+                <span>{ar.closing.totalCashPayments}</span>
                 <span>{formatMoney(preview.totalCashPayments)}</span>
               </div>
               <div className="flex justify-between text-muted-foreground">
-                <span>ط§ظ„ظ…طµط±ظˆظپط§طھ ط§ظ„ظ…ط¹طھظ…ط¯ط©</span>
+                <span>{ar.closing.totalApprovedExpenses}</span>
                 <span>- {formatMoney(preview.totalApprovedExpenses)}</span>
               </div>
             </CardContent>

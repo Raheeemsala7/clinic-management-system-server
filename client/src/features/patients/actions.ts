@@ -48,3 +48,12 @@ export async function createPatientAction(
     return { success: false, error: ar.errors.INTERNAL_SERVER_ERROR };
   }
 }
+
+export async function getPatientSummaryAction(patientId: string) {
+  await requireRole(['ADMIN', 'DOCTOR']);
+  try {
+    return await api.get<import('./queries').PatientSummary>(`/patients/${patientId}/summary`);
+  } catch {
+    return null;
+  }
+}

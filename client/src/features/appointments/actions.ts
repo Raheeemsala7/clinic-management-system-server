@@ -42,6 +42,7 @@ export async function createAppointmentAction(
     const appointment = await api.post<{ id: string }>('/appointments', parsed.data);
     revalidatePath('/reception');
     revalidatePath('/admin');
+    revalidatePath('/admin/appointments');
     return { success: true, appointmentId: appointment.id };
   } catch (err) {
     if (err instanceof ApiError) return { success: false, error: err.arabicMessage };

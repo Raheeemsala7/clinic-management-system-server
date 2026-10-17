@@ -28,10 +28,24 @@ export class ClosingController {
   constructor(private service: ClosingService) {}
 
   @Get('preview')
-  @Roles(Role.ADMIN)
-  @ApiOperation({ summary: 'Preview closing for a date [A]' })
+  @Roles(Role.ADMIN, Role.RECEPTION)
+  @ApiOperation({ summary: 'Preview closing for a date [A,R]' })
   async preview(@Query('date') date: string) {
     return this.service.getPreview(date);
+  }
+
+  @Get('status')
+  @Roles(Role.ADMIN, Role.RECEPTION)
+  @ApiOperation({ summary: 'Get closing record for a date [A,R]' })
+  async status(@Query('date') date: string) {
+    return this.service.getClosing(date);
+  }
+
+  @Get('history')
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'List closing history [A]' })
+  async history() {
+    return this.service.getHistory();
   }
 
   @Post()
