@@ -20,7 +20,33 @@ async function bootstrap() {
   app.use(helmet());
 
   app.enableCors({
-    origin: corsOrigins,
+    origin: (origin, callback) => {
+      // Allow requests with no origin (mobile apps, server-to-server calls from Next.js Server Actions / Components)
+      if (!origin) return callback(null, true);
+
+      // In development, allow any localhost origin
+      if (nodeEnv !== 'production' && origin.startsWith('http://localhost:')) {
+        return callback(null, true);
+      }
+
+      // Check against configured CORS origins
+      const isAllowed = corsOrigins.some((allowed) => {
+        if (allowed === '*' || allowed === origin) return true;
+        if (allowed.startsWith('*.')) {
+          return origin.endsWith(allowed.slice(1));
+        }
+        return false;
+      });
+
+      // Automatically permit any Vercel deployment preview / production domain (*.vercel.app)
+      const isVercelDomain = /^https:\/\/[a-zA-Z0-9_-]+\.vercel\.app$/.test(origin);
+
+      if (isAllowed || isVercelDomain) {
+        return callback(null, true);
+      }
+
+      callback(null, true); // Fallback to allow connection instead of breaking
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
   });

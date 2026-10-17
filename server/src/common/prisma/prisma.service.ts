@@ -4,6 +4,7 @@ import { PrismaClient } from '@prisma/client';
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(PrismaService.name);
+  private keepAliveTimer: NodeJS.Timeout | null = null;
 
   constructor() {
     super({
@@ -29,6 +30,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
       try {
         await this.$connect();
         this.logger.log('Database connected');
+        this.startKeepAlive();
         return;
       } catch (err) {
         attempts++;
@@ -39,7 +41,24 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
     }
   }
 
+  private startKeepAlive() {
+    // Neon auto-suspends compute after 5 minutes of inactivity.
+    // Ping every 2.5 minutes (150,000ms) with SELECT 1 to keep connection warm and prevent scale-to-zero.
+    if (this.keepAliveTimer) clearInterval(this.keepAliveTimer);
+    this.keepAliveTimer = setInterval(async () => {
+      try {
+        await this.$queryRaw`SELECT 1`;
+      } catch (err) {
+        this.logger.debug('Keep-alive ping failed, will reconnect on next request');
+      }
+    }, 150000);
+  }
+
   async onModuleDestroy() {
+    if (this.keepAliveTimer) {
+      clearInterval(this.keepAliveTimer);
+      this.keepAliveTimer = null;
+    }
     await this.$disconnect();
     this.logger.log('Database disconnected');
   }
