@@ -1,0 +1,86 @@
+import { checkAuth } from '@/proxy';
+import { api } from '@/lib/api/client';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ar } from '@/messages/ar';
+import { formatMoney, todayClinicDate } from '@/lib/utils';
+
+export const dynamic = 'force-dynamic';
+
+interface SummaryReport {
+  income: string;
+  expenses: string;
+  net: string;
+  visitCount: number;
+  avgPerVisit: string;
+}
+
+export default async function AdminDashboardPage() {
+  checkAuth(['ADMIN']);
+
+  const today = todayClinicDate();
+  const monthStart = today.slice(0, 7) + '-01';
+
+  let summary: SummaryReport | null = null;
+  try {
+    summary = await api.get<SummaryReport>(
+      `/reports/summary?from=${monthStart}&to=${today}`,
+    );
+  } catch {
+    // Summary may fail if no data — show zeros
+  }
+
+  const metrics = [
+    { label: ar.reports.income, value: formatMoney(summary?.income ?? '0') },
+    { label: ar.reports.expenses, value: formatMoney(summary?.expenses ?? '0') },
+    { label: ar.reports.net, value: formatMoney(summary?.net ?? '0') },
+    { label: ar.reports.visits, value: String(summary?.visitCount ?? 0) },
+    { label: ar.reports.avgPerVisit, value: formatMoney(summary?.avgPerVisit ?? '0') },
+  ];
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">{ar.nav.dashboard}</h1>
+        <p className="text-sm text-muted-foreground">
+          {ar.reports.from} {monthStart} {ar.reports.to} {today}
+        </p>
+      </div>
+
+      {/* Summary cards */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        {metrics.map((m) => (
+          <Card key={m.label}>
+            <CardHeader className="pb-1 pt-4 px-4">
+              <CardTitle className="text-xs font-medium text-muted-foreground">{m.label}</CardTitle>
+            </CardHeader>
+            <CardContent className="px-4 pb-4">
+              <p className="text-xl font-bold text-foreground">{m.value}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Quick links */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {[
+          { href: '/admin/payments', label: ar.nav.payments },
+          { href: '/admin/expenses', label: ar.nav.expenses },
+          { href: '/admin/closing', label: ar.nav.closing },
+          { href: '/admin/reports', label: ar.nav.reports },
+          { href: '/admin/users', label: ar.nav.users },
+          { href: '/admin/settings', label: ar.nav.settings },
+          { href: '/admin/audit', label: ar.nav.audit },
+          { href: '/admin/patients', label: ar.nav.patients },
+        ].map((link) => (
+          <a
+            key={link.href}
+            href={link.href}
+            className="flex items-center justify-center rounded-lg border bg-card p-4 text-sm font-medium hover:bg-secondary transition-colors min-h-touch"
+          >
+            {link.label}
+          </a>
+        ))}
+      </div>
+    </div>
+  );
+}
