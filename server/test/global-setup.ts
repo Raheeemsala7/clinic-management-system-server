@@ -1,7 +1,4 @@
 import { execSync } from 'child_process';
-import * as dotenv from 'dotenv';
-
-dotenv.config({ path: '.env' });
 
 export default async function globalSetup() {
   const testDbUrl = process.env.TEST_DATABASE_URL;
