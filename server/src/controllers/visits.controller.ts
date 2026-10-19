@@ -41,17 +41,6 @@ export class VisitsController {
     );
     res.status(201).json(result);
   });
-
-  addAttachment = asyncHandler(async (req: Request, res: Response) => {
-    const ip = req.ip || req.socket.remoteAddress || '';
-    const result = await VisitsService.addAttachment(
-      req.params.visitId,
-      req.file,
-      req.user!.id,
-      ip,
-    );
-    res.status(201).json(result);
-  });
 }
 
 export const visitsController = new VisitsController();

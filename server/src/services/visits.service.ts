@@ -1,5 +1,4 @@
-import fs from 'fs';
-import { Visit, Patient, Prescription, Attachment, Drug } from '../models';
+import { Visit, Patient, Prescription, Drug } from '../models';
 import { NotFoundError, ConflictError, BadRequestError } from '../utils/errors';
 import { logAudit } from '../utils/audit';
 
@@ -8,14 +7,11 @@ export class VisitsService {
     const visit = await Visit.findById(id);
     if (!visit) throw new NotFoundError('Visit not found');
 
-    const [patient, prescriptions, attachments] = await Promise.all([
+    const [patient, prescriptions] = await Promise.all([
       Patient.findById(visit.patientId).select(
         'id fullName phone gender dateOfBirth allergies chronicConditions generalNotes',
       ),
       Prescription.find({ visitId: visit.id }).sort({ versionNumber: -1 }),
-      Attachment.find({ visitId: visit.id, deletedAt: null }).select(
-        'id fileName mimeType sizeBytes createdAt',
-      ),
     ]);
 
     await logAudit({
@@ -29,7 +25,7 @@ export class VisitsService {
       ...visit.toJSON(),
       patient: patient ? patient.toJSON() : null,
       prescriptions: prescriptions.map((p) => p.toJSON()),
-      attachments: attachments.map((a) => a.toJSON()),
+      attachments: [],
     };
   }
 
@@ -177,43 +173,5 @@ export class VisitsService {
     });
 
     return prescription.toJSON();
-  }
-
-  static async addAttachment(visitId: string, file: Express.Multer.File | undefined, actorId: string, ip = '') {
-    if (!file) {
-      throw new BadRequestError('File is required');
-    }
-
-    const visit = await Visit.findById(visitId);
-    if (!visit) {
-      fs.unlinkSync(file.path);
-      throw new NotFoundError('Visit not found');
-    }
-
-    const count = await Attachment.countDocuments({ visitId, deletedAt: null });
-    if (count >= 10) {
-      fs.unlinkSync(file.path);
-      throw new BadRequestError('Maximum 10 attachments per visit', 'MAX_ATTACHMENTS_EXCEEDED');
-    }
-
-    const attachment = await Attachment.create({
-      visitId,
-      patientId: visit.patientId,
-      uploadedById: actorId,
-      fileName: file.originalname,
-      mimeType: file.mimetype,
-      sizeBytes: file.size,
-      storageKey: file.filename,
-    });
-
-    await logAudit({
-      userId: actorId,
-      action: 'CREATE',
-      entityType: 'Attachment',
-      entityId: attachment.id,
-      ip,
-    });
-
-    return attachment.toJSON();
   }
 }

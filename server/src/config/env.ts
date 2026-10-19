@@ -22,12 +22,6 @@ export const config = {
     timezone: process.env.CLINIC_TIMEZONE || 'Africa/Cairo',
     currency: process.env.CURRENCY_CODE || 'EGP',
   },
-  storage: {
-    localPath: process.env.LOCAL_STORAGE_PATH || './uploads',
-    maxFileSize: 10 * 1024 * 1024, // 10MB
-    maxFilesPerVisit: 10,
-    allowedMimeTypes: ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'],
-  },
   seed: {
     adminUsername: (process.env.SEED_ADMIN_USERNAME || 'admin').toLowerCase().trim(),
     adminPassword: process.env.SEED_ADMIN_PASSWORD || 'Adm@150b852037c3026d',

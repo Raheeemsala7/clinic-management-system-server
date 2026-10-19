@@ -1,4 +1,4 @@
-import { Patient, Visit, Prescription, Attachment, Appointment } from '../models';
+import { Patient, Visit, Prescription, Appointment } from '../models';
 import { normalizeArabic } from '../utils/arabic';
 import { parsePagination, buildPaginatedResult } from '../utils/pagination';
 import { NotFoundError, ForbiddenError, BadRequestError } from '../utils/errors';
@@ -176,9 +176,8 @@ export class PatientsService {
 
     const visitItems = await Promise.all(
       visits.map(async (v) => {
-        const [prescriptions, attachments, appointment] = await Promise.all([
+        const [prescriptions, appointment] = await Promise.all([
           Prescription.find({ visitId: v.id }).sort({ versionNumber: -1 }),
-          Attachment.find({ visitId: v.id, deletedAt: null }).select('id fileName mimeType sizeBytes createdAt'),
           Appointment.findById(v.appointmentId).select('clinicDate type'),
         ]);
 
@@ -195,7 +194,7 @@ export class PatientsService {
           createdAt: v.createdAt.toISOString(),
           updatedAt: v.updatedAt.toISOString(),
           prescriptions: prescriptions.map((p) => p.toJSON()),
-          attachments: attachments.map((a) => a.toJSON()),
+          attachments: [],
           appointment: appointment
             ? { clinicDate: appointment.clinicDate, type: appointment.type }
             : undefined,
