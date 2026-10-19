@@ -9,7 +9,19 @@ export async function connectDB(): Promise<typeof mongoose> {
   }
 
   if (!connectionPromise) {
-    const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/clinic-management';
+    let mongoUri = process.env.MONGODB_URI;
+    if (!mongoUri && process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith('mongodb')) {
+      mongoUri = process.env.DATABASE_URL;
+    }
+
+    if (!mongoUri) {
+      if (process.env.NODE_ENV === 'production' || process.env.VERCEL) {
+        throw new Error(
+          'Missing MONGODB_URI environment variable on Vercel. Please add MONGODB_URI in your Vercel Project Settings > Environment Variables.'
+        );
+      }
+      mongoUri = 'mongodb://localhost:27017/clinic-management';
+    }
     
     connectionPromise = mongoose
       .connect(mongoUri, {

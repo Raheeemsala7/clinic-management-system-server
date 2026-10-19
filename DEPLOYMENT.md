@@ -1,6 +1,6 @@
-# 🚀 دليل نشر النظام كاملاً (الفرونت إند والباك إند) على Vercel
+# 🚀 دليل نشر النظام كاملاً (Express + Next.js + MongoDB) على Vercel
 
-تم تجهيز الباك إند (NestJS) ليعمل كـ **Serverless Function** على Vercel، والفرونت إند (Next.js) ليعمل كمشروع Vercel أصلي.
+تم تجهيز الباك إند (Express.js + MongoDB/Mongoose) ليعمل كـ **Serverless Function** على Vercel، والفرونت إند (Next.js) ليعمل كمشروع Vercel أصلي.
 
 ---
 
@@ -11,36 +11,59 @@
 
 ---
 
-## الخطوة الأولى: رفع الباك إند (NestJS API) على Vercel
+## الخطوة الأولى: إعداد قاعدة بيانات MongoDB Atlas (مهم جداً)
+1. افتح حسابك في [MongoDB Atlas](https://cloud.mongodb.com/).
+2. توجه إلى **Network Access**:
+   - اضغط **Add IP Address**.
+   - اختر **Allow Access from Anywhere (`0.0.0.0/0`)** ثم احفظ.
+   > ⚠️ **تنبيه حاسم:** وظائف Vercel Serverless لا تمتلك IP ثابت. إذا لم تُفعل `0.0.0.0/0` سيتجمد السيرفر عند أي طلب ولن يستجيب!
+3. انسخ رابط الاتصال (Connection String)، مثلاً:
+   `mongodb+srv://user:password@cluster0.xxx.mongodb.net/clinic?retryWrites=true&w=majority`
+
+---
+
+## الخطوة الثانية: رفع الباك إند (Express API) على Vercel
 
 1. افتح [Vercel Dashboard](https://vercel.com/new).
 2. اختر مستودع المشروع (Repository) واضغط **Import**.
 3. غيّر اسم المشروع ليصبح مثلاً: `clinic-api`.
-4. **الخطوة الهامة (Root Directory)**:
+4. **الخطوة الأكثر أهمية (Root Directory)**:
    - اضغط **Edit** بجوار **Root Directory** واكتب أو اختر مجلد: `server`.
+   > ⚠️ **إذا تركت الـ Root Directory فارغاً، سينشر Vercel صفحة فارغة بدون أخطاء ولن يعمل السيرفر إطلاقاً!**
 5. في قسم **Environment Variables** أضف المتغيرات التالية:
    - `NODE_ENV`: `production`
-   - `DATABASE_URL`: رابط اتصال Neon (الـ Pooled URL)
-   - `DIRECT_URL`: رابط اتصال Neon (الـ Direct URL)
+   - `MONGODB_URI`: رابط اتصال MongoDB Atlas الخاص بك
    - `JWT_ACCESS_SECRET`: نص أمان عشوائي لا يقل عن 32 حرفاً
    - `JWT_REFRESH_SECRET`: نص أمان عشوائي لا يقل عن 32 حرفاً
    - `STORAGE_DRIVER`: `local` (أو `s3` عند استخدام تخزين سحابي للمرفقات)
 6. اضغط **Deploy**.
-7. بعد انتهاء النشر، انسخ رابط الباك إند الذي يوفره Vercel، مثلاً:
-   `https://clinic-api-xxx.vercel.app`
+7. بعد انتهاء النشر، افتح الرابط في المتصفح، مثلاً:
+   `https://clinic-api-xxx.vercel.app/`
+   يجب أن يعيد لك استجابة JSON سليمة:
+   ```json
+   {
+     "status": "ok",
+     "service": "Clinic Management API (Express + MongoDB)",
+     "version": "1.0.0"
+   }
+   ```
 
 ---
 
-## الخطوة الثانية: تشغيل Migrations قاعدة البيانات
-بما أن Vercel يعمل كـ Serverless، يجب تطبيق الميجريشنز على قاعدة بيانات Neon لمرة واحدة:
-- من جهازك في مجلد `server`:
-  ```bash
-  npx prisma migrate deploy
-  ```
+## الخطوة الثالثة: تشغيل الـ Seed لإنشاء الحسابات الأولية
+من جهازك محلياً في مجلد `server`، تأكد أن ملف `.env` يحتوي على نفس رابط `MONGODB_URI` الخاص بـ Atlas، ثم شغّل:
+```bash
+pnpm run seed
+```
+أو
+```bash
+npm run seed
+```
+سيقوم هذا بإنشاء حسابات الأدمن، والدكتور، والريسبشن، والإعدادات الافتراضية.
 
 ---
 
-## الخطوة الثالثة: رفع الفرونت إند (Next.js) على Vercel
+## الخطوة الرابعة: رفع الفرونت إند (Next.js) على Vercel
 
 1. في Vercel Dashboard، اضغط **Add New…** -> **Project**.
 2. اختر نفس المستودع مرة أخرى.
@@ -58,10 +81,11 @@
 
 ---
 
-## 💡 كيف يتعامل النظام مع بيئة Serverless على Vercel؟
-1. **تم إنشاء Serverless Handler**:
-   - تم تزويد الباك إند بـ `server/api/index.ts` وملف `server/vercel.json` مع خاصية Caching لـ NestJS Instance لتسريع الاستجابة وتقليل وقت الـ Cold Start.
-2. **الاتصال اللحظي (Fallback Polling)**:
-   - إذا تم فصل WebSockets بسبب طبيعة الـ Serverless، يقوم الفرونت إند تلقائياً بتفعيل الـ **Polling التلقائي كل 5 ثوانٍ** لتحديث طابور الاستقبال وشاشة الطبيب دون أي توقف.
-3. **CORS الذكي**:
-   - تم ضبط الـ CORS في الباك إند ليسمح بجميع دومينات Vercel تلقائياً (`*.vercel.app`) دون الحاجة لضبط معقد.
+## 🛠️ استكشاف الأخطاء الشائعة (Troubleshooting)
+
+| المشكلة | السبب المحتمل | الحل |
+| :--- | :--- | :--- |
+| شاشة بيضاء أو 404 ولا يوجد أي أخطاء في الـ Logs | لم يتم ضبط **Root Directory** على `server` | من إعدادات Vercel -> General -> غيّر Root Directory إلى `server` واضغط Redeploy |
+| الطلبات تستغرق وقتاً طويلاً ثم تعطي 504 Gateway Timeout | لم يتم السماح لـ Vercel بالاتصال في MongoDB Atlas | أضف `0.0.0.0/0` في MongoDB Atlas -> Network Access |
+| خطأ `Missing MONGODB_URI` أو فشل الاتصال بقاعدة البيانات | لم تتم إضافة متغير `MONGODB_URI` في Vercel | أضف `MONGODB_URI` في Project Settings -> Environment Variables ثم Redeploy |
+| خطأ CORS عند الاتصال من الفرونت إند | اختلاف الدومينات | تم ضبط CORS في السيرفر تلقائياً للسماح بجميع دومينات `vercel.app` |

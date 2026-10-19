@@ -46,7 +46,7 @@ app.use(async (_req: Request, _res: Response, next: NextFunction) => {
 });
 
 // Health check endpoints
-app.get(['/', '/health'], (_req: Request, res: Response) => {
+app.get(['/', '/health', '/api', '/api/health'], (_req: Request, res: Response) => {
   res.json({
     status: 'ok',
     service: 'Clinic Management API (Express + MongoDB)',
@@ -58,6 +58,7 @@ app.get(['/', '/health'], (_req: Request, res: Response) => {
 // Mount Central API Router
 app.use('/api/v1', apiRouter);
 app.use('/v1', apiRouter);
+app.use('/api', apiRouter);
 
 // 404 handler
 app.use((req: Request, res: Response) => {
