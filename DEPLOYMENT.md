@@ -5,18 +5,21 @@
 ---
 
 ## 📌 الفكرة الأساسية:
+
 في Vercel، يتم إنشاء **مشروعين منفصلين (Two Projects)** من نفس الـ GitHub Repository:
+
 1. **مشروع 1 (الباك إند)**: يقرأ من مجلد `server`.
 2. **مشروع 2 (الفرونت إند)**: يقرأ من مجلد `client`.
 
 ---
 
 ## الخطوة الأولى: إعداد قاعدة بيانات MongoDB Atlas (مهم جداً)
+
 1. افتح حسابك في [MongoDB Atlas](https://cloud.mongodb.com/).
 2. توجه إلى **Network Access**:
    - اضغط **Add IP Address**.
    - اختر **Allow Access from Anywhere (`0.0.0.0/0`)** ثم احفظ.
-   > ⚠️ **تنبيه حاسم:** وظائف Vercel Serverless لا تمتلك IP ثابت. إذا لم تُفعل `0.0.0.0/0` سيتجمد السيرفر عند أي طلب ولن يستجيب!
+     > ⚠️ **تنبيه حاسم:** وظائف Vercel Serverless لا تمتلك IP ثابت. إذا لم تُفعل `0.0.0.0/0` سيتجمد السيرفر عند أي طلب ولن يستجيب!
 3. انسخ رابط الاتصال (Connection String)، مثلاً:
    `mongodb+srv://user:password@cluster0.xxx.mongodb.net/clinic?retryWrites=true&w=majority`
 
@@ -29,7 +32,7 @@
 3. غيّر اسم المشروع ليصبح مثلاً: `clinic-api`.
 4. **الخطوة الأكثر أهمية (Root Directory)**:
    - اضغط **Edit** بجوار **Root Directory** واكتب أو اختر مجلد: `server`.
-   > ⚠️ **إذا تركت الـ Root Directory فارغاً، سينشر Vercel صفحة فارغة بدون أخطاء ولن يعمل السيرفر إطلاقاً!**
+     > ⚠️ **إذا تركت الـ Root Directory فارغاً، سينشر Vercel صفحة فارغة بدون أخطاء ولن يعمل السيرفر إطلاقاً!**
 5. في قسم **Environment Variables** أضف المتغيرات التالية:
    - `NODE_ENV`: `production`
    - `MONGODB_URI`: رابط اتصال MongoDB Atlas الخاص بك
@@ -50,14 +53,19 @@
 ---
 
 ## الخطوة الثالثة: تشغيل الـ Seed لإنشاء الحسابات الأولية
+
 من جهازك محلياً في مجلد `server`، تأكد أن ملف `.env` يحتوي على نفس رابط `MONGODB_URI` الخاص بـ Atlas، ثم شغّل:
+
 ```bash
 pnpm run seed
 ```
+
 أو
+
 ```bash
 npm run seed
 ```
+
 سيقوم هذا بإنشاء حسابات الأدمن، والدكتور، والريسبشن، والإعدادات الافتراضية.
 
 ---
@@ -82,9 +90,9 @@ npm run seed
 
 ## 🛠️ استكشاف الأخطاء الشائعة (Troubleshooting)
 
-| المشكلة | السبب المحتمل | الحل |
-| :--- | :--- | :--- |
-| شاشة بيضاء أو 404 ولا يوجد أي أخطاء في الـ Logs | لم يتم ضبط **Root Directory** على `server` | من إعدادات Vercel -> General -> غيّر Root Directory إلى `server` واضغط Redeploy |
-| الطلبات تستغرق وقتاً طويلاً ثم تعطي 504 Gateway Timeout | لم يتم السماح لـ Vercel بالاتصال في MongoDB Atlas | أضف `0.0.0.0/0` في MongoDB Atlas -> Network Access |
-| خطأ `Missing MONGODB_URI` أو فشل الاتصال بقاعدة البيانات | لم تتم إضافة متغير `MONGODB_URI` في Vercel | أضف `MONGODB_URI` في Project Settings -> Environment Variables ثم Redeploy |
-| خطأ CORS عند الاتصال من الفرونت إند | اختلاف الدومينات | تم ضبط CORS في السيرفر تلقائياً للسماح بجميع دومينات `vercel.app` |
+| المشكلة                                                  | السبب المحتمل                                     | الحل                                                                            |
+| :------------------------------------------------------- | :------------------------------------------------ | :------------------------------------------------------------------------------ |
+| شاشة بيضاء أو 404 ولا يوجد أي أخطاء في الـ Logs          | لم يتم ضبط **Root Directory** على `server`        | من إعدادات Vercel -> General -> غيّر Root Directory إلى `server` واضغط Redeploy |
+| الطلبات تستغرق وقتاً طويلاً ثم تعطي 504 Gateway Timeout  | لم يتم السماح لـ Vercel بالاتصال في MongoDB Atlas | أضف `0.0.0.0/0` في MongoDB Atlas -> Network Access                              |
+| خطأ `Missing MONGODB_URI` أو فشل الاتصال بقاعدة البيانات | لم تتم إضافة متغير `MONGODB_URI` في Vercel        | أضف `MONGODB_URI` في Project Settings -> Environment Variables ثم Redeploy      |
+| خطأ CORS عند الاتصال من الفرونت إند                      | اختلاف الدومينات                                  | تم ضبط CORS في السيرفر تلقائياً للسماح بجميع دومينات `vercel.app`               |
