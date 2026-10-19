@@ -6,7 +6,6 @@ export * from './queue.controller';
 export * from './visits.controller';
 export * from './prescriptions.controller';
 export * from './drugs.controller';
-export * from './attachments.controller';
 export * from './payments.controller';
 export * from './expenses.controller';
 export * from './closing.controller';

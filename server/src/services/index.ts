@@ -6,7 +6,6 @@ export * from './queue.service';
 export * from './visits.service';
 export * from './prescriptions.service';
 export * from './drugs.service';
-export * from './attachments.service';
 export * from './payments.service';
 export * from './expenses.service';
 export * from './closing.service';
