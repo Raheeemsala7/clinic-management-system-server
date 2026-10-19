@@ -35,7 +35,6 @@
    - `MONGODB_URI`: رابط اتصال MongoDB Atlas الخاص بك
    - `JWT_ACCESS_SECRET`: نص أمان عشوائي لا يقل عن 32 حرفاً
    - `JWT_REFRESH_SECRET`: نص أمان عشوائي لا يقل عن 32 حرفاً
-   - `STORAGE_DRIVER`: `local` (أو `s3` عند استخدام تخزين سحابي للمرفقات)
 6. اضغط **Deploy**.
 7. بعد انتهاء النشر، افتح الرابط في المتصفح، مثلاً:
    `https://clinic-api-xxx.vercel.app/`
