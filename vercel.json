@@ -1,0 +1,14 @@
+{
+  "functions": {
+    "server/api/index.ts": {
+      "includeFiles": "server/node_modules/argon2/**",
+      "maxDuration": 30
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/server/api"
+    }
+  ]
+}
