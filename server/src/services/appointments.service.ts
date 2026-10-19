@@ -65,8 +65,8 @@ export class AppointmentsService {
     const initialStatus = source === 'WALK_IN' ? 'WAITING' : 'BOOKED';
     const now = new Date();
 
-    // Financial calculations
-    const isExempt = Boolean(dto.isExempt);
+    // Financial calculationsddd
+    const isExempt = Boolean(dto.isExempt)
     const exemptionReason = dto.exemptionReason || null;
     let totalAmount = isExempt ? 0 : Math.max(0, Number(dto.totalAmount || 0));
     let paidAmount = isExempt ? 0 : Math.max(0, Number(dto.paidAmount || 0));
