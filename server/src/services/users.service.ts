@@ -1,8 +1,8 @@
-import argon2 from 'argon2';
 import { User } from '../models';
 import { parsePagination, buildPaginatedResult } from '../utils/pagination';
 import { NotFoundError, ConflictError, BadRequestError } from '../utils/errors';
 import { logAudit } from '../utils/audit';
+import { hashPassword } from '../utils/crypto';
 
 export class UsersService {
   static async getDoctors() {
@@ -46,7 +46,7 @@ export class UsersService {
       throw new ConflictError('Username already in use');
     }
 
-    const passwordHash = await argon2.hash(password);
+    const passwordHash = await hashPassword(password);
     const user = await User.create({
       name,
       username: cleanUsername,
@@ -149,7 +149,7 @@ export class UsersService {
       throw new NotFoundError('User not found');
     }
 
-    user.passwordHash = await argon2.hash(newPassword);
+    user.passwordHash = await hashPassword(newPassword);
     await user.save();
 
     await logAudit({

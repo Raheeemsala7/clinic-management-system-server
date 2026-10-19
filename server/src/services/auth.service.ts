@@ -1,9 +1,8 @@
-import argon2 from 'argon2';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 import { User, RefreshToken } from '../models';
 import { config } from '../config/env';
-import { hashToken, generateToken } from '../utils/crypto';
+import { hashToken, generateToken, verifyPassword } from '../utils/crypto';
 import { UnauthorizedError, ForbiddenError, BadRequestError } from '../utils/errors';
 import { logAudit, logAuditSystem } from '../utils/audit';
 
@@ -59,7 +58,7 @@ export class AuthService {
       throw new UnauthorizedError('Invalid credentials');
     }
 
-    const passwordValid = await argon2.verify(user.passwordHash, password);
+    const passwordValid = await verifyPassword(user.passwordHash, password);
     if (!passwordValid) {
       await logAudit({
         userId: user.id,
