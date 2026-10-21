@@ -3,6 +3,7 @@ import { api } from '@/lib/api/client';
 import { DoctorTodayScreen } from './doctor-today-screen';
 import { getServerI18n } from '@/i18n/server';
 import type { QueueEntry, DoctorStatus } from '@/features/queue/queries';
+import { Stethoscope } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,7 +22,7 @@ interface Visit {
 
 export default async function DoctorTodayPage() {
   const user = await requireRole(['DOCTOR', 'ADMIN']);
-  const { t } = await getServerI18n();
+  const { t, isAr } = await getServerI18n();
 
   const [queue, doctorStatus] = await Promise.all([
     api.get<QueueEntry[]>(`/queue/today?doctorId=${user.id}`),
@@ -50,8 +51,21 @@ export default async function DoctorTodayPage() {
   }
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-bold">{t.nav.today}</h1>
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b pb-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground flex items-center gap-2.5">
+            <Stethoscope className="size-6 text-primary" />
+            <span>{isAr ? 'شاشة كشف اليوم' : "Today's Clinical Session"}</span>
+          </h1>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+            {isAr
+              ? 'متابعة طابور الانتظار الحي وإدارة تدفق المرضى وفحوصات العيادة'
+              : 'Live waiting queue monitoring, patient flow, and clinical examinations'}
+          </p>
+        </div>
+      </div>
+
       <DoctorTodayScreen
         doctorId={user.id}
         initialQueue={queue}
