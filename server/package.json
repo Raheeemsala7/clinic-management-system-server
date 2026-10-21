@@ -9,7 +9,7 @@
     "build": "tsc",
     "vercel-build": "tsc",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "start": "ts-node src/server.ts",
+    "start": "node dist/src/server.js",
     "dev": "ts-node src/server.ts",
     "start:dev": "ts-node src/server.ts",
     "start:prod": "node dist/src/server.js",

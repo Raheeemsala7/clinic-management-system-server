@@ -1,32 +1,23 @@
 # ─── Base ─────────────────────────────────────────────────────────────────────
-FROM node:20-alpine AS base
+FROM node:20-slim AS base
 WORKDIR /app
-RUN apk add --no-cache openssl
-
-# ─── Development ──────────────────────────────────────────────────────────────
-FROM base AS development
-COPY package*.json ./
-RUN npm ci
-COPY . .
-RUN npx prisma generate
-CMD ["npm", "run", "start:dev"]
 
 # ─── Builder ──────────────────────────────────────────────────────────────────
 FROM base AS builder
 COPY package*.json ./
-RUN npm ci
+RUN npm install
 COPY . .
-RUN npx prisma generate
 RUN npm run build
 
 # ─── Production ───────────────────────────────────────────────────────────────
 FROM base AS production
 ENV NODE_ENV=production
-COPY package*.json ./
-RUN npm ci --only=production
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY prisma ./prisma
+WORKDIR /app
 
-EXPOSE 3000
-CMD ["node", "dist/main"]
+COPY package*.json ./
+RUN npm install --only=production
+
+COPY --from=builder /app/dist ./dist
+
+EXPOSE 4000
+CMD ["node", "dist/src/server.js"]
