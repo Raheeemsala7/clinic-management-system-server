@@ -1,12 +1,13 @@
+import './globals.css';
 import type { Metadata } from 'next';
 import { Cairo, Inter } from 'next/font/google';
-import { cookies } from 'next/headers';
 import { hasLocale, NextIntlClientProvider } from 'next-intl';
-import { getMessages, setRequestLocale } from 'next-intl/server';
-import { notFound } from 'next/navigation';
-import { routing } from '@/i18n/routing';
 import { Toaster } from '@/components/ui/toast';
-import './globals.css';
+import { routing } from '@/i18n/routing';
+import { notFound } from 'next/navigation';
+import { getMessages, setRequestLocale } from 'next-intl/server';
+
+
 
 const cairo = Cairo({
   subsets: ['arabic', 'latin'],
@@ -27,29 +28,25 @@ export const metadata: Metadata = {
 
 type Props = {
   children: React.ReactNode;
-  params?: Promise<{ locale?: string }>;
+  params: Promise<{ locale: string }>;
 };
 
-export default async function RootLayout({ children, params }: Props) {
-  const resolvedParams = params ? await params : undefined;
-  const cookieStore = await cookies();
-  const localeCookie = cookieStore.get('NEXT_LOCALE')?.value;
 
-  const candidate = resolvedParams?.locale || localeCookie || routing.defaultLocale;
-  if (!hasLocale(routing.locales, candidate)) {
+export default async function RootLayout({ children, params }: Props) {
+  const { locale } = await params;
+
+  if (!hasLocale(routing.locales, locale)) {
     notFound();
   }
 
-  const locale = candidate;
   setRequestLocale(locale);
   const messages = await getMessages();
-  const dir = locale === 'ar' ? 'rtl' : 'ltr';
+  const dir = locale === "ar" ? "rtl" : "ltr";
 
   return (
     <html
       lang={locale}
       dir={dir}
-      className={`${cairo.variable} ${inter.variable}`}
     >
       <body className={`min-h-screen bg-background antialiased ${dir === 'rtl' ? 'font-sans' : 'font-sans'}`}>
         <NextIntlClientProvider locale={locale} messages={messages}>
