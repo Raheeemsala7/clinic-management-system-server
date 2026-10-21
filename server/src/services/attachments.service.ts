@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
 import { v4 as uuidv4 } from 'uuid';
 import FileType from 'file-type';
 import { BadRequestError } from '../utils/errors';
@@ -8,12 +9,26 @@ const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
 const MAX_FILES_PER_BATCH = 5;
 
-const UPLOAD_DIR = path.resolve(process.cwd(), 'uploads/appointments');
+// On serverless environments (like Vercel / AWS Lambda), the root filesystem (/var/task)
+// is read-only. Only /tmp (os.tmpdir()) is writable.
+const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+const UPLOAD_DIR = isServerless
+  ? path.join(os.tmpdir(), 'clinic_uploads', 'appointments')
+  : path.resolve(process.cwd(), process.env.LOCAL_STORAGE_PATH || 'uploads/appointments');
 
-// Ensure upload directory exists on initialization
-if (!fs.existsSync(UPLOAD_DIR)) {
-  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+function ensureUploadDir(): void {
+  try {
+    if (!fs.existsSync(UPLOAD_DIR)) {
+      fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+    }
+  } catch (err) {
+    // Non-fatal warning so module load never crashes on read-only environments
+    console.warn('⚠️ [STORAGE] Upload directory warning:', err);
+  }
 }
+
+// Attempt initialization without throwing on import
+ensureUploadDir();
 
 export interface StoredAttachment {
   id: string;
@@ -62,6 +77,9 @@ export class AttachmentsService {
         'Invalid file type. Only JPEG, PNG, and WebP images are permitted',
       );
     }
+
+    // Ensure directory exists right before write
+    ensureUploadDir();
 
     const safeExt = detectedType.ext;
     const fileId = uuidv4();
