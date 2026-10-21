@@ -17,12 +17,12 @@ export async function connectDB(): Promise<typeof mongoose> {
     if (!mongoUri) {
       if (process.env.NODE_ENV === 'production' || process.env.VERCEL) {
         throw new Error(
-          'Missing MONGODB_URI environment variable in production. Please configure MONGODB_URI in your server environment variables.'
+          'Missing MONGODB_URI environment variable in production. Please configure MONGODB_URI in your server environment variables. نب'
         );
       }
       mongoUri = 'mongodb://localhost:27017/clinic-management';
     }
-    
+
     // Mask password in logs
     const maskedUri = mongoUri.replace(/\/\/([^:]+):([^@]+)@/, '//$1:****@');
     console.log(`🔌 [DB] Connecting to MongoDB at: ${maskedUri}`);
