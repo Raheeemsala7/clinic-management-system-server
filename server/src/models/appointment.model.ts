@@ -2,6 +2,23 @@ import mongoose, { Schema, Document } from 'mongoose';
 import { v4 as uuidv4 } from 'uuid';
 import { transformOptions } from './base';
 
+export interface IAttachmentMeta {
+  id: string;
+  fileName: string;
+  fileSize: number;
+  mimeType: string;
+  url: string;
+  uploadedAt: Date;
+}
+
+export type AppointmentType =
+  | 'EXAMINATION'
+  | 'FOLLOW_UP'
+  | 'POST_OPERATIVE'
+  | 'LAB_TESTS_IMAGING'
+  | 'TEST_RESULTS_REVIEW'
+  | 'CONSULTATION';
+
 export interface IAppointment extends Document {
   id: string;
   patientId: string;
@@ -9,7 +26,7 @@ export interface IAppointment extends Document {
   clinicDate: string;
   source: 'SCHEDULED' | 'WALK_IN';
   scheduledAt?: Date;
-  type: 'CONSULTATION' | 'FOLLOW_UP';
+  type: AppointmentType;
   status: 'BOOKED' | 'WAITING' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW';
   queueNumber: number;
   queueOrder: number;
@@ -27,6 +44,7 @@ export interface IAppointment extends Document {
   isExempt: boolean;
   exemptionReason?: string;
   notes?: string;
+  attachments?: IAttachmentMeta[];
   createdById: string;
   createdAt: Date;
   updatedAt: Date;
@@ -42,7 +60,18 @@ const AppointmentSchema = new Schema(
     scheduledAt: { type: Date },
     startTime: { type: String },
     endTime: { type: String },
-    type: { type: String, enum: ['CONSULTATION', 'FOLLOW_UP'], required: true },
+    type: {
+      type: String,
+      enum: [
+        'EXAMINATION',
+        'FOLLOW_UP',
+        'POST_OPERATIVE',
+        'LAB_TESTS_IMAGING',
+        'TEST_RESULTS_REVIEW',
+        'CONSULTATION',
+      ],
+      required: true,
+    },
     status: {
       type: String,
       enum: ['BOOKED', 'WAITING', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED', 'NO_SHOW'],
@@ -68,6 +97,16 @@ const AppointmentSchema = new Schema(
     isExempt: { type: Boolean, default: false },
     exemptionReason: { type: String },
     notes: { type: String },
+    attachments: [
+      {
+        id: { type: String, default: uuidv4 },
+        fileName: { type: String, required: true },
+        fileSize: { type: Number, required: true },
+        mimeType: { type: String, required: true },
+        url: { type: String, required: true },
+        uploadedAt: { type: Date, default: Date.now },
+      },
+    ],
     createdById: { type: String, required: true, ref: 'User' },
   },
   { timestamps: true, toJSON: transformOptions, toObject: transformOptions },

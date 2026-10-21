@@ -26,3 +26,23 @@ export function normalizeArabic(text: string): string {
 
   return normalized;
 }
+
+export function validateFourPartName(name: string): {
+  isValid: boolean;
+  normalized: string;
+  partsCount: number;
+} {
+  if (!name || typeof name !== 'string') {
+    return { isValid: false, normalized: '', partsCount: 0 };
+  }
+
+  // Trim and collapse multiple spaces into a single space
+  const normalized = name.trim().replace(/\s+/g, ' ');
+  const parts = normalized.split(' ').filter((part) => part.length > 0);
+
+  return {
+    isValid: parts.length >= 4,
+    normalized,
+    partsCount: parts.length,
+  };
+}
