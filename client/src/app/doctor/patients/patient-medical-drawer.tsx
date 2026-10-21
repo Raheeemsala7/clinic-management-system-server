@@ -11,7 +11,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ar } from '@/messages/ar';
+import { ar } from '@/i18n/messages/ar';
 import { formatDate } from '@/lib/utils';
 import { AlertCircle, HeartPulse, Pill, FileText, Calendar, Phone, Activity, User } from 'lucide-react';
 import type { PatientSummary } from '@/features/patients/queries';

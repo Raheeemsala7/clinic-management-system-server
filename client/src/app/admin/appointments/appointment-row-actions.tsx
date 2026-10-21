@@ -10,7 +10,7 @@ import {
   noShowAction,
   postponeAction,
 } from '@/features/queue/actions';
-import { ar } from '@/messages/ar';
+import { ar } from '@/i18n/messages/ar';
 import { Check, Play, UserX, Clock, X, CheckCheck } from 'lucide-react';
 
 interface AppointmentRowActionsProps {

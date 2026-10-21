@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation';
 import { Stethoscope, AlertCircle } from 'lucide-react';
 import { getSession, clearSessionCookies } from '@/lib/session';
 import { homePathForRole } from '@/lib/roles';
-import { ar } from '@/messages/ar';
+import { ar } from '@/i18n/messages/ar';
 import { LoginForm } from './login-form';
 
 export const dynamic = 'force-dynamic';

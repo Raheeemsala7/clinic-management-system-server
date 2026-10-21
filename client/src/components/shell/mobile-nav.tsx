@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { NavLinks } from '@/components/shell/nav-links';
 import { homePathForRole } from '@/lib/roles';
 import { type Role } from '@/lib/roles';
-import { ar } from '@/messages/ar';
+import { ar } from '@/i18n/messages/ar';
 
 interface MobileNavProps {
   role: Role;
@@ -64,9 +64,8 @@ export function MobileNav({ role, locale = 'ar' }: MobileNavProps) {
 
       {/* Off-canvas Drawer (RTL start = Right side) */}
       <div
-        className={`fixed inset-y-0 start-0 z-50 w-72 sm:w-80 bg-card border-e shadow-2xl flex flex-col justify-between transition-transform duration-300 ease-in-out ${
-          open ? 'translate-x-0' : '-translate-x-full rtl:translate-x-full'
-        }`}
+        className={`fixed inset-y-0 start-0 z-50 w-72 sm:w-80 bg-card border-e shadow-2xl flex flex-col justify-between transition-transform duration-300 ease-in-out ${open ? 'translate-x-0' : '-translate-x-full rtl:translate-x-full'
+          }`}
         role="dialog"
         aria-modal="true"
         aria-label={ar.nav.menu}

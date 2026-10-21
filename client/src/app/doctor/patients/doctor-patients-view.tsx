@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ar } from '@/messages/ar';
+import { ar } from '@/i18n/messages/ar';
 import { computeAge, formatDate } from '@/lib/utils';
 import { PatientMedicalDrawer } from './patient-medical-drawer';
 import { FileText, Phone, MapPin, Calendar, AlertCircle, HeartPulse, Loader2, Search } from 'lucide-react';

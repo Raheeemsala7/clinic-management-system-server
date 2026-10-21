@@ -15,7 +15,7 @@ import {
   DialogTrigger,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { ar } from '@/messages/ar';
+import { ar } from '@/i18n/messages/ar';
 import { todayClinicDate } from '@/lib/utils';
 import { CalendarPlus, Loader2, Search, Coins, Gift, Clock } from 'lucide-react';
 import type { DoctorOption } from '@/lib/doctor';
@@ -171,11 +171,10 @@ export function NewAppointmentDialog({ doctors, recentPatients }: NewAppointment
                       type="button"
                       key={p.id}
                       onClick={() => setSelectedPatientId(p.id)}
-                      className={`w-full flex items-center justify-between px-3 py-2 text-xs rounded text-start transition-colors ${
-                        isSelected
+                      className={`w-full flex items-center justify-between px-3 py-2 text-xs rounded text-start transition-colors ${isSelected
                           ? 'bg-primary text-primary-foreground font-semibold'
                           : 'hover:bg-muted text-foreground'
-                      }`}
+                        }`}
                     >
                       <span>{p.fullName}</span>
                       <span className="font-mono opacity-80">{p.phone}</span>
@@ -259,11 +258,10 @@ export function NewAppointmentDialog({ doctors, recentPatients }: NewAppointment
               <button
                 type="button"
                 onClick={() => setIsExempt(!isExempt)}
-                className={`text-xs px-2.5 py-1 rounded-full border transition-all ${
-                  isExempt
+                className={`text-xs px-2.5 py-1 rounded-full border transition-all ${isExempt
                     ? 'bg-emerald-600 text-white font-bold'
                     : 'bg-muted text-muted-foreground'
-                }`}
+                  }`}
               >
                 <Gift className="size-3.5 inline mr-1" />
                 {isExempt ? 'كشف معفي / مجاني ✓' : 'إعفاء من الرسوم'}

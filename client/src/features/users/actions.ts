@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { api, ApiError } from '@/lib/api/client';
 import { requireRole } from '@/lib/session';
-import { ar } from '@/messages/ar';
+import { ar } from '@/i18n/messages/ar';
 
 const createUserSchema = z.object({
   name: z.string().min(2, 'الاسم يجب أن يكون حرفين على الأقل').max(128),

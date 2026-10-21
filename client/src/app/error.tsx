@@ -2,11 +2,11 @@
 
 import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { ar } from '@/messages/ar';
+import { ar } from '@/i18n/messages/ar';
 import Link from 'next/link';
 
-/** Global error boundary — never shows raw server errors to the user. */
-export default function GlobalError({
+/** App error boundary — never shows raw server errors to the user. */
+export default function AppError({
   error,
   reset,
 }: {

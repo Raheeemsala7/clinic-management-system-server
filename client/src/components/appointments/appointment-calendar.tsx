@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useLocale } from 'next-intl';
 import { formatTime, todayClinicDate } from '@/lib/utils';
-import { ar } from '@/messages/ar';
+import { ar } from '@/i18n/messages/ar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -386,18 +386,16 @@ export function AppointmentCalendar({
             return (
               <div
                 key={slotTime}
-                className={`p-3 rounded-xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
-                  isBooked
+                className={`p-3 rounded-xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${isBooked
                     ? 'bg-card border-primary/30 shadow-sm'
                     : 'bg-muted/10 border-dashed border-border/80 hover:bg-muted/30'
-                }`}
+                  }`}
               >
                 {/* Time Indicator */}
                 <div className="flex items-center gap-3 sm:w-40 shrink-0">
                   <div
-                    className={`size-9 rounded-lg flex items-center justify-center font-mono font-bold text-xs ${
-                      isBooked ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
-                    }`}
+                    className={`size-9 rounded-lg flex items-center justify-center font-mono font-bold text-xs ${isBooked ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+                      }`}
                   >
                     {slotTime}
                   </div>
@@ -454,10 +452,10 @@ export function AppointmentCalendar({
                               appt.status === 'COMPLETED'
                                 ? 'default'
                                 : appt.status === 'IN_PROGRESS'
-                                ? 'destructive'
-                                : appt.status === 'WAITING'
-                                ? 'secondary'
-                                : 'outline'
+                                  ? 'destructive'
+                                  : appt.status === 'WAITING'
+                                    ? 'secondary'
+                                    : 'outline'
                             }
                             className="text-xs"
                           >

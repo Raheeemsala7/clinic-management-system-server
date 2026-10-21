@@ -15,7 +15,7 @@ import {
   DialogTrigger,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { ar } from '@/messages/ar';
+import { ar } from '@/i18n/messages/ar';
 import { computeAge } from '@/lib/utils';
 import { UserPlus, Loader2 } from 'lucide-react';
 

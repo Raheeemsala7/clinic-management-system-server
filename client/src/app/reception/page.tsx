@@ -2,7 +2,7 @@ import { requireRole } from '@/lib/session';
 import { getPrimaryDoctor } from '@/lib/doctor';
 import { getTodayQueue, getDoctorStatus } from '@/features/queue/queries';
 import { QueueBoard } from './queue-board';
-import { ar } from '@/messages/ar';
+import { ar } from '@/i18n/messages/ar';
 import type { QueueEntry, DoctorStatus } from '@/features/queue/queries';
 
 import { NewReceptionBookingDialog } from './new-reception-booking-dialog';

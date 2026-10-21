@@ -1,6 +1,6 @@
 import { requireRole } from '@/lib/session';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { ar } from '@/messages/ar';
+import { ar } from '@/i18n/messages/ar';
 import { NewUserForm } from './new-user-form';
 import { UserPlus } from 'lucide-react';
 

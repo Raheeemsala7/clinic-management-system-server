@@ -1,6 +1,6 @@
 import { requireRole } from '@/lib/session';
 import { api } from '@/lib/api/client';
-import { ar } from '@/messages/ar';
+import { ar } from '@/i18n/messages/ar';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { formatMoney, formatDate } from '@/lib/utils';
@@ -60,8 +60,8 @@ export default async function ReceptionExpensesPage() {
                     e.status === 'APPROVED'
                       ? 'default'
                       : e.status === 'REJECTED'
-                      ? 'destructive'
-                      : 'outline'
+                        ? 'destructive'
+                        : 'outline'
                   }
                 >
                   {ar.expenses[e.status]}

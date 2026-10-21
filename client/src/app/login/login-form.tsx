@@ -6,7 +6,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ar } from '@/messages/ar';
+import { ar } from '@/i18n/messages/ar';
 import { loginAction } from '@/features/auth/actions';
 
 function SubmitButton() {

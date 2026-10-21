@@ -1,7 +1,7 @@
 ﻿import { requireRole } from '@/lib/session';
 import { api } from '@/lib/api/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ar } from '@/messages/ar';
+import { ar } from '@/i18n/messages/ar';
 import { formatMoney, todayClinicDate } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';

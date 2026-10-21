@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { ar } from '@/messages/ar';
+import { ar } from '@/i18n/messages/ar';
 import { Eye, EyeOff, UserPlus, ArrowRight, ShieldCheck, Stethoscope, UserCircle } from 'lucide-react';
 
 const initial: UserActionResult = { success: false };
@@ -68,17 +68,15 @@ export function NewUserForm() {
                 type="button"
                 key={r.value}
                 onClick={() => setSelectedRole(r.value)}
-                className={`flex flex-col text-start p-4 rounded-xl border-2 transition-all ${
-                  isSelected
+                className={`flex flex-col text-start p-4 rounded-xl border-2 transition-all ${isSelected
                     ? 'border-primary bg-primary/5 text-primary shadow-sm'
                     : 'border-border bg-card hover:bg-muted/50 text-foreground'
-                }`}
+                  }`}
               >
                 <div className="flex items-center gap-2 mb-2">
                   <div
-                    className={`size-8 rounded-lg flex items-center justify-center ${
-                      isSelected ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
-                    }`}
+                    className={`size-8 rounded-lg flex items-center justify-center ${isSelected ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+                      }`}
                   >
                     <Icon className="size-4" />
                   </div>

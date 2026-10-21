@@ -15,7 +15,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { ar } from '@/messages/ar';
+import { ar } from '@/i18n/messages/ar';
 import { formatDate, formatTime } from '@/lib/utils';
 import { Pill, Plus, Trash2, Printer, Check, CheckCheck, Loader2, Sparkles, FileText } from 'lucide-react';
 

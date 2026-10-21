@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { ar } from '@/messages/ar';
+import { ar } from '@/i18n/messages/ar';
 import { Receipt, Loader2, Plus } from 'lucide-react';
 
 interface ExpenseCategory {

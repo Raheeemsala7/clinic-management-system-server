@@ -1,7 +1,7 @@
 import 'server-only';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { ar } from '@/messages/ar';
+import { ar } from '@/i18n/messages/ar';
 import {
   ACCESS_COOKIE,
   REFRESH_COOKIE,

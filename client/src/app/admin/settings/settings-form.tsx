@@ -1,7 +1,7 @@
 'use client';
 
 import { useActionState, useTransition } from 'react';
-import { ar } from '@/messages/ar';
+import { ar } from '@/i18n/messages/ar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';

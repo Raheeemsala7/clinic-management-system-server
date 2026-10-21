@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition, useCallback, useEffect } from 'react';
-import { ar } from '@/messages/ar';
+import { ar } from '@/i18n/messages/ar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { AppointmentTypeBadge } from '@/components/appointments/appointment-type-badge';

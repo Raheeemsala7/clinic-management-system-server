@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ar } from '@/messages/ar';
+import { ar } from '@/i18n/messages/ar';
 
 export default function ForbiddenPage() {
   return (

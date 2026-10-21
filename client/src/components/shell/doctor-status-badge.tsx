@@ -1,5 +1,5 @@
 import { Badge } from '@/components/ui/badge';
-import { ar } from '@/messages/ar';
+import { ar } from '@/i18n/messages/ar';
 
 interface DoctorStatusBadgeProps {
   status: 'AVAILABLE' | 'WITH_PATIENT' | 'BREAK';

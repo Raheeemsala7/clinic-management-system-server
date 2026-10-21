@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { ar } from '@/messages/ar';
+import { ar } from '@/i18n/messages/ar';
 import { type Role } from '@/lib/roles';
 
 interface UserMenuProps {

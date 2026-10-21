@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { ar } from '@/messages/ar';
+import { ar } from '@/i18n/messages/ar';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -179,20 +179,19 @@ export function AdminClosingView({ preview, currentClosing, history }: AdminClos
                   <div className="flex justify-between items-center">
                     <span className="text-muted-foreground">{ar.closing.difference}:</span>
                     <span
-                      className={`font-semibold text-sm px-2 py-0.5 rounded ${
-                        parseFloat(currentClosing.difference) === 0
+                      className={`font-semibold text-sm px-2 py-0.5 rounded ${parseFloat(currentClosing.difference) === 0
                           ? 'bg-emerald-100 text-emerald-800'
                           : parseFloat(currentClosing.difference) > 0
-                          ? 'bg-blue-100 text-blue-800'
-                          : 'bg-red-100 text-red-800'
-                      }`}
+                            ? 'bg-blue-100 text-blue-800'
+                            : 'bg-red-100 text-red-800'
+                        }`}
                     >
                       {formatMoney(currentClosing.difference)}
                       {parseFloat(currentClosing.difference) === 0
                         ? ` (${ar.closing.balanced})`
                         : parseFloat(currentClosing.difference) > 0
-                        ? ` (${ar.closing.overage})`
-                        : ` (${ar.closing.shortage})`}
+                          ? ` (${ar.closing.overage})`
+                          : ` (${ar.closing.shortage})`}
                     </span>
                   </div>
                   <div className="flex justify-between text-xs text-muted-foreground pt-1 border-t border-amber-200/60">
@@ -235,20 +234,19 @@ export function AdminClosingView({ preview, currentClosing, history }: AdminClos
                     <div className="flex items-center justify-between text-xs pt-1 px-1">
                       <span className="text-muted-foreground">{ar.closing.difference}:</span>
                       <span
-                        className={`font-semibold ${
-                          liveDiff === 0
+                        className={`font-semibold ${liveDiff === 0
                             ? 'text-emerald-700'
                             : liveDiff > 0
-                            ? 'text-blue-700'
-                            : 'text-destructive'
-                        }`}
+                              ? 'text-blue-700'
+                              : 'text-destructive'
+                          }`}
                       >
                         {formatMoney(liveDiff)}
                         {liveDiff === 0
                           ? ` (${ar.closing.balanced})`
                           : liveDiff > 0
-                          ? ` (${ar.closing.overage})`
-                          : ` (${ar.closing.shortage})`}
+                            ? ` (${ar.closing.overage})`
+                            : ` (${ar.closing.shortage})`}
                       </span>
                     </div>
                   )}
@@ -319,13 +317,12 @@ export function AdminClosingView({ preview, currentClosing, history }: AdminClos
                         </TableCell>
                         <TableCell className="whitespace-nowrap">
                           <span
-                            className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                              diffNum === 0
+                            className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${diffNum === 0
                                 ? 'bg-emerald-100 text-emerald-800'
                                 : diffNum > 0
-                                ? 'bg-blue-100 text-blue-800'
-                                : 'bg-red-100 text-red-800'
-                            }`}
+                                  ? 'bg-blue-100 text-blue-800'
+                                  : 'bg-red-100 text-red-800'
+                              }`}
                           >
                             {diffNum > 0 ? '+' : ''}
                             {formatMoney(record.difference)}

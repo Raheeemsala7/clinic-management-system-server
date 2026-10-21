@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ar } from '@/messages/ar';
+import { ar } from '@/i18n/messages/ar';
 import { KeyRound, UserX, Loader2 } from 'lucide-react';
 
 interface UserRowActionsProps {

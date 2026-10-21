@@ -18,7 +18,7 @@ import {
   DialogTrigger,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { ar } from '@/messages/ar';
+import { ar } from '@/i18n/messages/ar';
 import { computeAge, todayClinicDate } from '@/lib/utils';
 import {
   CalendarPlus,
@@ -673,11 +673,10 @@ export function NewReceptionBookingDialog({
                               setStartTime(slot.startTime);
                               setEndTime(slot.endTime);
                             }}
-                            className={`p-1.5 rounded text-center border text-xs transition-all flex flex-col items-center justify-center ${
-                              isSelected
+                            className={`p-1.5 rounded text-center border text-xs transition-all flex flex-col items-center justify-center ${isSelected
                                 ? 'bg-primary text-primary-foreground border-primary shadow-sm font-bold scale-[1.02]'
                                 : 'bg-background hover:bg-primary/10 hover:border-primary/50 text-foreground'
-                            }`}
+                              }`}
                           >
                             <span className="font-mono font-medium">{slot.startTime}</span>
                             <span className="text-[9px] opacity-75">إلى {slot.endTime}</span>
@@ -782,11 +781,10 @@ export function NewReceptionBookingDialog({
                       setPaidAmount('0');
                     }
                   }}
-                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border transition-all ${
-                    isExempt
+                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border transition-all ${isExempt
                       ? 'bg-emerald-500 text-white border-emerald-600 shadow-sm'
                       : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                  }`}
+                    }`}
                 >
                   <Gift className="size-3.5" />
                   <span>{isExempt ? 'الكشف مجاني / معفي ✓' : 'إعفاء من الرسوم (مجاني)'}</span>
@@ -840,11 +838,10 @@ export function NewReceptionBookingDialog({
                             key={fee}
                             type="button"
                             onClick={() => setTotalAmount(String(fee))}
-                            className={`px-2 py-1.5 text-xs rounded border transition-colors ${
-                              totalAmount === String(fee)
+                            className={`px-2 py-1.5 text-xs rounded border transition-colors ${totalAmount === String(fee)
                                 ? 'bg-primary text-primary-foreground font-bold border-primary'
                                 : 'bg-muted hover:bg-muted/80 text-muted-foreground'
-                            }`}
+                              }`}
                           >
                             {fee}
                           </button>

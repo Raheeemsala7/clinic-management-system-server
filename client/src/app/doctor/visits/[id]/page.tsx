@@ -1,6 +1,6 @@
 import { requireRole } from '@/lib/session';
 import { api } from '@/lib/api/client';
-import { ar } from '@/messages/ar';
+import { ar } from '@/i18n/messages/ar';
 import { VisitEditor } from './visit-editor';
 import { PrescriptionManager, type Prescription } from './prescription-manager';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';

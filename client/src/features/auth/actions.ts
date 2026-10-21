@@ -3,7 +3,7 @@
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
 import { api } from '@/lib/api/client';
-import { ar } from '@/messages/ar';
+import { ar } from '@/i18n/messages/ar';
 import { clearSessionCookies, setSessionCookies, type TokenResponse } from '@/lib/session';
 import { homePathForRole } from '@/lib/roles';
 

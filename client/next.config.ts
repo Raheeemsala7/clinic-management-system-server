@@ -4,6 +4,7 @@ import createNextIntlPlugin from 'next-intl/plugin';
 const withNextIntl = createNextIntlPlugin();
 
 const nextConfig: NextConfig = {
+  transpilePackages: ['next-intl', 'sonner'],
   // All clinic data is private/user-specific — disable shared caching
   // See AGENTS.md caching rules: private data must never leak between sessions
   experimental: {

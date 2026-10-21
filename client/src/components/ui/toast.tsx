@@ -1,5 +1,11 @@
 'use client';
 
-// Thin wrapper so components can `import { toast } from '@/components/ui/toast'`.
-// Sonner is the notification engine; <Toaster /> is mounted in the root layout.
-export { Toaster, toast } from 'sonner';
+import * as React from 'react';
+import { Toaster as SonnerToaster, toast as sonnerToast } from 'sonner';
+
+export function Toaster(props: React.ComponentProps<typeof SonnerToaster>) {
+  return <SonnerToaster {...props} />;
+}
+
+export const toast = sonnerToast;
+

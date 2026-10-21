@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ar } from '@/messages/ar';
+import { ar } from '@/i18n/messages/ar';
 
 export default function NotFound() {
   return (

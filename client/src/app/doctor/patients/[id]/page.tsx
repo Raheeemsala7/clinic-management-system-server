@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { requireRole } from '@/lib/session';
 import { getPatient, getPatientHistory, type PatientFull, type PatientVisitHistoryItem } from '@/features/patients/queries';
-import { ar } from '@/messages/ar';
+import { ar } from '@/i18n/messages/ar';
 import { formatDate, formatTime, computeAge } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -139,17 +139,15 @@ export default async function PatientProfilePage({ params }: PatientProfilePageP
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
             {/* Allergies Alert */}
             <div
-              className={`rounded-xl border p-3.5 transition-colors ${
-                patient.allergies && patient.allergies.length > 0
+              className={`rounded-xl border p-3.5 transition-colors ${patient.allergies && patient.allergies.length > 0
                   ? 'bg-red-50/90 border-red-300 text-red-950 dark:bg-red-950/20'
                   : 'bg-muted/30 border-muted text-muted-foreground'
-              }`}
+                }`}
             >
               <div className="flex items-center gap-2 mb-2 font-bold text-sm">
                 <AlertCircle
-                  className={`size-4 shrink-0 ${
-                    patient.allergies && patient.allergies.length > 0 ? 'text-red-600' : 'text-muted-foreground'
-                  }`}
+                  className={`size-4 shrink-0 ${patient.allergies && patient.allergies.length > 0 ? 'text-red-600' : 'text-muted-foreground'
+                    }`}
                 />
                 <span className={patient.allergies && patient.allergies.length > 0 ? 'text-red-700' : ''}>
                   حساسية الأدوية والمواد (تحذير سريري)
@@ -170,19 +168,17 @@ export default async function PatientProfilePage({ params }: PatientProfilePageP
 
             {/* Chronic Conditions Alert */}
             <div
-              className={`rounded-xl border p-3.5 transition-colors ${
-                patient.chronicConditions && patient.chronicConditions.length > 0
+              className={`rounded-xl border p-3.5 transition-colors ${patient.chronicConditions && patient.chronicConditions.length > 0
                   ? 'bg-amber-50/90 border-amber-300 text-amber-950 dark:bg-amber-950/20'
                   : 'bg-muted/30 border-muted text-muted-foreground'
-              }`}
+                }`}
             >
               <div className="flex items-center gap-2 mb-2 font-bold text-sm">
                 <HeartPulse
-                  className={`size-4 shrink-0 ${
-                    patient.chronicConditions && patient.chronicConditions.length > 0
+                  className={`size-4 shrink-0 ${patient.chronicConditions && patient.chronicConditions.length > 0
                       ? 'text-amber-600'
                       : 'text-muted-foreground'
-                  }`}
+                    }`}
                 />
                 <span className={patient.chronicConditions && patient.chronicConditions.length > 0 ? 'text-amber-800' : ''}>
                   الأمراض المزمنة

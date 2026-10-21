@@ -1,7 +1,10 @@
 import type { Metadata } from 'next';
 import { Cairo, Inter } from 'next/font/google';
 import { cookies } from 'next/headers';
-import { NextIntlClientProvider } from 'next-intl';
+import { hasLocale, NextIntlClientProvider } from 'next-intl';
+import { getMessages, setRequestLocale } from 'next-intl/server';
+import { notFound } from 'next/navigation';
+import { routing } from '@/i18n/routing';
 import { Toaster } from '@/components/ui/toast';
 import './globals.css';
 
@@ -22,21 +25,33 @@ export const metadata: Metadata = {
   description: 'Single-doctor clinic management platform | نظام إدارة العيادة الطبية',
 };
 
-export default async function RootLayout({ children }: { children: React.ReactNode }) {
+type Props = {
+  children: React.ReactNode;
+  params?: Promise<{ locale?: string }>;
+};
+
+export default async function RootLayout({ children, params }: Props) {
+  const resolvedParams = params ? await params : undefined;
   const cookieStore = await cookies();
   const localeCookie = cookieStore.get('NEXT_LOCALE')?.value;
-  const locale = localeCookie === 'ar' ? 'ar' : 'en';
-  const isRtl = locale === 'ar';
 
-  const messages = (await import(`../messages/${locale}.json`)).default;
+  const candidate = resolvedParams?.locale || localeCookie || routing.defaultLocale;
+  if (!hasLocale(routing.locales, candidate)) {
+    notFound();
+  }
+
+  const locale = candidate;
+  setRequestLocale(locale);
+  const messages = await getMessages();
+  const dir = locale === 'ar' ? 'rtl' : 'ltr';
 
   return (
     <html
       lang={locale}
-      dir={isRtl ? 'rtl' : 'ltr'}
+      dir={dir}
       className={`${cairo.variable} ${inter.variable}`}
     >
-      <body className={`min-h-screen bg-background antialiased ${isRtl ? 'font-sans' : 'font-sans'}`}>
+      <body className={`min-h-screen bg-background antialiased ${dir === 'rtl' ? 'font-sans' : 'font-sans'}`}>
         <NextIntlClientProvider locale={locale} messages={messages}>
           {children}
           <Toaster position="top-center" richColors closeButton />

@@ -1,6 +1,6 @@
 import { requireRole } from '@/lib/session';
 import { api } from '@/lib/api/client';
-import { ar } from '@/messages/ar';
+import { ar } from '@/i18n/messages/ar';
 import { formatDateTime } from '@/lib/utils';
 import { ShieldCheck, Search, Calendar, Filter } from 'lucide-react';
 import { Card } from '@/components/ui/card';

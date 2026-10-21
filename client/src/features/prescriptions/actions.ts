@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { api, ApiError } from '@/lib/api/client';
 import { requireRole } from '@/lib/session';
-import { ar } from '@/messages/ar';
+import { ar } from '@/i18n/messages/ar';
 
 export interface PrescriptionItemInput {
   drugName: string;

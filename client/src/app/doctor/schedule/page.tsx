@@ -1,7 +1,7 @@
 import { requireRole } from '@/lib/session';
 import { getDoctorScheduleAction } from '@/features/doctor-schedule/actions';
 import { DoctorScheduleForm } from './schedule-form';
-import { ar } from '@/messages/ar';
+import { ar } from '@/i18n/messages/ar';
 
 export const dynamic = 'force-dynamic';
 

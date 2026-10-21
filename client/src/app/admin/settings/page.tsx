@@ -1,6 +1,6 @@
 ﻿import { requireRole } from '@/lib/session';
 import { api } from '@/lib/api/client';
-import { ar } from '@/messages/ar';
+import { ar } from '@/i18n/messages/ar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { SettingsForm } from './settings-form';
 

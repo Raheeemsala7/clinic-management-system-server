@@ -1,7 +1,7 @@
 import { requireRole } from '@/lib/session';
 import { api } from '@/lib/api/client';
 import { DoctorTodayScreen } from './doctor-today-screen';
-import { ar } from '@/messages/ar';
+import { ar } from '@/i18n/messages/ar';
 import type { QueueEntry, DoctorStatus } from '@/features/queue/queries';
 
 export const dynamic = 'force-dynamic';
