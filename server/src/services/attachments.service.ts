@@ -6,7 +6,7 @@ import FileType from 'file-type';
 import { BadRequestError } from '../utils/errors';
 
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
-const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
+const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 5MB
 const MAX_FILES_PER_BATCH = 5;
 
 // On serverless environments (like Vercel / AWS Lambda), the root filesystem (/var/task)
