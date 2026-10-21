@@ -14,6 +14,7 @@ import { completeAction, setDoctorStatusAction, startAction } from '@/features/q
 import type { QueueEntry, DoctorStatus } from '@/features/queue/queries';
 import { useRouter } from 'next/navigation';
 import { Play, Stethoscope, FileText } from 'lucide-react';
+import { AppointmentTypeBadge } from '@/components/appointments/appointment-type-badge';
 
 interface Visit {
   id: string;
@@ -140,10 +141,10 @@ export function DoctorTodayScreen({
                   {ar.appointmentStatus.IN_PROGRESS}
                 </Badge>
               </div>
-              <p className="text-xs text-muted-foreground">
-                رقم الدور #{inProgressEntry.queueNumber} •{' '}
-                {ar.appointmentType[inProgressEntry.type]}
-              </p>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="text-xs text-muted-foreground font-mono">رقم الدور #{inProgressEntry.queueNumber}</span>
+                <AppointmentTypeBadge type={inProgressEntry.type} size="sm" />
+              </div>
             </CardHeader>
             <CardContent className="space-y-4 pt-4">
               {currentVisit && (
@@ -271,9 +272,12 @@ export function DoctorTodayScreen({
                           >
                             {entry.patientName}
                           </Link>
-                          <Badge variant={entry.status} className="text-[10px] mt-0.5">
-                            {ar.appointmentStatus[entry.status]}
-                          </Badge>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <Badge variant={entry.status} className="text-[10px]">
+                              {ar.appointmentStatus[entry.status]}
+                            </Badge>
+                            <AppointmentTypeBadge type={entry.type} size="sm" />
+                          </div>
                         </div>
                       </div>
 

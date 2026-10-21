@@ -118,6 +118,7 @@ export const ar = {
     MAX_ATTACHMENTS_EXCEEDED: 'تم الوصول للحد الأقصى من المرفقات لهذه الزيارة',
     MEDICAL_FIELD_FORBIDDEN: 'لا تملك صلاحية تعديل البيانات الطبية',
     SCHEDULED_AT_REQUIRED: 'يجب تحديد وقت الموعد',
+    FULL_NAME_FOUR_PARTS_REQUIRED: 'يجب إدخال الاسم الرباعي كاملاً (4 مقاطع على الأقل مفصولة بمسافات)',
     generic: 'تعذر إكمال العملية، حاول مرة أخرى',
   },
 
@@ -154,8 +155,12 @@ export const ar = {
   },
 
   appointmentType: {
-    CONSULTATION: 'استشارة',
-    FOLLOW_UP: 'متابعة',
+    EXAMINATION: 'كشف',
+    FOLLOW_UP: 'إعادة',
+    POST_OPERATIVE: 'متابعة عملية',
+    LAB_TESTS_IMAGING: 'تحليل و أشعة',
+    TEST_RESULTS_REVIEW: 'مراجعة فحوصات',
+    CONSULTATION: 'كشف',
   },
 
   doctorStatus: {

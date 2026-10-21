@@ -56,19 +56,31 @@ export default function proxy(request: NextRequest) {
   }
 
   const required = sectionRole(pathname);
-  if (!required) return NextResponse.next();
+  let res: NextResponse;
 
-  if (!session) {
+  if (!required) {
+    res = NextResponse.next();
+  } else if (!session) {
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('next', pathname);
-    return NextResponse.redirect(loginUrl);
+    res = NextResponse.redirect(loginUrl);
+  } else if (session.role !== required) {
+    res = NextResponse.redirect(new URL('/403', request.url));
+  } else {
+    res = NextResponse.next();
   }
 
-  if (session.role !== required) {
-    return NextResponse.redirect(new URL('/403', request.url));
+  // Handle ?lang= or ?locale= query param to sync locale cookie
+  const langParam = searchParams.get('lang') || searchParams.get('locale');
+  if (langParam === 'ar' || langParam === 'en') {
+    res.cookies.set('NEXT_LOCALE', langParam, {
+      path: '/',
+      maxAge: 60 * 60 * 24 * 365,
+      sameSite: 'lax',
+    });
   }
 
-  return NextResponse.next();
+  return res;
 }
 
 export const config = {

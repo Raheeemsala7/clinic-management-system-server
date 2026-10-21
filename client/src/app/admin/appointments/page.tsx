@@ -10,9 +10,10 @@ import { getDoctors } from '@/lib/doctor';
 import { NewAppointmentDialog } from './new-appointment-dialog';
 import { AppointmentRowActions } from './appointment-row-actions';
 import { AppointmentCalendar, type CalendarAppointment } from '@/components/appointments/appointment-calendar';
+import { AppointmentTypeBadge } from '@/components/appointments/appointment-type-badge';
 import { PayRemainingDialog } from '@/components/payments/pay-remaining-dialog';
 import type { PaginatedResult, PatientBasic } from '@/features/patients/queries';
-import { Calendar, Filter, Users, Clock, AlertCircle, CalendarDays, List, Coins, Gift } from 'lucide-react';
+import { Calendar, Filter, Users, Clock, AlertCircle, CalendarDays, List, Coins, Gift, CalendarPlus, Edit } from 'lucide-react';
 import Link from 'next/link';
 
 export const dynamic = 'force-dynamic';
@@ -30,7 +31,7 @@ interface AppointmentItem {
   completedAt: string | null;
   status: 'BOOKED' | 'WAITING' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW';
   source: 'SCHEDULED' | 'WALK_IN';
-  type: 'CONSULTATION' | 'FOLLOW_UP';
+  type: string;
   postponedCount: number;
   totalAmount?: number;
   paidAmount?: number;
@@ -145,6 +146,13 @@ export default async function AdminAppointmentsPage({ searchParams }: AdminAppoi
             </Button>
           </div>
 
+          <Button asChild className="gap-2 bg-primary text-primary-foreground font-bold shadow-sm">
+            <Link href="/admin/appointments/new">
+              <CalendarPlus className="size-4" />
+              حجز موعد جديد
+            </Link>
+          </Button>
+
           <NewAppointmentDialog
             doctors={doctors}
             recentPatients={patientsRes.data.map((p) => ({ id: p.id, fullName: p.fullName, phone: p.phone }))}
@@ -231,6 +239,7 @@ export default async function AdminAppointmentsPage({ searchParams }: AdminAppoi
                       <TableRow>
                         <TableHead className="w-16">{ar.queue.number}</TableHead>
                         <TableHead>{ar.common.patient}</TableHead>
+                        <TableHead>نوع الموعد</TableHead>
                         <TableHead>{ar.common.doctor}</TableHead>
                         <TableHead>{ar.common.time}</TableHead>
                         <TableHead>الرسوم والمدفوعات</TableHead>
@@ -252,6 +261,9 @@ export default async function AdminAppointmentsPage({ searchParams }: AdminAppoi
                                 <p className="font-semibold text-sm text-foreground">{appt.patient?.fullName}</p>
                                 <p className="text-xs text-muted-foreground font-mono">{appt.patient?.phone}</p>
                               </div>
+                            </TableCell>
+                            <TableCell>
+                              <AppointmentTypeBadge type={appt.type} size="sm" />
                             </TableCell>
                             <TableCell className="text-xs text-muted-foreground">
                               {appt.doctor?.name}
@@ -302,7 +314,14 @@ export default async function AdminAppointmentsPage({ searchParams }: AdminAppoi
                               {getStatusBadge(appt.status)}
                             </TableCell>
                             <TableCell>
-                              <AppointmentRowActions id={appt.id} status={appt.status} />
+                              <div className="flex items-center gap-1">
+                                <Button asChild variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+                                  <Link href={`/admin/appointments/${appt.id}/edit`} title="تعديل الحجز">
+                                    <Edit className="size-4" />
+                                  </Link>
+                                </Button>
+                                <AppointmentRowActions id={appt.id} status={appt.status} />
+                              </div>
                             </TableCell>
                           </TableRow>
                         );

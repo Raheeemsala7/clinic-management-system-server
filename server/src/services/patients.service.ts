@@ -1,5 +1,5 @@
-import { Patient, Visit, Prescription, Appointment } from '../models';
-import { normalizeArabic } from '../utils/arabic';
+import { Patient, Visit, Prescription, Appointment, User } from '../models';
+import { normalizeArabic, validateFourPartName } from '../utils/arabic';
 import { parsePagination, buildPaginatedResult } from '../utils/pagination';
 import { NotFoundError, ForbiddenError, BadRequestError } from '../utils/errors';
 import { logAudit } from '../utils/audit';
@@ -21,6 +21,11 @@ export class PatientsService {
 
     if (!fullName || !phone || !gender) {
       throw new BadRequestError('fullName, phone, and gender are required');
+    }
+
+    const nameValidation = validateFourPartName(fullName);
+    if (!nameValidation.isValid) {
+      throw new BadRequestError('يجب إدخال اسم المريض رباعياً على الأقل (أربعة مقاطع)');
     }
 
     if (actor.role === 'RECEPTION') {
@@ -124,8 +129,12 @@ export class PatientsService {
     const before = patient.toJSON();
 
     if (dto.fullName !== undefined) {
-      patient.fullName = dto.fullName;
-      patient.searchName = normalizeArabic(dto.fullName);
+      const nameValidation = validateFourPartName(dto.fullName);
+      if (!nameValidation.isValid) {
+        throw new BadRequestError('يجب إدخال اسم المريض رباعياً على الأقل (أربعة مقاطع)');
+      }
+      patient.fullName = nameValidation.normalized;
+      patient.searchName = normalizeArabic(nameValidation.normalized);
     }
     if (dto.phone !== undefined) patient.phone = dto.phone;
     if (dto.gender !== undefined) patient.gender = dto.gender;
@@ -240,6 +249,117 @@ export class PatientsService {
         frequency: item.frequency,
         duration: item.duration,
       })),
+    };
+  }
+
+  static async getPatientBookingSummary(patientId: string) {
+    const patient = await Patient.findOne({ _id: patientId, deletedAt: null });
+    if (!patient) throw new NotFoundError('Patient not found');
+
+    let age: number | null = (patient as any).age ?? null;
+    if (age === null && patient.dateOfBirth) {
+      const now = new Date();
+      const dob = new Date(patient.dateOfBirth);
+      age = now.getFullYear() - dob.getFullYear();
+      const m = now.getMonth() - dob.getMonth();
+      if (m < 0 || (m === 0 && now.getDate() < dob.getDate())) age--;
+    }
+
+    // 1. Fetch recent appointments
+    const appointments = await Appointment.find({ patientId, status: { $ne: 'CANCELLED' } })
+      .sort({ clinicDate: -1, createdAt: -1 })
+      .limit(10);
+
+    const populatedAppointments = await Promise.all(
+      appointments.map(async (appt) => {
+        const doc = await User.findById(appt.doctorId).select('name');
+        return {
+          id: appt.id,
+          clinicDate: appt.clinicDate,
+          type: appt.type === 'CONSULTATION' ? 'EXAMINATION' : appt.type,
+          status: appt.status,
+          startTime: appt.startTime || null,
+          totalAmount: appt.totalAmount || 0,
+          paidAmount: appt.paidAmount || 0,
+          remainingAmount: appt.remainingAmount || 0,
+          paymentStatus: appt.paymentStatus,
+          doctorName: doc ? doc.name : null,
+          createdAt: appt.createdAt ? appt.createdAt.toISOString() : null,
+        };
+      }),
+    );
+
+    // 2. Fetch last visit / examination
+    const lastVisit = await Visit.findOne({ patientId }).sort({ createdAt: -1 });
+    let lastVisitDetails: any = null;
+    if (lastVisit) {
+      const [lastAppt, doc] = await Promise.all([
+        Appointment.findById(lastVisit.appointmentId),
+        User.findById(lastVisit.doctorId).select('name'),
+      ]);
+      lastVisitDetails = {
+        date: lastVisit.createdAt.toISOString(),
+        appointmentType:
+          lastAppt?.type === 'CONSULTATION' ? 'EXAMINATION' : lastAppt?.type || 'EXAMINATION',
+        doctorName: doc?.name || null,
+        diagnosis: lastVisit.diagnosis || null,
+        notes: lastVisit.notes || null,
+        status: lastVisit.status,
+      };
+    } else if (populatedAppointments.length > 0) {
+      const mostRecent = populatedAppointments[0];
+      lastVisitDetails = {
+        date: mostRecent.createdAt,
+        appointmentType: mostRecent.type,
+        doctorName: mostRecent.doctorName,
+        diagnosis: null,
+        notes: null,
+        status: mostRecent.status,
+      };
+    }
+
+    // 3. Financial calculations across all active patient appointments
+    const allAppts = await Appointment.find({ patientId, status: { $ne: 'CANCELLED' } });
+    let totalCharged = 0;
+    let totalPaid = 0;
+    let outstandingBalance = 0;
+    for (const appt of allAppts) {
+      totalCharged += appt.totalAmount || 0;
+      totalPaid += appt.paidAmount || 0;
+      outstandingBalance += appt.remainingAmount || 0;
+    }
+
+    let overallPaymentStatus: 'PAID' | 'PARTIAL' | 'UNPAID' = 'PAID';
+    if (outstandingBalance > 0 && totalPaid > 0) {
+      overallPaymentStatus = 'PARTIAL';
+    } else if (outstandingBalance > 0 && totalPaid === 0) {
+      overallPaymentStatus = 'UNPAID';
+    }
+
+    const { Payment } = await import('../models');
+    const recentPayments = await Payment.find({ patientId, status: 'RECORDED' })
+      .sort({ createdAt: -1 })
+      .limit(5);
+
+    return {
+      patient: {
+        id: patient.id,
+        fullName: patient.fullName,
+        phone: patient.phone,
+        gender: patient.gender,
+        age,
+        dateOfBirth: patient.dateOfBirth ? patient.dateOfBirth.toISOString() : null,
+        address: patient.address || null,
+      },
+      lastVisit: lastVisitDetails,
+      financialSummary: {
+        totalCharged,
+        totalPaid,
+        outstandingBalance,
+        paymentStatus: overallPaymentStatus,
+        recentPayments: recentPayments.map((p) => p.toJSON()),
+      },
+      previousAppointments: populatedAppointments,
     };
   }
 }

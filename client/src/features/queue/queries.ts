@@ -7,7 +7,7 @@ export interface QueueEntry {
   queueOrder: number;
   status: 'BOOKED' | 'WAITING' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW';
   source: 'SCHEDULED' | 'WALK_IN';
-  type: 'CONSULTATION' | 'FOLLOW_UP';
+  type: 'EXAMINATION' | 'FOLLOW_UP' | 'POST_OPERATIVE' | 'LAB_TESTS_IMAGING' | 'TEST_RESULTS_REVIEW' | 'CONSULTATION' | string;
   postponedCount: number;
   patientId: string;
   patientName: string;

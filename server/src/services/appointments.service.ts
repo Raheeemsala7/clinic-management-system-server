@@ -113,6 +113,7 @@ export class AppointmentsService {
       isExempt,
       exemptionReason,
       notes: notes || null,
+      attachments: Array.isArray(dto.attachments) ? dto.attachments : [],
       createdById: actor.id,
     });
 
@@ -124,7 +125,7 @@ export class AppointmentsService {
         patientId,
         amount: paidAmount,
         method: dto.paymentMethod || 'CASH',
-        kind: type === 'CONSULTATION' ? 'CONSULTATION' : 'FOLLOW_UP',
+        kind: type === 'CONSULTATION' ? 'EXAMINATION' : type,
         paymentType: paidAmount < totalAmount ? 'DEPOSIT' : 'FULL',
         notes: paidAmount < totalAmount
           ? `عربون حجز موعد - متبقي ${remainingAmount} ج.م`
@@ -386,4 +387,60 @@ export class AppointmentsService {
 
     return appt.toJSON();
   }
+
+  static async updateAppointment(id: string, dto: any, actor: { id: string }, ip = '') {
+    const appt = await Appointment.findById(id);
+    if (!appt) throw new NotFoundError('Appointment not found');
+
+    const before = appt.toJSON();
+
+    if (dto.type !== undefined) appt.type = dto.type;
+    if (dto.clinicDate !== undefined) appt.clinicDate = dto.clinicDate;
+    if (dto.startTime !== undefined) appt.startTime = dto.startTime;
+    if (dto.endTime !== undefined) appt.endTime = dto.endTime;
+    if (dto.notes !== undefined) appt.notes = dto.notes;
+    if (dto.attachments !== undefined) {
+      appt.attachments = Array.isArray(dto.attachments) ? dto.attachments : [];
+    }
+
+    if (dto.isExempt !== undefined) {
+      appt.isExempt = Boolean(dto.isExempt);
+      if (appt.isExempt) {
+        appt.exemptionReason = dto.exemptionReason || appt.exemptionReason;
+        appt.totalAmount = 0;
+        appt.paidAmount = 0;
+        appt.remainingAmount = 0;
+        appt.paymentStatus = 'EXEMPT';
+      }
+    }
+
+    if (!appt.isExempt && dto.totalAmount !== undefined) {
+      appt.totalAmount = Math.max(0, Number(dto.totalAmount));
+      if (dto.paidAmount !== undefined) {
+        appt.paidAmount = Math.min(appt.totalAmount, Math.max(0, Number(dto.paidAmount)));
+      }
+      appt.remainingAmount = Math.max(0, appt.totalAmount - appt.paidAmount);
+      appt.paymentStatus =
+        appt.remainingAmount === 0 && appt.totalAmount > 0
+          ? 'PAID'
+          : appt.paidAmount > 0
+            ? 'PARTIAL'
+            : 'UNPAID';
+    }
+
+    await appt.save();
+
+    await logAudit({
+      userId: actor.id,
+      action: 'UPDATE',
+      entityType: 'Appointment',
+      entityId: appt.id,
+      before,
+      after: appt.toJSON(),
+      ip,
+    });
+
+    return appt.toJSON();
+  }
 }
+

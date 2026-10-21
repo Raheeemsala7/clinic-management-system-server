@@ -14,6 +14,7 @@ import reportsRoutes from './reports.routes';
 import settingsRoutes from './settings.routes';
 import auditRoutes from './audit.routes';
 import doctorScheduleRoutes from './doctor-schedule.routes';
+import attachmentsRoutes from './attachments.routes';
 
 const apiRouter = Router();
 
@@ -35,5 +36,6 @@ apiRouter.use(queueRoutes);
 apiRouter.use(prescriptionsRoutes);
 apiRouter.use(paymentsRoutes);
 apiRouter.use(expensesRoutes);
+apiRouter.use('/attachments', attachmentsRoutes);
 
 export default apiRouter;

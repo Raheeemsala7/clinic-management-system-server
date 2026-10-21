@@ -13,6 +13,17 @@ export class AppointmentsController {
     res.status(201).json(result);
   });
 
+  updateAppointment = asyncHandler(async (req: Request, res: Response) => {
+    const ip = req.ip || req.socket.remoteAddress || '';
+    const result = await AppointmentsService.updateAppointment(
+      req.params.id,
+      req.body,
+      { id: req.user!.id },
+      ip,
+    );
+    res.json(result);
+  });
+
   listAppointments = asyncHandler(async (req: Request, res: Response) => {
     const result = await AppointmentsService.listAppointments(req.query);
     res.json(result);

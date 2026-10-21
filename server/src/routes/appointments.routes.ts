@@ -8,6 +8,7 @@ router.use(authMiddleware);
 router.post('/', appointmentsController.createAppointment);
 router.get('/', appointmentsController.listAppointments);
 router.get('/:id', appointmentsController.getAppointmentById);
+router.put('/:id', appointmentsController.updateAppointment);
 
 // Appointment lifecycle transition endpoints
 router.post('/:id/arrive', appointmentsController.transition('arrive'));

@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { formatMoney, formatTime, todayClinicDate } from '@/lib/utils';
 import { PayRemainingDialog } from '@/components/payments/pay-remaining-dialog';
+import { AppointmentTypeBadge } from '@/components/appointments/appointment-type-badge';
 import {
   CreditCard,
   Calendar,
@@ -173,10 +174,13 @@ export default async function AdminPaymentsPage({ searchParams }: AdminPaymentsP
                     </div>
 
                     <div className="text-xs text-muted-foreground space-y-1">
-                      <p className="flex items-center gap-2">
-                        <span>نوع الكشف: <strong className="text-foreground">{p.appointment?.type === 'CONSULTATION' ? 'كشف' : 'استشارة'}</strong></span>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="flex items-center gap-1.5">
+                          <span>نوع الحجز:</span>
+                          <AppointmentTypeBadge type={p.appointment?.type || p.kind} size="sm" />
+                        </span>
                         {p.doctor && <span>• الطبيب: <strong className="text-foreground">د. {p.doctor.name}</strong></span>}
-                      </p>
+                      </div>
 
                       {p.notes && (
                         <p className="text-foreground font-medium bg-muted/40 px-2 py-0.5 rounded border inline-block">

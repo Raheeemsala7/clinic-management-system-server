@@ -4,6 +4,7 @@ import { useState, useTransition, useCallback, useEffect } from 'react';
 import { ar } from '@/messages/ar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { AppointmentTypeBadge } from '@/components/appointments/appointment-type-badge';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { DoctorStatusBadge } from '@/components/shell/doctor-status-badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -152,6 +153,7 @@ export function QueueBoard({
               <tr className="border-b bg-muted/40">
                 <th className="px-3 py-3 text-start font-medium" scope="col">{ar.queue.number}</th>
                 <th className="px-3 py-3 text-start font-medium" scope="col">{ar.queue.patient}</th>
+                <th className="px-3 py-3 text-start font-medium" scope="col">نوع الموعد</th>
                 <th className="px-3 py-3 text-start font-medium" scope="col">{ar.queue.status}</th>
                 <th className="px-3 py-3 text-start font-medium" scope="col">{ar.queue.waitingTime}</th>
                 <th className="px-3 py-3 text-start font-medium" scope="col">{ar.common.actions}</th>
@@ -204,6 +206,9 @@ function QueueRow({ entry, isPending, onArrive, onStart, onComplete, onCancel, o
         )}
       </td>
       <td className="px-3 py-3 font-medium">{entry.patientName}</td>
+      <td className="px-3 py-3">
+        <AppointmentTypeBadge type={entry.type} size="sm" />
+      </td>
       <td className="px-3 py-3">
         <Badge variant={entry.status as keyof typeof Badge}>{statusLabel}</Badge>
       </td>

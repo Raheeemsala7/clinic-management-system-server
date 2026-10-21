@@ -53,6 +53,11 @@ export class PatientsController {
     const summary = await PatientsService.getPatientSummary(req.params.id);
     res.json(summary);
   });
+
+  getPatientBookingSummary = asyncHandler(async (req: Request, res: Response) => {
+    const summary = await PatientsService.getPatientBookingSummary(req.params.id);
+    res.json(summary);
+  });
 }
 
 export const patientsController = new PatientsController();

@@ -12,9 +12,10 @@ import { ar } from '@/messages/ar';
 
 interface MobileNavProps {
   role: Role;
+  locale?: 'en' | 'ar';
 }
 
-export function MobileNav({ role }: MobileNavProps) {
+export function MobileNav({ role, locale = 'ar' }: MobileNavProps) {
   const [open, setOpen] = useState(false);
 
   // Lock body scroll when open
@@ -105,7 +106,7 @@ export function MobileNav({ role }: MobileNavProps) {
 
           {/* Navigation Links */}
           <div className="flex-1 py-1">
-            <NavLinks role={role} onNavigate={() => setOpen(false)} />
+            <NavLinks role={role} locale={locale} onNavigate={() => setOpen(false)} />
           </div>
         </div>
 

@@ -3,12 +3,13 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useLocale } from 'next-intl';
 import { formatTime, todayClinicDate } from '@/lib/utils';
 import { ar } from '@/messages/ar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { NewReceptionBookingDialog } from '@/app/reception/new-reception-booking-dialog';
+import { AppointmentTypeBadge } from '@/components/appointments/appointment-type-badge';
 import {
   Calendar as CalendarIcon,
   CalendarX,
@@ -24,6 +25,8 @@ import {
   Filter,
   Settings,
   Loader2,
+  CalendarPlus,
+  Edit,
 } from 'lucide-react';
 import type { DoctorOption } from '@/lib/doctor';
 import {
@@ -40,7 +43,7 @@ export interface CalendarAppointment {
   scheduledAt?: string | null;
   status: 'BOOKED' | 'WAITING' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW';
   source: 'SCHEDULED' | 'WALK_IN';
-  type: 'CONSULTATION' | 'FOLLOW_UP';
+  type: string;
   totalAmount?: number;
   paidAmount?: number;
   remainingAmount?: number;
@@ -84,6 +87,7 @@ export function AppointmentCalendar({
   initialScheduleData,
 }: AppointmentCalendarProps) {
   const router = useRouter();
+  const locale = useLocale();
   const today = todayClinicDate();
   const [selectedDate, setSelectedDate] = useState(initialDate || today);
   const [selectedDoctorId, setSelectedDoctorId] = useState(currentDoctorId || doctors[0]?.id || '');
@@ -268,19 +272,18 @@ export function AppointmentCalendar({
           )}
         </div>
 
-        {/* Quick Booking Button */}
+        {/* Dedicated Booking Page Action */}
         {userRole !== 'DOCTOR' && !isOffDay && (
-          <NewReceptionBookingDialog
-            doctorId={selectedDoctorId || doctors[0]?.id || ''}
-            doctorName={selectedDoctorName}
-            defaultDate={selectedDate}
-            triggerButton={
-              <Button className="gap-2 bg-primary text-primary-foreground font-bold shadow-sm">
-                <Plus className="size-4" />
-                حجز موعد جديد
-              </Button>
-            }
-          />
+          <Button asChild className="gap-2 bg-primary text-primary-foreground font-bold shadow-sm">
+            <Link
+              href={`/${userRole.toLowerCase()}/appointments/new?doctorId=${encodeURIComponent(
+                selectedDoctorId || doctors[0]?.id || ''
+              )}&date=${encodeURIComponent(selectedDate)}`}
+            >
+              <CalendarPlus className="size-4" />
+              {locale === 'en' ? 'New Booking' : 'حجز موعد جديد'}
+            </Link>
+          </Button>
         )}
       </div>
 
@@ -419,16 +422,7 @@ export function AppointmentCalendar({
                             <Badge variant="outline" className="text-[10px] px-1.5 py-0 font-mono">
                               #{appt.queueNumber}
                             </Badge>
-                            <Badge
-                              variant="secondary"
-                              className={`text-[10px] ${
-                                appt.type === 'CONSULTATION'
-                                  ? 'bg-blue-50 text-blue-700'
-                                  : 'bg-teal-50 text-teal-700'
-                              }`}
-                            >
-                              {appt.type === 'CONSULTATION' ? 'كشف' : 'استشارة'}
-                            </Badge>
+                            <AppointmentTypeBadge type={appt.type} locale={locale} size="sm" />
                           </div>
                           <p className="text-xs text-muted-foreground font-mono flex items-center gap-2">
                             <span>{appt.patient?.phone}</span>
@@ -469,6 +463,17 @@ export function AppointmentCalendar({
                           >
                             {ar.appointmentStatus[appt.status] || appt.status}
                           </Badge>
+
+                          {userRole !== 'DOCTOR' && (
+                            <Button asChild variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground">
+                              <Link
+                                href={`/${userRole.toLowerCase()}/appointments/${appt.id}/edit`}
+                                title={locale === 'en' ? 'Edit Booking' : 'تعديل الحجز'}
+                              >
+                                <Edit className="size-3.5" />
+                              </Link>
+                            </Button>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -477,22 +482,20 @@ export function AppointmentCalendar({
                   <div className="flex-1 flex items-center justify-between border-t sm:border-t-0 sm:border-r pr-0 sm:pr-4 pt-2 sm:pt-0">
                     <span className="text-xs text-muted-foreground italic flex items-center gap-1.5">
                       <Clock className="size-3.5 text-emerald-500" />
-                      الموعد متاح للحجز
+                      {locale === 'en' ? 'Slot available for booking' : 'الموعد متاح للحجز'}
                     </span>
 
                     {userRole !== 'DOCTOR' && (
-                      <NewReceptionBookingDialog
-                        doctorId={selectedDoctorId || doctors[0]?.id || ''}
-                        doctorName={selectedDoctorName}
-                        defaultDate={selectedDate}
-                        defaultStartTime={slotTime}
-                        triggerButton={
-                          <Button size="sm" variant="ghost" className="h-8 text-xs text-primary gap-1 hover:bg-primary/10">
-                            <Plus className="size-3.5" />
-                            حجز هذه الفترة
-                          </Button>
-                        }
-                      />
+                      <Button asChild size="sm" variant="ghost" className="h-8 text-xs text-primary gap-1 hover:bg-primary/10">
+                        <Link
+                          href={`/${userRole.toLowerCase()}/appointments/new?doctorId=${encodeURIComponent(
+                            selectedDoctorId || doctors[0]?.id || ''
+                          )}&date=${encodeURIComponent(selectedDate)}&startTime=${encodeURIComponent(slotTime)}`}
+                        >
+                          <Plus className="size-3.5" />
+                          {locale === 'en' ? 'Book this slot' : 'حجز هذه الفترة'}
+                        </Link>
+                      </Button>
                     )}
                   </div>
                 )}
@@ -517,13 +520,26 @@ export function AppointmentCalendar({
                         {a.startTime ? `${a.startTime} • ` : ''}طابور #{a.queueNumber}
                       </p>
                     </div>
-                    {a.isExempt ? (
-                      <Badge className="bg-purple-100 text-purple-800">معفي</Badge>
-                    ) : (a.remainingAmount ?? 0) > 0 ? (
-                      <Badge className="bg-amber-100 text-amber-800 font-mono">باقي {a.remainingAmount} ج.م</Badge>
-                    ) : (
-                      <Badge className="bg-emerald-100 text-emerald-800 font-mono">مدفوع</Badge>
-                    )}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <AppointmentTypeBadge type={a.type} locale={locale} size="sm" />
+                      {a.isExempt ? (
+                        <Badge className="bg-purple-100 text-purple-800">معفي</Badge>
+                      ) : (a.remainingAmount ?? 0) > 0 ? (
+                        <Badge className="bg-amber-100 text-amber-800 font-mono">باقي {a.remainingAmount} ج.م</Badge>
+                      ) : (
+                        <Badge className="bg-emerald-100 text-emerald-800 font-mono">مدفوع</Badge>
+                      )}
+                      {userRole !== 'DOCTOR' && (
+                        <Button asChild variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground">
+                          <Link
+                            href={`/${userRole.toLowerCase()}/appointments/${a.id}/edit`}
+                            title={locale === 'en' ? 'Edit Booking' : 'تعديل الحجز'}
+                          >
+                            <Edit className="size-3.5" />
+                          </Link>
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>

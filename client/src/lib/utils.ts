@@ -77,3 +77,27 @@ export function computeAge(dateOfBirth?: string | null, explicitAge?: number | n
 export function todayClinicDate(): string {
   return new Intl.DateTimeFormat('en-CA', { timeZone: CLINIC_TIMEZONE }).format(new Date());
 }
+
+/**
+ * Validates that a patient name consists of at least four non-empty name parts
+ * after leading/trailing trimming and collapsing internal repeated whitespace.
+ */
+export function validateFourPartName(rawName: string): {
+  isValid: boolean;
+  normalized: string;
+  partsCount: number;
+} {
+  if (!rawName || typeof rawName !== 'string') {
+    return { isValid: false, normalized: '', partsCount: 0 };
+  }
+
+  const normalized = rawName.trim().replace(/\s+/g, ' ');
+  const parts = normalized.split(' ').filter((part) => part.length > 0);
+
+  return {
+    isValid: parts.length >= 4,
+    normalized,
+    partsCount: parts.length,
+  };
+}
+

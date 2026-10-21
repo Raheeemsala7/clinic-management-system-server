@@ -8,7 +8,14 @@ export interface IPayment extends Document {
   patientId: string;
   amount: number;
   method: 'CASH' | 'CARD' | 'WALLET';
-  kind: 'CONSULTATION' | 'FOLLOW_UP' | 'OTHER';
+  kind:
+    | 'EXAMINATION'
+    | 'FOLLOW_UP'
+    | 'POST_OPERATIVE'
+    | 'LAB_TESTS_IMAGING'
+    | 'TEST_RESULTS_REVIEW'
+    | 'CONSULTATION'
+    | 'OTHER';
   status: 'RECORDED' | 'VOIDED';
   voidReason?: string;
   paymentType?: 'FULL' | 'DEPOSIT' | 'REMAINING' | 'OTHER';
@@ -25,7 +32,19 @@ const PaymentSchema = new Schema(
     patientId: { type: String, required: true, index: true },
     amount: { type: Number, required: true },
     method: { type: String, enum: ['CASH', 'CARD', 'WALLET'], required: true },
-    kind: { type: String, enum: ['CONSULTATION', 'FOLLOW_UP', 'OTHER'], required: true },
+    kind: {
+      type: String,
+      enum: [
+        'EXAMINATION',
+        'FOLLOW_UP',
+        'POST_OPERATIVE',
+        'LAB_TESTS_IMAGING',
+        'TEST_RESULTS_REVIEW',
+        'CONSULTATION',
+        'OTHER',
+      ],
+      required: true,
+    },
     paymentType: {
       type: String,
       enum: ['FULL', 'DEPOSIT', 'REMAINING', 'OTHER'],

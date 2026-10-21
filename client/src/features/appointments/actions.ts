@@ -6,11 +6,29 @@ import { api, ApiError } from '@/lib/api/client';
 import { requireRole } from '@/lib/session';
 import { ar } from '@/messages/ar';
 
+const appointmentTypeEnum = z.enum([
+  'EXAMINATION',
+  'FOLLOW_UP',
+  'POST_OPERATIVE',
+  'LAB_TESTS_IMAGING',
+  'TEST_RESULTS_REVIEW',
+  'CONSULTATION',
+]);
+
+const attachmentSchema = z.object({
+  id: z.string(),
+  fileName: z.string(),
+  fileSize: z.number(),
+  mimeType: z.string(),
+  url: z.string(),
+  uploadedAt: z.union([z.string(), z.date()]).optional(),
+});
+
 const createAppointmentSchema = z.object({
   patientId: z.string().min(1, 'معرف المريض مطلوب'),
   doctorId: z.string().min(1, 'معرف الطبيب مطلوب'),
   source: z.enum(['SCHEDULED', 'WALK_IN']),
-  type: z.enum(['CONSULTATION', 'FOLLOW_UP']),
+  type: appointmentTypeEnum,
   clinicDate: z.string().optional(),
   startTime: z.string().optional(),
   endTime: z.string().optional(),
@@ -21,12 +39,26 @@ const createAppointmentSchema = z.object({
   isExempt: z.boolean().default(false),
   exemptionReason: z.string().optional(),
   notes: z.string().optional(),
+  attachments: z.array(attachmentSchema).optional(),
 });
 
 export interface AppointmentActionResult {
   success: boolean;
   appointmentId?: string;
   error?: string;
+}
+
+export async function uploadBookingAttachmentsAction(
+  files: Array<{ name: string; data: string }>,
+): Promise<{ success: boolean; attachments?: any[]; error?: string }> {
+  await requireRole(['ADMIN', 'RECEPTION', 'DOCTOR']);
+  try {
+    const res = await api.post<{ attachments: any[] }>('/attachments/upload', { files });
+    return { success: true, attachments: res.attachments };
+  } catch (err) {
+    if (err instanceof ApiError) return { success: false, error: err.arabicMessage };
+    return { success: false, error: 'فشل رفع المرفقات' };
+  }
 }
 
 export async function createAppointmentAction(
@@ -36,6 +68,16 @@ export async function createAppointmentAction(
   await requireRole(['ADMIN', 'RECEPTION']);
 
   const isExempt = formData.get('isExempt') === 'true' || formData.get('isExempt') === 'on';
+
+  let parsedAttachments: any[] | undefined = undefined;
+  const rawAttachments = formData.get('attachments');
+  if (typeof rawAttachments === 'string' && rawAttachments.trim()) {
+    try {
+      parsedAttachments = JSON.parse(rawAttachments);
+    } catch {
+      // ignore JSON parse error
+    }
+  }
 
   const parsed = createAppointmentSchema.safeParse({
     patientId: formData.get('patientId'),
@@ -52,6 +94,7 @@ export async function createAppointmentAction(
     isExempt,
     exemptionReason: formData.get('exemptionReason') || undefined,
     notes: formData.get('notes') || undefined,
+    attachments: parsedAttachments,
   });
 
   if (!parsed.success) {
@@ -71,6 +114,38 @@ export async function createAppointmentAction(
   } catch (err) {
     if (err instanceof ApiError) return { success: false, error: err.arabicMessage };
     return { success: false, error: ar.errors.INTERNAL_SERVER_ERROR };
+  }
+}
+
+export async function updateAppointmentAction(
+  appointmentId: string,
+  data: {
+    type?: string;
+    clinicDate?: string;
+    startTime?: string;
+    endTime?: string;
+    notes?: string;
+    attachments?: any[];
+    totalAmount?: number;
+    paidAmount?: number;
+    isExempt?: boolean;
+    exemptionReason?: string;
+  },
+): Promise<AppointmentActionResult> {
+  await requireRole(['ADMIN', 'RECEPTION']);
+
+  try {
+    await api.put(`/appointments/${appointmentId}`, data);
+    revalidatePath('/reception');
+    revalidatePath('/reception/appointments');
+    revalidatePath('/reception/payments');
+    revalidatePath('/doctor/appointments');
+    revalidatePath('/admin');
+    revalidatePath('/admin/appointments');
+    return { success: true, appointmentId };
+  } catch (err) {
+    if (err instanceof ApiError) return { success: false, error: err.arabicMessage };
+    return { success: false, error: 'فشل تحديث بيانات الحجز' };
   }
 }
 
