@@ -1,10 +1,9 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { z } from 'zod';
 import { api, ApiError } from '@/lib/api/client';
 import { requireRole } from '@/lib/session';
-import { ar } from '@/i18n/messages/ar';
+import { getServerI18n } from '@/i18n/server';
 
 export interface ActionResult {
   success: boolean;
@@ -19,6 +18,7 @@ async function transitionAppointment(
   allowedRoles: ('ADMIN' | 'DOCTOR' | 'RECEPTION')[],
 ): Promise<ActionResult> {
   await requireRole(allowedRoles);
+  const { t, locale } = await getServerI18n();
   try {
     await api.post(`/appointments/${appointmentId}/${action}`);
     revalidatePath('/reception');
@@ -28,9 +28,9 @@ async function transitionAppointment(
     return { success: true };
   } catch (err) {
     if (err instanceof ApiError) {
-      return { success: false, error: err.arabicMessage };
+      return { success: false, error: err.getLocalizedMessage(locale) };
     }
-    return { success: false, error: ar.errors.INTERNAL_SERVER_ERROR };
+    return { success: false, error: t.errors.INTERNAL_SERVER_ERROR };
   }
 }
 
@@ -61,14 +61,15 @@ export async function postponeAction(appointmentId: string) {
 // ── Doctor status ─────────────────────────────────────────────────────────────
 
 export async function setDoctorStatusAction(status: 'AVAILABLE' | 'BREAK'): Promise<ActionResult> {
-  requireRole(['DOCTOR']);
+  await requireRole(['DOCTOR']);
+  const { t, locale } = await getServerI18n();
   try {
     await api.put('/doctor-status', { status });
     revalidatePath('/doctor');
     revalidatePath('/reception');
     return { success: true };
   } catch (err) {
-    if (err instanceof ApiError) return { success: false, error: err.arabicMessage };
-    return { success: false, error: ar.errors.INTERNAL_SERVER_ERROR };
+    if (err instanceof ApiError) return { success: false, error: err.getLocalizedMessage(locale) };
+    return { success: false, error: t.errors.INTERNAL_SERVER_ERROR };
   }
 }

@@ -1,13 +1,13 @@
 import { requireRole } from '@/lib/session';
 import { api } from '@/lib/api/client';
-import { ar } from '@/i18n/messages/ar';
+import { getServerI18n } from '@/i18n/server';
 import { VisitEditor } from './visit-editor';
 import { PrescriptionManager, type Prescription } from './prescription-manager';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { computeAge } from '@/lib/utils';
-import { AlertCircle, HeartPulse, Stethoscope, ArrowRight, UserCheck, FileText } from 'lucide-react';
+import { AlertCircle, HeartPulse, Stethoscope, ArrowRight, ArrowLeft, UserCheck, FileText } from 'lucide-react';
 import Link from 'next/link';
 
 export const dynamic = 'force-dynamic';
@@ -42,9 +42,11 @@ export interface Visit {
 export default async function VisitPage({ params }: { params: Promise<{ id: string }> }) {
   const user = await requireRole(['DOCTOR', 'ADMIN']);
   const { id } = await params;
+  const { t, isAr } = await getServerI18n();
 
   const visit = await api.get<Visit>(`/visits/${id}`);
   const age = computeAge(visit.patient.dateOfBirth, visit.patient.age);
+  const BackIcon = isAr ? ArrowRight : ArrowLeft;
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
@@ -52,12 +54,14 @@ export default async function VisitPage({ params }: { params: Promise<{ id: stri
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <Button variant="ghost" size="sm" asChild className="gap-1.5 text-xs text-muted-foreground hover:text-foreground">
           <Link href="/doctor">
-            <ArrowRight className="size-4" />
-            العودة لشاشة كشف اليوم
+            <BackIcon className="size-4" />
+            {isAr ? 'العودة لشاشة كشف اليوم' : 'Back to Today Overview'}
           </Link>
         </Button>
         <Badge variant={visit.status === 'OPEN' ? 'default' : 'outline'} className={visit.status === 'OPEN' ? 'bg-blue-600' : ''}>
-          {visit.status === 'OPEN' ? 'كشف جارٍ (مفتوح)' : 'كشف منتهٍ (مغلق)'}
+          {visit.status === 'OPEN'
+            ? (isAr ? 'كشف جارٍ (مفتوح)' : 'In Progress (Open)')
+            : (isAr ? 'كشف منتهٍ (مغلق)' : 'Completed (Closed)')}
         </Badge>
       </div>
 
@@ -77,8 +81,8 @@ export default async function VisitPage({ params }: { params: Promise<{ id: stri
                   {visit.patient.fullName}
                 </h1>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  {visit.patient.gender === 'MALE' ? ar.patients.male : ar.patients.female}
-                  {age !== null && ` • ${age} ${ar.patients.years}`}
+                  {visit.patient.gender === 'MALE' ? t.patients.male : t.patients.female}
+                  {age !== null && ` • ${age} ${t.patients.years}`}
                 </p>
               </div>
             </Link>
@@ -93,21 +97,27 @@ export default async function VisitPage({ params }: { params: Promise<{ id: stri
               >
                 <Link href={`/doctor/patients/${visit.patientId}`}>
                   <FileText className="size-3.5" />
-                  زيارات وتقرير المريض
+                  {isAr ? 'زيارات وتقرير المريض' : 'Patient Visits & Report'}
                 </Link>
               </Button>
 
               {visit.patient.allergies && visit.patient.allergies.length > 0 && (
                 <div className="flex items-center gap-1.5 px-3 py-1 rounded-md bg-red-100 text-red-900 border border-red-300 text-xs font-bold">
                   <AlertCircle className="size-3.5 text-red-600 shrink-0" />
-                  <span>حساسية: {visit.patient.allergies.join('، ')}</span>
+                  <span>
+                    {isAr ? 'حساسية: ' : 'Allergies: '}
+                    {visit.patient.allergies.join(isAr ? '، ' : ', ')}
+                  </span>
                 </div>
               )}
 
               {visit.patient.chronicConditions && visit.patient.chronicConditions.length > 0 && (
                 <div className="flex items-center gap-1.5 px-3 py-1 rounded-md bg-amber-100 text-amber-900 border border-amber-300 text-xs font-semibold">
                   <HeartPulse className="size-3.5 text-amber-600 shrink-0" />
-                  <span>أمراض مزمنة: {visit.patient.chronicConditions.join('، ')}</span>
+                  <span>
+                    {isAr ? 'أمراض مزمنة: ' : 'Chronic: '}
+                    {visit.patient.chronicConditions.join(isAr ? '، ' : ', ')}
+                  </span>
                 </div>
               )}
             </div>
@@ -120,10 +130,12 @@ export default async function VisitPage({ params }: { params: Promise<{ id: stri
         <CardHeader className="pb-3 border-b bg-muted/20">
           <CardTitle className="text-base font-bold flex items-center gap-2">
             <Stethoscope className="size-5 text-primary" />
-            الفحص السريري والملاحظات الطبية
+            {isAr ? 'الفحص السريري والملاحظات الطبية' : 'Clinical Examination & Medical Notes'}
           </CardTitle>
           <CardDescription className="text-xs">
-            تسجيل الشكوى والتشخيص والملاحظات والتعليمات الطبية للمريض
+            {isAr
+              ? 'تسجيل الشكوى والتشخيص والملاحظات والتعليمات الطبية للمريض'
+              : 'Record chief complaint, diagnosis, clinical notes, and patient instructions'}
           </CardDescription>
         </CardHeader>
         <CardContent className="p-5">

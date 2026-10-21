@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { api, ApiError } from '@/lib/api/client';
 import { requireRole } from '@/lib/session';
-import { ar } from '@/i18n/messages/ar';
+import { getServerI18n } from '@/i18n/server';
 
 export interface DoctorScheduleShift {
   startTime: string; // "08:00"
@@ -32,6 +32,7 @@ export interface AvailableSlotItem {
 }
 
 export interface AvailableSlotsResponse {
+  doctorId?: string;
   date: string;
   dayOfWeek: number;
   dayName: string;
@@ -59,6 +60,7 @@ export async function updateDoctorScheduleAction(
   data: { slotDurationMinutes: number; weeklySchedule: DoctorDaySchedule[] },
 ): Promise<{ success: boolean; error?: string }> {
   await requireRole(['DOCTOR', 'ADMIN']);
+  const { t, locale } = await getServerI18n();
   try {
     await api.put(`/doctor-schedule/${doctorId}`, data);
     revalidatePath('/doctor/schedule');
@@ -66,8 +68,8 @@ export async function updateDoctorScheduleAction(
     revalidatePath('/reception/appointments');
     return { success: true };
   } catch (err) {
-    if (err instanceof ApiError) return { success: false, error: err.arabicMessage };
-    return { success: false, error: ar.errors.INTERNAL_SERVER_ERROR };
+    if (err instanceof ApiError) return { success: false, error: err.getLocalizedMessage(locale) };
+    return { success: false, error: t.errors.INTERNAL_SERVER_ERROR };
   }
 }
 
@@ -78,7 +80,9 @@ export async function getDoctorAvailableSlotsAction(
   await requireRole(['RECEPTION', 'DOCTOR', 'ADMIN']);
   if (!doctorId || !date) return null;
   try {
-    return await api.get<AvailableSlotsResponse>(`/doctor-schedule/${doctorId}/available-slots?date=${encodeURIComponent(date)}`);
+    return await api.get<AvailableSlotsResponse>(
+      `/doctor-schedule/${doctorId}/available-slots?date=${encodeURIComponent(date)}`,
+    );
   } catch {
     return null;
   }

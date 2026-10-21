@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ar } from '@/i18n/messages/ar';
+import { useI18n } from '@/i18n/use-i18n';
 import { KeyRound, UserX, Loader2 } from 'lucide-react';
 
 interface UserRowActionsProps {
@@ -23,13 +23,14 @@ interface UserRowActionsProps {
 }
 
 export function UserRowActions({ userId, userName, isActive }: UserRowActionsProps) {
+  const { t, isAr } = useI18n();
   const [isPending, startTransition] = useTransition();
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   const handleDeactivate = () => {
-    if (!confirm(ar.users.deactivateConfirm)) return;
+    if (!confirm(t.users.deactivateConfirm)) return;
     startTransition(async () => {
       await deactivateUserAction(userId);
     });
@@ -37,7 +38,11 @@ export function UserRowActions({ userId, userName, isActive }: UserRowActionsPro
 
   const handleResetPassword = () => {
     if (!newPassword || newPassword.length < 8) {
-      setError('كلمة المرور يجب أن تكون 8 أحرف على الأقل');
+      setError(
+        isAr
+          ? 'كلمة المرور يجب أن تكون 8 أحرف على الأقل'
+          : 'Password must be at least 8 characters',
+      );
       return;
     }
     setError(null);
@@ -47,7 +52,7 @@ export function UserRowActions({ userId, userName, isActive }: UserRowActionsPro
         setResetDialogOpen(false);
         setNewPassword('');
       } else {
-        setError(res.error ?? ar.errors.generic);
+        setError(res.error ?? t.errors.generic);
       }
     });
   };
@@ -60,10 +65,10 @@ export function UserRowActions({ userId, userName, isActive }: UserRowActionsPro
           size="sm"
           className="h-8 px-2 text-xs"
           onClick={() => setResetDialogOpen(true)}
-          title={ar.users.resetPassword}
+          title={t.users.resetPassword}
         >
           <KeyRound className="size-3.5 me-1" />
-          {ar.users.resetPassword}
+          {t.users.resetPassword}
         </Button>
 
         {isActive && (
@@ -73,10 +78,10 @@ export function UserRowActions({ userId, userName, isActive }: UserRowActionsPro
             className="h-8 px-2 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive"
             onClick={handleDeactivate}
             disabled={isPending}
-            title={ar.users.deactivate}
+            title={t.users.deactivate}
           >
             <UserX className="size-3.5 me-1" />
-            {ar.users.deactivate}
+            {t.users.deactivate}
           </Button>
         )}
       </div>
@@ -84,16 +89,19 @@ export function UserRowActions({ userId, userName, isActive }: UserRowActionsPro
       <Dialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>{ar.users.resetPassword}</DialogTitle>
+            <DialogTitle>{t.users.resetPassword}</DialogTitle>
             <DialogDescription>
-              تعيين كلمة مرور جديدة للمستخدم: <span className="font-semibold text-foreground">{userName}</span>
+              {isAr
+                ? 'تعيين كلمة مرور جديدة للمستخدم: '
+                : 'Set a new password for user: '}
+              <span className="font-semibold text-foreground">{userName}</span>
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-2">
             {error && <p className="text-xs text-destructive font-medium">{error}</p>}
             <div className="space-y-1.5">
-              <Label htmlFor="newPassword">{ar.users.newPassword}</Label>
+              <Label htmlFor="newPassword">{t.users.newPassword}</Label>
               <Input
                 id="newPassword"
                 type="password"
@@ -109,11 +117,11 @@ export function UserRowActions({ userId, userName, isActive }: UserRowActionsPro
 
           <DialogFooter className="gap-2 sm:gap-0">
             <Button variant="outline" onClick={() => setResetDialogOpen(false)} disabled={isPending}>
-              {ar.common.cancel}
+              {t.common.cancel}
             </Button>
             <Button onClick={handleResetPassword} disabled={isPending}>
               {isPending && <Loader2 className="size-4 animate-spin me-2" />}
-              {ar.common.save}
+              {t.common.save}
             </Button>
           </DialogFooter>
         </DialogContent>

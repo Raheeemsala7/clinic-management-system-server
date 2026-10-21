@@ -116,6 +116,7 @@
     "MEDICAL_FIELD_FORBIDDEN": "You do not have permission to modify medical records",
     "SCHEDULED_AT_REQUIRED": "Appointment time must be specified",
     "FULL_NAME_FOUR_PARTS_REQUIRED": "Full four-part name is required (at least 4 names separated by spaces)",
+    "serverError": "Internal server error, please try again",
     "generic": "Could not complete operation, please try again"
   },
   "auth": {

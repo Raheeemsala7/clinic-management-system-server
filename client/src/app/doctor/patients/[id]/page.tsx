@@ -2,13 +2,14 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { requireRole } from '@/lib/session';
 import { getPatient, getPatientHistory, type PatientFull, type PatientVisitHistoryItem } from '@/features/patients/queries';
-import { ar } from '@/i18n/messages/ar';
+import { getServerI18n } from '@/i18n/server';
 import { formatDate, formatTime, computeAge } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   ArrowRight,
+  ArrowLeft,
   AlertCircle,
   HeartPulse,
   FileText,
@@ -33,6 +34,7 @@ interface PatientProfilePageProps {
 export default async function PatientProfilePage({ params }: PatientProfilePageProps) {
   await requireRole(['DOCTOR', 'ADMIN']);
   const { id } = await params;
+  const { t, isAr } = await getServerI18n();
 
   let patient: PatientFull;
   let historyItems: PatientVisitHistoryItem[] = [];
@@ -51,9 +53,8 @@ export default async function PatientProfilePage({ params }: PatientProfilePageP
   const age = computeAge(patient.dateOfBirth, patient.age);
   const totalVisits = historyItems.length;
   const latestVisit = historyItems[0] ?? null;
-
-  // Calculate all prescribed medications count
   const totalPrescriptions = historyItems.reduce((acc, v) => acc + (v.prescriptions?.length || 0), 0);
+  const BackIcon = isAr ? ArrowRight : ArrowLeft;
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
@@ -62,20 +63,20 @@ export default async function PatientProfilePage({ params }: PatientProfilePageP
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="sm" asChild className="gap-1.5 text-xs text-muted-foreground hover:text-foreground">
             <Link href="/doctor/patients">
-              <ArrowRight className="size-4" />
-              العودة لقائمة المرضى
+              <BackIcon className="size-4" />
+              {isAr ? 'العودة لقائمة المرضى' : 'Back to Patient List'}
             </Link>
           </Button>
           <span className="text-muted-foreground text-xs">•</span>
           <Button variant="ghost" size="sm" asChild className="gap-1.5 text-xs text-muted-foreground hover:text-foreground">
             <Link href="/doctor">
-              شاشة كشف اليوم
+              {isAr ? 'شاشة كشف اليوم' : 'Today Overview'}
             </Link>
           </Button>
         </div>
 
         <Badge variant="outline" className="text-xs font-mono">
-          رقم المريض: {patient.id.slice(0, 8)}
+          {isAr ? `رقم المريض: ${patient.id.slice(0, 8)}` : `Patient ID: ${patient.id.slice(0, 8)}`}
         </Badge>
       </div>
 
@@ -91,7 +92,7 @@ export default async function PatientProfilePage({ params }: PatientProfilePageP
                 <div className="flex items-center gap-3 flex-wrap">
                   <h1 className="text-2xl sm:text-3xl font-black text-foreground">{patient.fullName}</h1>
                   <Badge variant="secondary" className="font-semibold text-xs">
-                    {patient.gender === 'MALE' ? ar.patients.male : ar.patients.female}
+                    {patient.gender === 'MALE' ? t.patients.male : t.patients.female}
                   </Badge>
                 </div>
 
@@ -107,9 +108,9 @@ export default async function PatientProfilePage({ params }: PatientProfilePageP
                   )}
 
                   {age !== null && (
-                    <span className="flex items-center gap-1.5">
+                    <span className="flex items-center gap-1">
                       <Calendar className="size-3.5 text-primary" />
-                      {age} {ar.patients.years}
+                      {age} {t.patients.years}
                       {patient.dateOfBirth && (
                         <span className="text-muted-foreground font-mono">({formatDate(patient.dateOfBirth)})</span>
                       )}
@@ -117,7 +118,7 @@ export default async function PatientProfilePage({ params }: PatientProfilePageP
                   )}
 
                   {patient.address && (
-                    <span className="flex items-center gap-1.5">
+                    <span className="flex items-center gap-1">
                       <MapPin className="size-3.5 text-primary" />
                       {patient.address}
                     </span>
@@ -128,7 +129,7 @@ export default async function PatientProfilePage({ params }: PatientProfilePageP
 
             <div className="flex items-center gap-2">
               <Badge variant="outline" className="bg-background/80 text-xs px-3 py-1 font-semibold">
-                مسجل منذ: {formatDate(patient.createdAt)}
+                {isAr ? `مسجل منذ: ${formatDate(patient.createdAt)}` : `Registered: ${formatDate(patient.createdAt)}`}
               </Badge>
             </div>
           </div>
@@ -139,18 +140,20 @@ export default async function PatientProfilePage({ params }: PatientProfilePageP
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
             {/* Allergies Alert */}
             <div
-              className={`rounded-xl border p-3.5 transition-colors ${patient.allergies && patient.allergies.length > 0
+              className={`rounded-xl border p-3.5 transition-colors ${
+                patient.allergies && patient.allergies.length > 0
                   ? 'bg-red-50/90 border-red-300 text-red-950 dark:bg-red-950/20'
                   : 'bg-muted/30 border-muted text-muted-foreground'
-                }`}
+              }`}
             >
               <div className="flex items-center gap-2 mb-2 font-bold text-sm">
                 <AlertCircle
-                  className={`size-4 shrink-0 ${patient.allergies && patient.allergies.length > 0 ? 'text-red-600' : 'text-muted-foreground'
-                    }`}
+                  className={`size-4 shrink-0 ${
+                    patient.allergies && patient.allergies.length > 0 ? 'text-red-600' : 'text-muted-foreground'
+                  }`}
                 />
                 <span className={patient.allergies && patient.allergies.length > 0 ? 'text-red-700' : ''}>
-                  حساسية الأدوية والمواد (تحذير سريري)
+                  {isAr ? 'حساسية الأدوية والمواد (تحذير سريري)' : 'Drug & Material Allergies (Clinical Alert)'}
                 </span>
               </div>
               {patient.allergies && patient.allergies.length > 0 ? (
@@ -162,26 +165,30 @@ export default async function PatientProfilePage({ params }: PatientProfilePageP
                   ))}
                 </div>
               ) : (
-                <p className="text-xs text-muted-foreground font-medium">لا توجد أي حساسيات مسجلة للمريض</p>
+                <p className="text-xs text-muted-foreground font-medium">
+                  {isAr ? 'لا توجد أي حساسيات مسجلة للمريض' : 'No recorded allergies for this patient'}
+                </p>
               )}
             </div>
 
             {/* Chronic Conditions Alert */}
             <div
-              className={`rounded-xl border p-3.5 transition-colors ${patient.chronicConditions && patient.chronicConditions.length > 0
+              className={`rounded-xl border p-3.5 transition-colors ${
+                patient.chronicConditions && patient.chronicConditions.length > 0
                   ? 'bg-amber-50/90 border-amber-300 text-amber-950 dark:bg-amber-950/20'
                   : 'bg-muted/30 border-muted text-muted-foreground'
-                }`}
+              }`}
             >
               <div className="flex items-center gap-2 mb-2 font-bold text-sm">
                 <HeartPulse
-                  className={`size-4 shrink-0 ${patient.chronicConditions && patient.chronicConditions.length > 0
+                  className={`size-4 shrink-0 ${
+                    patient.chronicConditions && patient.chronicConditions.length > 0
                       ? 'text-amber-600'
                       : 'text-muted-foreground'
-                    }`}
+                  }`}
                 />
                 <span className={patient.chronicConditions && patient.chronicConditions.length > 0 ? 'text-amber-800' : ''}>
-                  الأمراض المزمنة
+                  {isAr ? 'الأمراض المزمنة' : 'Chronic Conditions'}
                 </span>
               </div>
               {patient.chronicConditions && patient.chronicConditions.length > 0 ? (
@@ -197,7 +204,9 @@ export default async function PatientProfilePage({ params }: PatientProfilePageP
                   ))}
                 </div>
               ) : (
-                <p className="text-xs text-muted-foreground font-medium">لا توجد أمراض مزمنة مسجلة</p>
+                <p className="text-xs text-muted-foreground font-medium">
+                  {isAr ? 'لا توجد أمراض مزمنة مسجلة' : 'No chronic conditions recorded'}
+                </p>
               )}
             </div>
           </div>
@@ -205,7 +214,9 @@ export default async function PatientProfilePage({ params }: PatientProfilePageP
           {/* General Notes */}
           {patient.generalNotes && (
             <div className="rounded-xl border bg-muted/20 p-3 text-xs text-muted-foreground">
-              <span className="font-bold text-foreground">ملاحظات عامة حول المريض: </span>
+              <span className="font-bold text-foreground">
+                {isAr ? 'ملاحظات عامة حول المريض: ' : 'General Notes: '}
+              </span>
               {patient.generalNotes}
             </div>
           )}
@@ -220,7 +231,9 @@ export default async function PatientProfilePage({ params }: PatientProfilePageP
               <Activity className="size-5" />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground font-medium">إجمالي الزيارات والفحوصات</p>
+              <p className="text-xs text-muted-foreground font-medium">
+                {isAr ? 'إجمالي الزيارات والفحوصات' : 'Total Visits & Exams'}
+              </p>
               <p className="text-2xl font-black text-foreground">{totalVisits}</p>
             </div>
           </CardContent>
@@ -232,7 +245,9 @@ export default async function PatientProfilePage({ params }: PatientProfilePageP
               <Pill className="size-5" />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground font-medium">الروشتات الطبية المصروفة</p>
+              <p className="text-xs text-muted-foreground font-medium">
+                {isAr ? 'الروشتات الطبية المصروفة' : 'Prescriptions Dispensed'}
+              </p>
               <p className="text-2xl font-black text-foreground">{totalPrescriptions}</p>
             </div>
           </CardContent>
@@ -244,9 +259,11 @@ export default async function PatientProfilePage({ params }: PatientProfilePageP
               <Clock className="size-5" />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground font-medium">آخر كشف / زيارة</p>
+              <p className="text-xs text-muted-foreground font-medium">
+                {isAr ? 'آخر كشف / زيارة' : 'Last Visit / Exam'}
+              </p>
               <p className="text-sm font-bold text-foreground mt-0.5 truncate">
-                {latestVisit ? formatDate(latestVisit.createdAt) : 'لا توجد زيارات سابقة'}
+                {latestVisit ? formatDate(latestVisit.createdAt) : (isAr ? 'لا توجد زيارات سابقة' : 'No prior visits')}
               </p>
             </div>
           </CardContent>
@@ -258,16 +275,22 @@ export default async function PatientProfilePage({ params }: PatientProfilePageP
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Stethoscope className="size-5 text-primary" />
-            <h2 className="text-xl font-bold">السجل الطبي والزيارات السابقة ({totalVisits})</h2>
+            <h2 className="text-xl font-bold">
+              {isAr ? `السجل الطبي والزيارات السابقة (${totalVisits})` : `Medical History & Past Visits (${totalVisits})`}
+            </h2>
           </div>
         </div>
 
         {historyItems.length === 0 ? (
           <Card className="p-12 text-center text-muted-foreground border-dashed">
             <FileText className="size-10 mx-auto text-muted-foreground/60 mb-2" />
-            <p className="font-bold text-base text-foreground">لا يوجد سجل زيارات سابق لهذا المريض</p>
+            <p className="font-bold text-base text-foreground">
+              {isAr ? 'لا يوجد سجل زيارات سابق لهذا المريض' : 'No past visit records found for this patient'}
+            </p>
             <p className="text-xs text-muted-foreground mt-1">
-              عند إتمام أول كشف طبي للمريض ستظهر كافة التشخيصات والملاحظات والروشتات هنا تلقائياً.
+              {isAr
+                ? 'عند إتمام أول كشف طبي للمريض ستظهر كافة التشخيصات والملاحظات والروشتات هنا تلقائياً.'
+                : 'Upon completing the first consultation, all diagnoses, notes, and prescriptions will appear here automatically.'}
             </p>
           </Card>
         ) : (
@@ -285,7 +308,7 @@ export default async function PatientProfilePage({ params }: PatientProfilePageP
                       </span>
                       <div>
                         <span className="font-bold text-sm text-foreground">
-                          كشف طبي — {formatDate(visit.createdAt)}
+                          {isAr ? `كشف طبي — ${formatDate(visit.createdAt)}` : `Medical Consultation — ${formatDate(visit.createdAt)}`}
                         </span>
                         <span className="text-xs text-muted-foreground ms-2 font-mono">
                           {formatTime(visit.createdAt)}
@@ -295,13 +318,15 @@ export default async function PatientProfilePage({ params }: PatientProfilePageP
 
                     <div className="flex items-center gap-2">
                       <Badge variant={isOpen ? 'default' : 'secondary'} className={isOpen ? 'bg-blue-600' : ''}>
-                        {isOpen ? 'كشف جارٍ (مفتوح)' : 'مكتمل ومغلق'}
+                        {isOpen
+                          ? (isAr ? 'كشف جارٍ (مفتوح)' : 'In Progress (Open)')
+                          : (isAr ? 'مكتمل ومغلق' : 'Completed (Closed)')}
                       </Badge>
 
                       <Button size="sm" variant="outline" asChild className="h-8 gap-1 text-xs">
                         <Link href={`/doctor/visits/${visit.id}`}>
                           <ExternalLink className="size-3.5" />
-                          فتح شاشة الكشف
+                          {isAr ? 'فتح شاشة الكشف' : 'Open Exam'}
                         </Link>
                       </Button>
                     </div>
@@ -313,20 +338,20 @@ export default async function PatientProfilePage({ params }: PatientProfilePageP
                       <div className="rounded-lg bg-muted/20 border p-3.5 space-y-1">
                         <p className="text-xs font-bold text-muted-foreground flex items-center gap-1.5">
                           <FileText className="size-3.5 text-primary" />
-                          الشكوى الرئيسية (Complaint)
+                          {isAr ? 'الشكوى الرئيسية (Complaint)' : 'Chief Complaint'}
                         </p>
                         <p className="text-sm text-foreground font-medium">
-                          {visit.complaint || '— لا توجد شكوى مسجلة —'}
+                          {visit.complaint || (isAr ? '— لا توجد شكوى مسجلة —' : '— No complaint recorded —')}
                         </p>
                       </div>
 
                       <div className="rounded-lg bg-primary/5 border border-primary/20 p-3.5 space-y-1">
                         <p className="text-xs font-bold text-primary flex items-center gap-1.5">
                           <CheckCircle2 className="size-3.5 text-primary" />
-                          التشخيص الطبي (Diagnosis)
+                          {isAr ? 'التشخيص الطبي (Diagnosis)' : 'Clinical Diagnosis'}
                         </p>
                         <p className="text-sm text-foreground font-bold">
-                          {visit.diagnosis || '— لا يوجد تشخيص مسجل —'}
+                          {visit.diagnosis || (isAr ? '— لا يوجد تشخيص مسجل —' : '— No diagnosis recorded —')}
                         </p>
                       </div>
                     </div>
@@ -336,20 +361,26 @@ export default async function PatientProfilePage({ params }: PatientProfilePageP
                       <div className="space-y-2 text-xs pt-1 border-t">
                         {visit.notes && (
                           <div className="flex items-start gap-2 text-muted-foreground">
-                            <span className="font-bold text-foreground shrink-0">ملاحظات الفحص:</span>
+                            <span className="font-bold text-foreground shrink-0">
+                              {isAr ? 'ملاحظات الفحص:' : 'Exam Notes:'}
+                            </span>
                             <span className="text-foreground/90">{visit.notes}</span>
                           </div>
                         )}
                         {visit.instructions && (
                           <div className="flex items-start gap-2 text-muted-foreground">
-                            <span className="font-bold text-emerald-700 shrink-0">تعليمات للمريض:</span>
+                            <span className="font-bold text-emerald-700 shrink-0">
+                              {isAr ? 'تعليمات للمريض:' : 'Patient Instructions:'}
+                            </span>
                             <span className="text-emerald-900">{visit.instructions}</span>
                           </div>
                         )}
                         {visit.followUpDate && (
                           <div className="flex items-center gap-2 text-primary font-bold">
                             <Calendar className="size-3.5" />
-                            <span>موعد الاستشارة / المتابعة: {formatDate(visit.followUpDate)}</span>
+                            <span>
+                              {isAr ? `موعد الاستشارة / المتابعة: ${formatDate(visit.followUpDate)}` : `Follow-up Date: ${formatDate(visit.followUpDate)}`}
+                            </span>
                           </div>
                         )}
                       </div>
@@ -360,7 +391,9 @@ export default async function PatientProfilePage({ params }: PatientProfilePageP
                       <div className="pt-3 border-t space-y-2.5">
                         <p className="text-xs font-bold text-foreground flex items-center gap-1.5">
                           <Pill className="size-4 text-emerald-600" />
-                          الروشتة والعلاج المصروف ({visitPrescriptions.length} روشتة)
+                          {isAr
+                            ? `الروشتة والعلاج المصروف (${visitPrescriptions.length} روشتة)`
+                            : `Prescriptions & Medications (${visitPrescriptions.length})`}
                         </p>
 
                         <div className="space-y-2">
@@ -368,7 +401,7 @@ export default async function PatientProfilePage({ params }: PatientProfilePageP
                             <div key={rx.id} className="rounded-lg border bg-emerald-50/30 p-3 text-xs space-y-2">
                               <div className="flex items-center justify-between text-muted-foreground border-b pb-1.5">
                                 <span className="font-bold text-emerald-900">
-                                  روشتة إصدار (v{rx.versionNumber})
+                                  {isAr ? `روشتة إصدار (v${rx.versionNumber})` : `Prescription (v${rx.versionNumber})`}
                                 </span>
                                 <span>{formatDate(rx.createdAt)}</span>
                               </div>
@@ -391,7 +424,9 @@ export default async function PatientProfilePage({ params }: PatientProfilePageP
 
                               {rx.notes && (
                                 <p className="text-muted-foreground text-[11px] pt-1 border-t border-emerald-100">
-                                  <span className="font-semibold text-foreground">توصيات: </span>
+                                  <span className="font-semibold text-foreground">
+                                    {isAr ? 'توصيات: ' : 'Recommendations: '}
+                                  </span>
                                   {rx.notes}
                                 </p>
                               )}

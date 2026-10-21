@@ -2,7 +2,11 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { createPrescriptionAction, markPrescriptionPrintedAction, searchDrugsAction, type PrescriptionItemInput } from '@/features/prescriptions/actions';
+import {
+  createPrescriptionAction,
+  markPrescriptionPrintedAction,
+  type PrescriptionItemInput,
+} from '@/features/prescriptions/actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -15,9 +19,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { ar } from '@/i18n/messages/ar';
+import { useI18n } from '@/i18n/use-i18n';
 import { formatDate, formatTime } from '@/lib/utils';
-import { Pill, Plus, Trash2, Printer, Check, CheckCheck, Loader2, Sparkles, FileText } from 'lucide-react';
+import { Pill, Plus, Trash2, Printer, Check, CheckCheck, Loader2 } from 'lucide-react';
 
 export interface PrescriptionItem {
   id: string;
@@ -49,37 +53,22 @@ interface PrescriptionManagerProps {
   isClosed?: boolean;
 }
 
-const COMMON_FREQUENCIES = [
-  'قرص 3 مرات يومياً بعد الأكل',
-  'قرص مرتين يومياً (صباحاً ومساءً)',
-  'قرص واحد يومياً قبل النوم',
-  'قرص واحد يومياً قبل الإفطار',
-  'ملعقة 3 مرات يومياً بعد الوجبات',
-  'كل 8 ساعات عند اللزوم',
-];
-
-const COMMON_DURATIONS = [
-  'لمدة 3 أيام',
-  'لمدة 5 أيام',
-  'لمدة أسبوع',
-  'لمدة 10 أيام',
-  'لمدة أسبوعين',
-  'لمدة شهر',
-];
-
 export function PrescriptionManager({
   visitId,
   patientName,
   patientAge,
   patientGender,
   doctorName,
-  clinicName = 'عيادة الرعاية الطبية المتكاملة',
+  clinicName,
   initialPrescriptions,
   isClosed,
 }: PrescriptionManagerProps) {
+  const { t, isAr } = useI18n();
+  const effectiveClinicName = clinicName || (isAr ? 'عيادة الرعاية الطبية المتكاملة' : 'Integrated Medical Clinic');
+
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const [prescriptions, setPrescriptions] = useState<Prescription[]>(initialPrescriptions);
+  const [prescriptions] = useState<Prescription[]>(initialPrescriptions);
   const [showAddForm, setShowAddForm] = useState(initialPrescriptions.length === 0);
   const [error, setError] = useState<string | null>(null);
 
@@ -88,14 +77,26 @@ export function PrescriptionManager({
 
   // New Prescription Items
   const [items, setItems] = useState<PrescriptionItemInput[]>([
-    { drugName: '', dose: '1 قرص', frequency: '3 مرات يومياً بعد الأكل', duration: 'لمدة 5 أيام', instructions: '' },
+    {
+      drugName: '',
+      dose: isAr ? '1 قرص' : '1 tablet',
+      frequency: isAr ? '3 مرات يومياً بعد الأكل' : '3 times daily after meals',
+      duration: isAr ? 'لمدة 5 أيام' : '5 days',
+      instructions: '',
+    },
   ]);
   const [notes, setNotes] = useState('');
 
   const handleAddItem = () => {
     setItems((prev) => [
       ...prev,
-      { drugName: '', dose: '1 قرص', frequency: '3 مرات يومياً بعد الأكل', duration: 'لمدة 5 أيام', instructions: '' },
+      {
+        drugName: '',
+        dose: isAr ? '1 قرص' : '1 tablet',
+        frequency: isAr ? '3 مرات يومياً بعد الأكل' : '3 times daily after meals',
+        duration: isAr ? 'لمدة 5 أيام' : '5 days',
+        instructions: '',
+      },
     ]);
   };
 
@@ -119,7 +120,7 @@ export function PrescriptionManager({
     // Validate
     const validItems = items.filter((it) => it.drugName.trim().length > 0);
     if (validItems.length === 0) {
-      setError('يرجى كتابة اسم دواء واحد على الأقل');
+      setError(isAr ? 'يرجى كتابة اسم دواء واحد على الأقل' : 'Please enter at least one medication name');
       return;
     }
 
@@ -133,7 +134,7 @@ export function PrescriptionManager({
         setShowAddForm(false);
         router.refresh();
       } else {
-        setError(res.error ?? ar.errors.generic);
+        setError(res.error ?? t.errors.generic);
       }
     });
   };
@@ -151,6 +152,14 @@ export function PrescriptionManager({
     window.print();
   };
 
+  const frequencyChips = isAr
+    ? ['3 مرات يومياً', 'مرتين يومياً', 'مرة قبل النوم']
+    : ['3 times daily', 'Twice daily', 'Once at bedtime'];
+
+  const durationChips = isAr
+    ? ['لمدة 5 أيام', 'لمدة أسبوع', 'لمدة شهر']
+    : ['For 5 days', 'For 1 week', 'For 1 month'];
+
   return (
     <div className="space-y-6">
       {/* Existing Prescriptions List */}
@@ -159,7 +168,9 @@ export function PrescriptionManager({
           <div className="flex items-center justify-between">
             <h3 className="font-bold text-lg flex items-center gap-2">
               <Pill className="size-5 text-emerald-600" />
-              الروشتات الطبية المسجلة ({prescriptions.length})
+              {isAr
+                ? `الروشتات الطبية المسجلة (${prescriptions.length})`
+                : `Prescriptions on file (${prescriptions.length})`}
             </h3>
             {!showAddForm && !isClosed && (
               <Button
@@ -169,7 +180,7 @@ export function PrescriptionManager({
                 className="gap-1.5 text-xs text-emerald-700 border-emerald-300 hover:bg-emerald-50"
               >
                 <Plus className="size-3.5" />
-                تحرير روشتة إضافية
+                {isAr ? 'تحرير روشتة إضافية' : 'Write Additional Prescription'}
               </Button>
             )}
           </div>
@@ -180,7 +191,9 @@ export function PrescriptionManager({
                 <CardHeader className="py-3 px-4 bg-muted/20 border-b flex flex-row items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="font-bold text-sm text-foreground">
-                      روشتة علاجية (إصدار v{rx.versionNumber})
+                      {isAr
+                        ? `روشتة علاجية (إصدار v${rx.versionNumber})`
+                        : `Prescription (v${rx.versionNumber})`}
                     </span>
                     <span className="text-xs text-muted-foreground font-mono">
                       {formatDate(rx.createdAt)} {formatTime(rx.createdAt)}
@@ -190,11 +203,11 @@ export function PrescriptionManager({
                     {rx.printedAt ? (
                       <Badge variant="outline" className="text-xs bg-emerald-50 text-emerald-800 border-emerald-300 flex items-center gap-1">
                         <CheckCheck className="size-3" />
-                        تمت الطباعة
+                        {isAr ? 'تمت الطباعة' : 'Printed'}
                       </Badge>
                     ) : (
                       <Badge variant="outline" className="text-xs text-muted-foreground">
-                        غير مطبوعة
+                        {isAr ? 'غير مطبوعة' : 'Not Printed'}
                       </Badge>
                     )}
                     <Button
@@ -204,7 +217,7 @@ export function PrescriptionManager({
                       onClick={() => handlePrint(rx)}
                     >
                       <Printer className="size-3.5" />
-                      طباعة الروشتة
+                      {isAr ? 'طباعة الروشتة' : 'Print Rx'}
                     </Button>
                   </div>
                 </CardHeader>
@@ -217,7 +230,8 @@ export function PrescriptionManager({
                           <div>
                             <p className="font-bold text-foreground text-sm">{item.drugName}</p>
                             <p className="text-xs text-muted-foreground mt-0.5">
-                              الجرعة: <span className="font-medium text-foreground">{item.dose}</span> • {item.frequency} • {item.duration}
+                              {isAr ? 'الجرعة: ' : 'Dose: '}
+                              <span className="font-medium text-foreground">{item.dose}</span> • {item.frequency} • {item.duration}
                             </p>
                             {item.instructions && (
                               <p className="text-xs text-emerald-700 mt-0.5 italic">
@@ -232,7 +246,9 @@ export function PrescriptionManager({
 
                   {rx.notes && (
                     <div className="mt-3 pt-2.5 border-t text-xs text-muted-foreground bg-muted/30 p-2.5 rounded">
-                      <span className="font-semibold text-foreground">ملاحظات الطبيب: </span>
+                      <span className="font-semibold text-foreground">
+                        {isAr ? 'ملاحظات الطبيب: ' : "Doctor's Notes: "}
+                      </span>
                       {rx.notes}
                     </div>
                   )}
@@ -251,10 +267,12 @@ export function PrescriptionManager({
               <div>
                 <CardTitle className="text-base font-bold flex items-center gap-2 text-emerald-950">
                   <Pill className="size-5 text-emerald-600" />
-                  تحرير الروشتة الطبية (Rx)
+                  {isAr ? 'تحرير الروشتة الطبية (Rx)' : 'Write Prescription (Rx)'}
                 </CardTitle>
                 <CardDescription className="text-xs mt-0.5">
-                  إضافة الأدوية والجرعات ومواعيد الاستخدام والتعليمات
+                  {isAr
+                    ? 'إضافة الأدوية والجرعات ومواعيد الاستخدام والتعليمات'
+                    : 'Add medications, dosages, frequency, and patient instructions'}
                 </CardDescription>
               </div>
               {prescriptions.length > 0 && (
@@ -265,7 +283,7 @@ export function PrescriptionManager({
                   className="h-8 text-xs text-muted-foreground"
                   onClick={() => setShowAddForm(false)}
                 >
-                  إلغاء
+                  {isAr ? 'إلغاء' : 'Cancel'}
                 </Button>
               )}
             </div>
@@ -288,7 +306,7 @@ export function PrescriptionManager({
                     <div className="flex items-center justify-between">
                       <span className="font-bold text-xs text-primary flex items-center gap-1.5">
                         <Pill className="size-3.5" />
-                        الدواء #{index + 1}
+                        {isAr ? `الدواء #${index + 1}` : `Medication #${index + 1}`}
                       </span>
                       {items.length > 1 && (
                         <Button
@@ -299,16 +317,18 @@ export function PrescriptionManager({
                           onClick={() => handleRemoveItem(index)}
                         >
                           <Trash2 className="size-3.5 me-1" />
-                          حذف الدواء
+                          {isAr ? 'حذف الدواء' : 'Delete Drug'}
                         </Button>
                       )}
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div className="space-y-1">
-                        <Label className="text-xs font-semibold">اسم الدواء / المادة الفعالة *</Label>
+                        <Label className="text-xs font-semibold">
+                          {isAr ? 'اسم الدواء / المادة الفعالة *' : 'Medication Name *'}
+                        </Label>
                         <Input
-                          placeholder="مثال: Augmentin 1g, Panadol Extra..."
+                          placeholder="e.g. Augmentin 1g, Panadol Extra..."
                           value={item.drugName}
                           onChange={(e) => handleItemChange(index, 'drugName', e.target.value)}
                           className="h-9 text-sm"
@@ -317,9 +337,11 @@ export function PrescriptionManager({
                       </div>
 
                       <div className="space-y-1">
-                        <Label className="text-xs">الجرعة (Dose)</Label>
+                        <Label className="text-xs">
+                          {isAr ? 'الجرعة (Dose)' : 'Dosage'}
+                        </Label>
                         <Input
-                          placeholder="مثال: قرص واحد، 500 ملجم، ملعقة..."
+                          placeholder={isAr ? 'مثال: قرص واحد، 500 ملجم، ملعقة...' : 'e.g. 1 tablet, 500mg...'}
                           value={item.dose}
                           onChange={(e) => handleItemChange(index, 'dose', e.target.value)}
                           className="h-9 text-sm"
@@ -329,16 +351,18 @@ export function PrescriptionManager({
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div className="space-y-1">
-                        <Label className="text-xs">التكرار (Frequency)</Label>
+                        <Label className="text-xs">
+                          {isAr ? 'التكرار (Frequency)' : 'Frequency'}
+                        </Label>
                         <Input
-                          placeholder="مثال: 3 مرات يومياً، كل 12 ساعة..."
+                          placeholder={isAr ? 'مثال: 3 مرات يومياً، كل 12 ساعة...' : 'e.g. 3 times daily, every 12 hrs...'}
                           value={item.frequency}
                           onChange={(e) => handleItemChange(index, 'frequency', e.target.value)}
                           className="h-9 text-sm"
                         />
                         {/* Quick preset chips */}
                         <div className="flex flex-wrap gap-1 pt-1">
-                          {['3 مرات يومياً', 'مرتين يومياً', 'مرة قبل النوم'].map((p) => (
+                          {frequencyChips.map((p) => (
                             <button
                               type="button"
                               key={p}
@@ -352,16 +376,18 @@ export function PrescriptionManager({
                       </div>
 
                       <div className="space-y-1">
-                        <Label className="text-xs">المدة (Duration)</Label>
+                        <Label className="text-xs">
+                          {isAr ? 'المدة (Duration)' : 'Duration'}
+                        </Label>
                         <Input
-                          placeholder="مثال: لمدة 5 أيام، لمدة أسبوع..."
+                          placeholder={isAr ? 'مثال: لمدة 5 أيام، لمدة أسبوع...' : 'e.g. For 5 days, for 1 week...'}
                           value={item.duration}
                           onChange={(e) => handleItemChange(index, 'duration', e.target.value)}
                           className="h-9 text-sm"
                         />
                         {/* Quick preset chips */}
                         <div className="flex flex-wrap gap-1 pt-1">
-                          {['لمدة 5 أيام', 'لمدة أسبوع', 'لمدة شهر'].map((d) => (
+                          {durationChips.map((d) => (
                             <button
                               type="button"
                               key={d}
@@ -376,9 +402,11 @@ export function PrescriptionManager({
                     </div>
 
                     <div className="space-y-1">
-                      <Label className="text-xs">تعليمات إضافية للمريض (اختياري)</Label>
+                      <Label className="text-xs">
+                        {isAr ? 'تعليمات إضافية للمريض (اختياري)' : 'Instructions for Patient (optional)'}
+                      </Label>
                       <Input
-                        placeholder="مثال: بعد الأكل، مع كمية وفيرة من الماء، تجنب القيادة بعد تناوله..."
+                        placeholder={isAr ? 'مثال: بعد الأكل، مع كمية وفيرة من الماء...' : 'e.g. After meals, with plenty of water...'}
                         value={item.instructions ?? ''}
                         onChange={(e) => handleItemChange(index, 'instructions', e.target.value)}
                         className="h-9 text-xs"
@@ -397,15 +425,17 @@ export function PrescriptionManager({
                 className="w-full border-dashed gap-1.5 text-xs text-primary hover:bg-primary/5"
               >
                 <Plus className="size-4" />
-                + إضافة دواء آخر للروشتة
+                {isAr ? '+ إضافة دواء آخر للروشتة' : '+ Add another medication'}
               </Button>
 
               {/* General prescription notes */}
               <div className="space-y-1.5 pt-2">
-                <Label htmlFor="rxNotes" className="text-xs">ملاحظات عامة على الروشتة (تظهر في الطباعة)</Label>
+                <Label htmlFor="rxNotes" className="text-xs">
+                  {isAr ? 'ملاحظات عامة على الروشتة (تظهر في الطباعة)' : 'General Prescription Notes (printed on Rx)'}
+                </Label>
                 <Input
                   id="rxNotes"
-                  placeholder="مثال: الراحة التامة، شرب سوائل دافئة، المتابعة بعد 5 أيام..."
+                  placeholder={isAr ? 'مثال: الراحة التامة، شرب سوائل دافئة...' : 'e.g. Bed rest, drink warm fluids...'}
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   className="h-9 text-xs"
@@ -415,7 +445,7 @@ export function PrescriptionManager({
               <div className="flex justify-end gap-2 pt-2">
                 <Button type="submit" disabled={isPending} className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2 font-semibold px-6">
                   {isPending ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
-                  حفظ الروشتة الطبية ✓
+                  {isAr ? 'حفظ الروشتة الطبية ✓' : 'Save Prescription ✓'}
                 </Button>
               </div>
             </form>
@@ -429,10 +459,12 @@ export function PrescriptionManager({
           <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader className="border-b pb-3 no-print">
               <div className="flex items-center justify-between">
-                <DialogTitle className="text-lg font-bold">معاينة طباعة الروشتة</DialogTitle>
+                <DialogTitle className="text-lg font-bold">
+                  {isAr ? 'معاينة طباعة الروشتة' : 'Prescription Print Preview'}
+                </DialogTitle>
                 <Button size="sm" onClick={executePrint} className="gap-1.5 bg-primary">
                   <Printer className="size-4" />
-                  طباعة الآن
+                  {isAr ? 'طباعة الآن' : 'Print Now'}
                 </Button>
               </div>
             </DialogHeader>
@@ -442,8 +474,10 @@ export function PrescriptionManager({
               {/* Header */}
               <div className="border-b-2 border-black pb-4 flex items-center justify-between text-start">
                 <div>
-                  <h2 className="text-xl font-bold tracking-tight">{clinicName}</h2>
-                  <p className="text-xs text-gray-600 mt-0.5">{doctorName ? `د. ${doctorName}` : 'عيادة التخصصات الطبية'}</p>
+                  <h2 className="text-xl font-bold tracking-tight">{effectiveClinicName}</h2>
+                  <p className="text-xs text-gray-600 mt-0.5">
+                    {doctorName ? (isAr ? `د. ${doctorName}` : `Dr. ${doctorName}`) : (isAr ? 'عيادة التخصصات الطبية' : 'Medical Specialist Clinic')}
+                  </p>
                 </div>
                 <div className="text-end text-xs font-mono text-gray-500">
                   <p className="font-bold text-sm text-black">Rx</p>
@@ -454,18 +488,18 @@ export function PrescriptionManager({
               {/* Patient Bar */}
               <div className="rounded border border-gray-300 p-3 bg-gray-50/70 text-xs flex items-center justify-between gap-4">
                 <div>
-                  <span className="font-bold text-gray-700">المريض: </span>
+                  <span className="font-bold text-gray-700">{isAr ? 'المريض: ' : 'Patient: '}</span>
                   <span className="font-bold text-black text-sm">{patientName}</span>
                 </div>
                 {patientAge !== null && (
                   <div>
-                    <span className="font-bold text-gray-700">العمر: </span>
-                    <span className="font-mono">{patientAge} سنة</span>
+                    <span className="font-bold text-gray-700">{isAr ? 'العمر: ' : 'Age: '}</span>
+                    <span className="font-mono">{patientAge} {isAr ? 'سنة' : 'yrs'}</span>
                   </div>
                 )}
                 <div>
-                  <span className="font-bold text-gray-700">الجنس: </span>
-                  <span>{patientGender === 'MALE' ? 'ذكر' : 'أنثى'}</span>
+                  <span className="font-bold text-gray-700">{isAr ? 'الجنس: ' : 'Gender: '}</span>
+                  <span>{patientGender === 'MALE' ? (isAr ? 'ذكر' : 'Male') : (isAr ? 'أنثى' : 'Female')}</span>
                 </div>
               </div>
 
@@ -491,7 +525,7 @@ export function PrescriptionManager({
                       </p>
                       {it.instructions && (
                         <p className="text-xs text-gray-600 italic">
-                          تعليمات: {it.instructions}
+                          {isAr ? 'تعليمات: ' : 'Instructions: '} {it.instructions}
                         </p>
                       )}
                     </div>
@@ -502,17 +536,19 @@ export function PrescriptionManager({
               {/* Notes */}
               {printPrescription.notes && (
                 <div className="rounded border border-gray-200 p-2.5 text-xs text-gray-700 bg-gray-50">
-                  <span className="font-bold">توصيات: </span>
+                  <span className="font-bold">{isAr ? 'توصيات: ' : 'Recommendations: '}</span>
                   {printPrescription.notes}
                 </div>
               )}
 
               {/* Footer Signature */}
               <div className="border-t-2 border-black pt-4 flex items-end justify-between text-xs text-gray-500">
-                <p>تمنياتنا لكم بالشفاء العاجل</p>
+                <p>{isAr ? 'تمنياتنا لكم بالشفاء العاجل' : 'Wishing you a speedy recovery'}</p>
                 <div className="text-center font-medium">
-                  <p className="font-bold text-black text-sm mb-6">توقيع الطبيب</p>
-                  <p className="border-t border-gray-400 pt-1 px-4 text-[10px]">ختم واعتماد العيادة</p>
+                  <p className="font-bold text-black text-sm mb-6">{isAr ? 'توقيع الطبيب' : "Doctor's Signature"}</p>
+                  <p className="border-t border-gray-400 pt-1 px-4 text-[10px]">
+                    {isAr ? 'ختم واعتماد العيادة' : 'Clinic Official Stamp'}
+                  </p>
                 </div>
               </div>
             </div>

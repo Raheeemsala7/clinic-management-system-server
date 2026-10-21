@@ -1,7 +1,6 @@
 import 'server-only';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { ar } from '@/i18n/messages/ar';
 import {
   ACCESS_COOKIE,
   REFRESH_COOKIE,
@@ -12,31 +11,45 @@ import {
 
 const API_BASE_URL = process.env.API_BASE_URL ?? 'http://localhost:4000/api/v1';
 
-/** Backend error codes → Arabic messages. Unknown codes fall back by status. */
-function arabicFor(code: string, status: number): string {
-  const map = ar.errors as Record<string, string>;
+import arMessages from '@/i18n/messages/ar.json';
+import enMessages from '@/i18n/messages/en.json';
+
+/** Backend error codes → Localized messages. Unknown codes fall back by status. */
+export function getLocalizedError(code: string, status: number, locale: 'ar' | 'en' = 'ar'): string {
+  const dict = locale === 'en' ? enMessages : arMessages;
+  const map = dict.errors as Record<string, string>;
   if (map[code]) return map[code];
-  if (status === 401) return ar.errors.UNAUTHORIZED;
-  if (status === 403) return ar.errors.FORBIDDEN;
-  if (status >= 500) return ar.errors.INTERNAL_SERVER_ERROR;
-  return ar.errors.generic;
+  if (status === 401) return dict.errors.UNAUTHORIZED;
+  if (status === 403) return dict.errors.FORBIDDEN;
+  if (status >= 500) return dict.errors.INTERNAL_SERVER_ERROR;
+  return dict.errors.generic;
+}
+
+function arabicFor(code: string, status: number): string {
+  return getLocalizedError(code, status, 'ar');
 }
 
 /**
- * Typed error raised for every non-OK backend response. `arabicMessage` is
- * safe to surface to the user; the raw backend message stays server-side.
+ * Typed error raised for every non-OK backend response. Provides localized
+ * user-friendly error messages for both Arabic and English.
  */
 export class ApiError extends Error {
   readonly code: string;
   readonly statusCode: number;
   readonly arabicMessage: string;
+  readonly englishMessage: string;
 
   constructor(code: string, message: string, statusCode: number) {
     super(message);
     this.name = 'ApiError';
     this.code = code;
     this.statusCode = statusCode;
-    this.arabicMessage = arabicFor(code, statusCode);
+    this.arabicMessage = getLocalizedError(code, statusCode, 'ar');
+    this.englishMessage = getLocalizedError(code, statusCode, 'en');
+  }
+
+  getLocalizedMessage(locale?: string): string {
+    return locale === 'en' ? this.englishMessage : this.arabicMessage;
   }
 }
 

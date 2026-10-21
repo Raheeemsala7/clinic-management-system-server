@@ -11,7 +11,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ar } from '@/i18n/messages/ar';
+import { useI18n } from '@/i18n/use-i18n';
 import { formatDate } from '@/lib/utils';
 import { AlertCircle, HeartPulse, Pill, FileText, Calendar, Phone, Activity, User } from 'lucide-react';
 import type { PatientSummary } from '@/features/patients/queries';
@@ -23,6 +23,7 @@ interface PatientMedicalDrawerProps {
 }
 
 export function PatientMedicalDrawer({ summary, open, onOpenChange }: PatientMedicalDrawerProps) {
+  const { t, isAr } = useI18n();
   if (!summary) return null;
 
   return (
@@ -36,8 +37,8 @@ export function PatientMedicalDrawer({ summary, open, onOpenChange }: PatientMed
             <div>
               <DialogTitle className="text-xl font-bold">{summary.fullName}</DialogTitle>
               <DialogDescription className="text-xs text-muted-foreground mt-0.5">
-                {summary.gender === 'MALE' ? ar.patients.male : ar.patients.female}
-                {summary.age !== null && ` • ${summary.age} ${ar.patients.years}`}
+                {summary.gender === 'MALE' ? t.patients.male : t.patients.female}
+                {summary.age !== null && ` • ${summary.age} ${t.patients.years}`}
               </DialogDescription>
             </div>
           </div>
@@ -49,7 +50,7 @@ export function PatientMedicalDrawer({ summary, open, onOpenChange }: PatientMed
             <div className="rounded-lg border-2 border-red-200 bg-red-50/80 p-3.5 text-red-950">
               <div className="flex items-center gap-2 mb-1.5 font-bold text-red-700 text-sm">
                 <AlertCircle className="size-4 shrink-0 text-red-600" />
-                <span>{ar.patients.allergies} (تحذير طبي)</span>
+                <span>{t.patients.allergies} {isAr ? '(تحذير طبي)' : '(Medical Alert)'}</span>
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {summary.allergies.map((allergy, i) => (
@@ -63,9 +64,9 @@ export function PatientMedicalDrawer({ summary, open, onOpenChange }: PatientMed
             <div className="flex items-center justify-between p-2.5 rounded-md bg-muted/30 border text-xs text-muted-foreground">
               <span className="flex items-center gap-1.5 font-medium">
                 <AlertCircle className="size-3.5 text-muted-foreground" />
-                {ar.patients.allergies}
+                {t.patients.allergies}
               </span>
-              <span>{ar.patients.none}</span>
+              <span>{t.patients.none}</span>
             </div>
           )}
 
@@ -74,7 +75,7 @@ export function PatientMedicalDrawer({ summary, open, onOpenChange }: PatientMed
             <div className="rounded-lg border border-amber-200 bg-amber-50/70 p-3.5 text-amber-950">
               <div className="flex items-center gap-2 mb-1.5 font-bold text-amber-800 text-sm">
                 <HeartPulse className="size-4 shrink-0 text-amber-600" />
-                <span>{ar.patients.chronicConditions}</span>
+                <span>{t.patients.chronicConditions}</span>
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {summary.chronicConditions.map((condition, i) => (
@@ -88,9 +89,9 @@ export function PatientMedicalDrawer({ summary, open, onOpenChange }: PatientMed
             <div className="flex items-center justify-between p-2.5 rounded-md bg-muted/30 border text-xs text-muted-foreground">
               <span className="flex items-center gap-1.5 font-medium">
                 <HeartPulse className="size-3.5 text-muted-foreground" />
-                {ar.patients.chronicConditions}
+                {t.patients.chronicConditions}
               </span>
-              <span>{ar.patients.none}</span>
+              <span>{t.patients.none}</span>
             </div>
           )}
 
@@ -100,7 +101,7 @@ export function PatientMedicalDrawer({ summary, open, onOpenChange }: PatientMed
               <CardContent className="p-3.5">
                 <p className="text-xs text-muted-foreground font-medium flex items-center gap-1">
                   <Activity className="size-3.5 text-primary" />
-                  {ar.patients.visitCount}
+                  {t.patients.visitCount}
                 </p>
                 <p className="text-2xl font-bold mt-1 text-foreground">
                   {summary.visitCount}
@@ -112,10 +113,10 @@ export function PatientMedicalDrawer({ summary, open, onOpenChange }: PatientMed
               <CardContent className="p-3.5">
                 <p className="text-xs text-muted-foreground font-medium flex items-center gap-1">
                   <Calendar className="size-3.5 text-primary" />
-                  {ar.patients.lastVisit}
+                  {t.patients.lastVisit}
                 </p>
                 <p className="text-sm font-bold mt-1.5 text-foreground truncate">
-                  {summary.lastVisitDate ? formatDate(summary.lastVisitDate) : ar.common.empty}
+                  {summary.lastVisitDate ? formatDate(summary.lastVisitDate) : t.common.empty}
                 </p>
               </CardContent>
             </Card>
@@ -127,7 +128,7 @@ export function PatientMedicalDrawer({ summary, open, onOpenChange }: PatientMed
               <CardHeader className="py-2.5 px-3.5 bg-muted/20 border-b">
                 <CardTitle className="text-xs font-semibold flex items-center gap-1.5">
                   <FileText className="size-3.5 text-primary" />
-                  {ar.patients.lastDiagnosis}
+                  {t.patients.lastDiagnosis}
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-3.5 text-sm text-foreground leading-relaxed">
@@ -142,7 +143,7 @@ export function PatientMedicalDrawer({ summary, open, onOpenChange }: PatientMed
               <CardHeader className="py-2.5 px-3.5 bg-muted/20 border-b">
                 <CardTitle className="text-xs font-semibold flex items-center gap-1.5">
                   <Pill className="size-3.5 text-emerald-600" />
-                  {ar.patients.lastPrescription}
+                  {t.patients.lastPrescription}
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-3 divide-y">
@@ -161,7 +162,7 @@ export function PatientMedicalDrawer({ summary, open, onOpenChange }: PatientMed
 
         <div className="flex justify-end pt-2 border-t">
           <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>
-            {ar.common.close}
+            {t.common.close}
           </Button>
         </div>
       </DialogContent>

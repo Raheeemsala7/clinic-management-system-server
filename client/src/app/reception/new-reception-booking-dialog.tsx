@@ -18,7 +18,7 @@ import {
   DialogTrigger,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { ar } from '@/i18n/messages/ar';
+import { useI18n } from '@/i18n/use-i18n';
 import { computeAge, todayClinicDate } from '@/lib/utils';
 import {
   CalendarPlus,
@@ -49,32 +49,22 @@ interface NewReceptionBookingDialogProps {
   triggerButton?: React.ReactNode;
 }
 
-const COMMON_SLOTS = [
-  { start: '09:00', end: '09:30' },
-  { start: '09:30', end: '10:00' },
-  { start: '10:00', end: '10:30' },
-  { start: '10:30', end: '11:00' },
-  { start: '11:00', end: '11:30' },
-  { start: '11:30', end: '12:00' },
-  { start: '12:00', end: '12:30' },
-  { start: '13:00', end: '13:30' },
-  { start: '14:00', end: '14:30' },
-  { start: '15:00', end: '15:30' },
-  { start: '16:00', end: '16:30' },
-  { start: '17:00', end: '17:30' },
-  { start: '18:00', end: '18:30' },
-  { start: '19:00', end: '19:30' },
-  { start: '20:00', end: '20:30' },
-];
-
 const COMMON_FEES = [100, 150, 200, 250, 300, 400];
 
-const EXEMPTION_PRESETS = [
+const EXEMPTION_PRESETS_AR = [
   'حالة إنسانية / غير مقتدر',
   'استشارة مجانية بعد كشف',
   'توصية وإعفاء من الطبيب',
   'طبيب زميل أو عائلة الطبيب',
   'تأمين / رعاية خاصة',
+];
+
+const EXEMPTION_PRESETS_EN = [
+  'Humanitarian case / Low-income',
+  'Free consultation follow-up',
+  'Doctor recommendation / waiver',
+  'Doctor colleague or family',
+  'Special care / Insurance',
 ];
 
 export function NewReceptionBookingDialog({
@@ -86,6 +76,10 @@ export function NewReceptionBookingDialog({
   triggerButton,
 }: NewReceptionBookingDialogProps) {
   const router = useRouter();
+  const { t, locale, isAr } = useI18n();
+  const currency = isAr ? 'ج.م' : 'EGP';
+  const presets = isAr ? EXEMPTION_PRESETS_AR : EXEMPTION_PRESETS_EN;
+
   const [open, setOpen] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -117,7 +111,7 @@ export function NewReceptionBookingDialog({
 
   // Pricing & Payment fields
   const [isExempt, setIsExempt] = useState(false);
-  const [exemptionReason, setExemptionReason] = useState(EXEMPTION_PRESETS[0]);
+  const [exemptionReason, setExemptionReason] = useState(presets[0]);
   const [totalAmount, setTotalAmount] = useState('200');
   const [paidAmount, setPaidAmount] = useState('0');
   const [paymentMethod, setPaymentMethod] = useState<'CASH' | 'CARD' | 'WALLET'>('CASH');
@@ -223,7 +217,7 @@ export function NewReceptionBookingDialog({
     setStartTime(defaultStartTime || '10:00');
     setEndTime(defaultEndTime || '10:30');
     setIsExempt(false);
-    setExemptionReason(EXEMPTION_PRESETS[0]);
+    setExemptionReason(presets[0]);
     setTotalAmount('200');
     setPaidAmount('0');
     setPaymentMethod('CASH');
@@ -237,12 +231,21 @@ export function NewReceptionBookingDialog({
     setError(null);
 
     if (clinicDate < today) {
-      setError('لا يمكن حجز موعد في تاريخ ماضٍ، يرجى اختيار تاريخ اليوم أو موعد مستقبلي');
+      setError(
+        isAr
+          ? 'لا يمكن حجز موعد في تاريخ ماضٍ، يرجى اختيار تاريخ اليوم أو موعد مستقبلي'
+          : 'Cannot book in the past. Please select today or a future date'
+      );
       return;
     }
 
     if (source === 'SCHEDULED' && slotsData && !slotsData.isWorkingDay) {
-      setError(slotsData.message || 'الطبيب غير متاح في هذا التاريخ (إجازة أسبوعية)');
+      setError(
+        slotsData.message ||
+          (isAr
+            ? 'الطبيب غير متاح في هذا التاريخ (إجازة أسبوعية)'
+            : 'Doctor is not available on this date (weekly off)')
+      );
       return;
     }
 
@@ -251,13 +254,21 @@ export function NewReceptionBookingDialog({
 
     if (isNewPatientMode) {
       if (!newFullName.trim() || !newPhone.trim()) {
-        setError('يرجى إدخال اسم المريض ورقم الهاتف');
+        setError(
+          isAr
+            ? 'يرجى إدخال اسم المريض ورقم الهاتف'
+            : 'Please enter patient name and phone number'
+        );
         return;
       }
 
       const parsedAge = Number(newAge);
       if (!newAge || Number.isNaN(parsedAge) || parsedAge < 0 || parsedAge > 130) {
-        setError('يرجى إدخال عمر المريض بشكل صحيح (إجباري)');
+        setError(
+          isAr
+            ? 'يرجى إدخال عمر المريض بشكل صحيح (إجباري)'
+            : 'Please enter a valid patient age (required)'
+        );
         return;
       }
 
@@ -272,7 +283,7 @@ export function NewReceptionBookingDialog({
         });
 
         if (!createRes.success || !createRes.patient) {
-          setError(createRes.error ?? ar.errors.generic);
+          setError(createRes.error ?? t.errors.generic);
           return;
         }
 
@@ -284,7 +295,11 @@ export function NewReceptionBookingDialog({
     }
 
     if (!patientIdToBook) {
-      setError('يرجى اختيار مريض أو تسجيل مريض جديد');
+      setError(
+        isAr
+          ? 'يرجى اختيار مريض أو تسجيل مريض جديد'
+          : 'Please select a patient or register a new patient'
+      );
       return;
     }
 
@@ -327,7 +342,7 @@ export function NewReceptionBookingDialog({
         resetAll();
       }, 1600);
     } else {
-      setError(res.error ?? ar.errors.generic);
+      setError(res.error ?? t.errors.generic);
     }
   };
 
@@ -341,9 +356,12 @@ export function NewReceptionBookingDialog({
     >
       <DialogTrigger asChild>
         {triggerButton ?? (
-          <Button size="lg" className="gap-2 bg-primary shadow-md hover:bg-primary/95 text-primary-foreground font-semibold">
+          <Button
+            size="lg"
+            className="gap-2 bg-primary shadow-md hover:bg-primary/95 text-primary-foreground font-semibold"
+          >
             <CalendarPlus className="size-5" />
-            حجز موعد / تسجيل مريض
+            {isAr ? 'حجز موعد / تسجيل مريض' : 'Book Appointment / Register Patient'}
           </Button>
         )}
       </DialogTrigger>
@@ -355,8 +373,14 @@ export function NewReceptionBookingDialog({
               <CalendarPlus className="size-5" />
             </div>
             <div>
-              <DialogTitle className="text-xl font-bold">حجز موعد جديد وتحديد الرسوم</DialogTitle>
-              {doctorName && <p className="text-xs text-muted-foreground">الطبيب المختار: د. {doctorName}</p>}
+              <DialogTitle className="text-xl font-bold">
+                {isAr ? 'حجز موعد جديد وتحديد الرسوم' : 'New Appointment Booking & Fee Setting'}
+              </DialogTitle>
+              {doctorName && (
+                <p className="text-xs text-muted-foreground">
+                  {isAr ? `الطبيب المختار: د. ${doctorName}` : `Selected Doctor: Dr. ${doctorName}`}
+                </p>
+              )}
             </div>
           </div>
         </DialogHeader>
@@ -371,15 +395,22 @@ export function NewReceptionBookingDialog({
         {successInfo ? (
           <div className="py-10 text-center space-y-3">
             <CheckCircle2 className="size-16 text-emerald-500 mx-auto animate-bounce" />
-            <h3 className="text-xl font-bold text-foreground">تم تأكيد الحجز بنجاح!</h3>
-            <p className="text-muted-foreground">للمريض: <span className="font-semibold text-foreground">{successInfo.patientName}</span></p>
+            <h3 className="text-xl font-bold text-foreground">
+              {isAr ? 'تم تأكيد الحجز بنجاح!' : 'Booking Confirmed Successfully!'}
+            </h3>
+            <p className="text-muted-foreground">
+              {isAr ? 'للمريض: ' : 'For Patient: '}
+              <span className="font-semibold text-foreground">{successInfo.patientName}</span>
+            </p>
             <div className="flex justify-center gap-4 text-sm font-mono pt-2">
-              <span className="px-3 py-1 bg-emerald-50 text-emerald-700 rounded-md border border-emerald-200">
-                المدفوع: {successInfo.paidAmount} ج.م
+              <span className="px-3 py-1 bg-emerald-50 text-emerald-700 rounded-md border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800">
+                {isAr ? 'المدفوع: ' : 'Paid: '}
+                {successInfo.paidAmount} {currency}
               </span>
               {(successInfo.remainingAmount ?? 0) > 0 && (
-                <span className="px-3 py-1 bg-amber-50 text-amber-700 rounded-md border border-amber-200">
-                  المتبقي: {successInfo.remainingAmount} ج.م
+                <span className="px-3 py-1 bg-amber-50 text-amber-700 rounded-md border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800">
+                  {isAr ? 'المتبقي: ' : 'Remaining: '}
+                  {successInfo.remainingAmount} {currency}
                 </span>
               )}
             </div>
@@ -391,7 +422,7 @@ export function NewReceptionBookingDialog({
               <div className="flex items-center justify-between">
                 <Label className="text-sm font-bold flex items-center gap-1.5">
                   <UserCheck className="size-4 text-primary" />
-                  1. اختيار المريض
+                  {isAr ? '1. اختيار المريض' : '1. Patient Selection'}
                 </Label>
                 {selectedPatient && (
                   <Button
@@ -401,7 +432,7 @@ export function NewReceptionBookingDialog({
                     className="text-xs text-primary h-7"
                     onClick={() => setSelectedPatient(null)}
                   >
-                    تغيير المريض
+                    {isAr ? 'تغيير المريض' : 'Change Patient'}
                   </Button>
                 )}
               </div>
@@ -411,19 +442,25 @@ export function NewReceptionBookingDialog({
                   <div className="space-y-0.5">
                     <p className="font-bold text-foreground text-base">{selectedPatient.fullName}</p>
                     <p className="text-xs text-muted-foreground font-mono flex items-center gap-2">
-                      <span>{selectedPatient.phone}</span>
+                      <span dir="ltr">{selectedPatient.phone}</span>
                       <span>•</span>
-                      <span>{selectedPatient.gender === 'MALE' ? 'ذكر' : 'أنثى'}</span>
+                      <span>
+                        {selectedPatient.gender === 'MALE'
+                          ? isAr ? 'ذكر' : 'Male'
+                          : isAr ? 'أنثى' : 'Female'}
+                      </span>
                       {selectedPatient.dateOfBirth && (
                         <>
                           <span>•</span>
-                          <span>{computeAge(selectedPatient.dateOfBirth)} سنة</span>
+                          <span>
+                            {computeAge(selectedPatient.dateOfBirth)} {isAr ? 'سنة' : 'yrs'}
+                          </span>
                         </>
                       )}
                     </p>
                   </div>
                   <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30">
-                    مريض مسجل
+                    {isAr ? 'مريض مسجل' : 'Registered Patient'}
                   </Badge>
                 </div>
               ) : isNewPatientMode ? (
@@ -432,7 +469,7 @@ export function NewReceptionBookingDialog({
                     <div className="flex items-center justify-between">
                       <p className="text-xs font-bold text-primary flex items-center gap-1">
                         <UserPlus className="size-4" />
-                        تسجيل مريض جديد في النظام
+                        {isAr ? 'تسجيل مريض جديد في النظام' : 'Register New Patient in System'}
                       </p>
                       <Button
                         type="button"
@@ -441,22 +478,22 @@ export function NewReceptionBookingDialog({
                         className="text-xs text-muted-foreground h-6"
                         onClick={() => setIsNewPatientMode(false)}
                       >
-                        العودة للبحث
+                        {isAr ? 'العودة للبحث' : 'Back to Search'}
                       </Button>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div className="space-y-1">
-                        <Label className="text-xs">الاسم بالكامل *</Label>
+                        <Label className="text-xs">{isAr ? 'الاسم بالكامل *' : 'Full Name *'}</Label>
                         <Input
                           value={newFullName}
                           onChange={(e) => setNewFullName(e.target.value)}
-                          placeholder="مثال: أحمد محمد علي"
+                          placeholder={isAr ? 'مثال: أحمد محمد علي' : 'e.g. John Doe Smith'}
                           required
                         />
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-xs">رقم الهاتف *</Label>
+                        <Label className="text-xs">{isAr ? 'رقم الهاتف *' : 'Phone Number *'}</Label>
                         <Input
                           value={newPhone}
                           onChange={(e) => setNewPhone(e.target.value)}
@@ -469,31 +506,35 @@ export function NewReceptionBookingDialog({
 
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       <div className="space-y-1">
-                        <Label className="text-xs">النوع</Label>
+                        <Label className="text-xs">{isAr ? 'النوع' : 'Gender'}</Label>
                         <select
                           value={newGender}
                           onChange={(e) => setNewGender(e.target.value as any)}
                           className="w-full h-10 px-3 text-sm rounded-md border border-input bg-background"
                         >
-                          <option value="MALE">ذكر</option>
-                          <option value="FEMALE">أنثى</option>
+                          <option value="MALE">{isAr ? 'ذكر' : 'Male'}</option>
+                          <option value="FEMALE">{isAr ? 'أنثى' : 'Female'}</option>
                         </select>
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-xs font-semibold text-primary">العمر (بالسنوات) *</Label>
+                        <Label className="text-xs font-semibold text-primary">
+                          {isAr ? 'العمر (بالسنوات) *' : 'Age (in years) *'}
+                        </Label>
                         <Input
                           type="number"
                           min="0"
                           max="130"
                           value={newAge}
                           onChange={(e) => setNewAge(e.target.value)}
-                          placeholder="مثال: 32"
+                          placeholder={isAr ? 'مثال: 32' : 'e.g. 32'}
                           className="font-medium"
                           required
                         />
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-xs text-muted-foreground">تاريخ الميلاد (اختياري)</Label>
+                        <Label className="text-xs text-muted-foreground">
+                          {isAr ? 'تاريخ الميلاد (اختياري)' : 'Date of Birth (Optional)'}
+                        </Label>
                         <Input
                           type="date"
                           value={newDateOfBirth}
@@ -506,15 +547,17 @@ export function NewReceptionBookingDialog({
               ) : (
                 <div className="space-y-2">
                   <div className="relative">
-                    <Search className="absolute right-3 top-3 size-4 text-muted-foreground" />
+                    <Search className="absolute start-3 top-3 size-4 text-muted-foreground" />
                     <Input
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      placeholder="ابحث برقم الهاتف أو الاسم..."
-                      className="pr-9"
+                      placeholder={
+                        isAr ? 'ابحث برقم الهاتف أو الاسم...' : 'Search by phone number or name...'
+                      }
+                      className="ps-9"
                     />
                     {isSearching && (
-                      <Loader2 className="absolute left-3 top-3 size-4 text-muted-foreground animate-spin" />
+                      <Loader2 className="absolute end-3 top-3 size-4 text-muted-foreground animate-spin" />
                     )}
                   </div>
 
@@ -529,10 +572,12 @@ export function NewReceptionBookingDialog({
                         >
                           <div>
                             <p className="font-semibold">{p.fullName}</p>
-                            <p className="text-xs text-muted-foreground font-mono">{p.phone}</p>
+                            <p className="text-xs text-muted-foreground font-mono" dir="ltr">
+                              {p.phone}
+                            </p>
                           </div>
                           <Button size="sm" variant="ghost" className="h-7 text-xs text-primary">
-                            اختيار
+                            {isAr ? 'اختيار' : 'Select'}
                           </Button>
                         </div>
                       ))}
@@ -541,7 +586,11 @@ export function NewReceptionBookingDialog({
 
                   {hasSearched && searchResults.length === 0 && !isSearching && (
                     <div className="p-3 border rounded-md bg-muted/30 text-center space-y-2">
-                      <p className="text-xs text-muted-foreground">لم يتم العثور على مريض بهذا الاسم أو الرقم</p>
+                      <p className="text-xs text-muted-foreground">
+                        {isAr
+                          ? 'لم يتم العثور على مريض بهذا الاسم أو الرقم'
+                          : 'No patient found with this name or phone number'}
+                      </p>
                       <Button
                         type="button"
                         variant="secondary"
@@ -550,7 +599,7 @@ export function NewReceptionBookingDialog({
                         onClick={handleStartNewPatient}
                       >
                         <UserPlus className="size-3.5" />
-                        تسجيل كـ مريض جديد الآن
+                        {isAr ? 'تسجيل كـ مريض جديد الآن' : 'Register as New Patient Now'}
                       </Button>
                     </div>
                   )}
@@ -562,12 +611,14 @@ export function NewReceptionBookingDialog({
             <div className="space-y-3 pt-2 border-t">
               <Label className="text-sm font-bold flex items-center gap-1.5">
                 <Calendar className="size-4 text-primary" />
-                2. الموعد والتوقيت
+                {isAr ? '2. الموعد والتوقيت' : '2. Appointment & Timing'}
               </Label>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <Label className="text-xs font-semibold">تاريخ الكشف / الحجز *</Label>
+                  <Label className="text-xs font-semibold">
+                    {isAr ? 'تاريخ الكشف / الحجز *' : 'Clinic / Booking Date *'}
+                  </Label>
                   <Input
                     type="date"
                     value={clinicDate}
@@ -575,10 +626,14 @@ export function NewReceptionBookingDialog({
                     onChange={(e) => setClinicDate(e.target.value)}
                     required
                   />
-                  <p className="text-[10px] text-muted-foreground">لا يمكن حجز مواعيد في تواريخ ماضية</p>
+                  <p className="text-[10px] text-muted-foreground">
+                    {isAr
+                      ? 'لا يمكن حجز مواعيد في تواريخ ماضية'
+                      : 'Cannot book appointments in the past'}
+                  </p>
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs">نوع الحضور</Label>
+                  <Label className="text-xs">{isAr ? 'نوع الحضور' : 'Attendance Type'}</Label>
                   <div className="grid grid-cols-2 gap-2">
                     <Button
                       type="button"
@@ -586,7 +641,7 @@ export function NewReceptionBookingDialog({
                       size="sm"
                       onClick={() => setSource('WALK_IN')}
                     >
-                      حضور فوري (طابور)
+                      {isAr ? 'حضور فوري (طابور)' : 'Walk-in (Queue)'}
                     </Button>
                     <Button
                       type="button"
@@ -594,7 +649,7 @@ export function NewReceptionBookingDialog({
                       size="sm"
                       onClick={() => setSource('SCHEDULED')}
                     >
-                      حجز مسبق بموعد
+                      {isAr ? 'حجز مسبق بموعد' : 'Scheduled Appointment'}
                     </Button>
                   </div>
                 </div>
@@ -604,16 +659,27 @@ export function NewReceptionBookingDialog({
               {isLoadingSlots ? (
                 <div className="flex items-center gap-2 p-3 text-xs text-muted-foreground bg-muted/30 rounded-lg border">
                   <Loader2 className="size-4 animate-spin text-primary" />
-                  <span>جارٍ فحص جدول الطبيب والمواعيد المتاحة ليوم {clinicDate}...</span>
+                  <span>
+                    {isAr
+                      ? `جارٍ فحص جدول الطبيب والمواعيد المتاحة ليوم ${clinicDate}...`
+                      : `Checking doctor schedule and available slots for ${clinicDate}...`}
+                  </span>
                 </div>
               ) : slotsData && !slotsData.isWorkingDay ? (
                 <div className="p-3.5 rounded-lg border border-amber-300 bg-amber-50 dark:bg-amber-950/30 text-amber-900 dark:text-amber-200 text-xs space-y-1.5">
                   <div className="flex items-center gap-2 font-bold text-sm">
                     <AlertCircle className="size-4 text-amber-600 dark:text-amber-400 shrink-0" />
-                    <span>{slotsData.message || `الطبيب غير متاح في هذا اليوم (${slotsData.dayName})`}</span>
+                    <span>
+                      {slotsData.message ||
+                        (isAr
+                          ? `الطبيب غير متاح في هذا اليوم (${slotsData.dayName})`
+                          : `Doctor is not available on this day (${slotsData.dayName})`)}
+                    </span>
                   </div>
                   <p className="text-[11px] text-amber-800/90 dark:text-amber-300/90">
-                    هذا اليوم عطلة أسبوعية محددة في جدول الطبيب. يرجى اختيار تاريخ عمل آخر لحجز الموعد.
+                    {isAr
+                      ? 'هذا اليوم عطلة أسبوعية محددة في جدول الطبيب. يرجى اختيار تاريخ عمل آخر لحجز الموعد.'
+                      : 'This day is a designated weekly day off for the doctor. Please select another date.'}
                   </p>
                 </div>
               ) : slotsData && slotsData.isWorkingDay ? (
@@ -621,18 +687,26 @@ export function NewReceptionBookingDialog({
                   <div className="flex items-center justify-between gap-2 flex-wrap text-xs">
                     <span className="font-bold text-foreground flex items-center gap-1.5">
                       <Clock className="size-3.5 text-primary" />
-                      المواعيد المتاحة من جدول الطبيب ({slotsData.dayName}):
+                      {isAr
+                        ? `المواعيد المتاحة من جدول الطبيب (${slotsData.dayName}):`
+                        : `Available slots from doctor schedule (${slotsData.dayName}):`}
                     </span>
                     <span className="text-[11px] text-muted-foreground">
-                      <span className="text-emerald-600 dark:text-emerald-400 font-semibold">{slotsData.availableCount} متاح</span>
+                      <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
+                        {slotsData.availableCount} {isAr ? 'متاح' : 'available'}
+                      </span>
                       {' • '}
-                      <span>{slotsData.bookedCount} محجوز</span>
+                      <span>
+                        {slotsData.bookedCount} {isAr ? 'محجوز' : 'booked'}
+                      </span>
                     </span>
                   </div>
 
                   {slotsData.slots.length === 0 ? (
                     <p className="text-xs text-muted-foreground p-2 bg-muted/40 rounded">
-                      لا توجد فترات عمل محددة للطبيب في هذا اليوم
+                      {isAr
+                        ? 'لا توجد فترات عمل محددة للطبيب في هذا اليوم'
+                        : 'No working shifts configured for this day'}
                     </p>
                   ) : (
                     <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-1.5 max-h-48 overflow-y-auto p-1.5 border rounded-md bg-background">
@@ -644,10 +718,18 @@ export function NewReceptionBookingDialog({
                             <div
                               key={slot.startTime}
                               className="p-1.5 rounded text-center border bg-muted/50 text-muted-foreground cursor-not-allowed opacity-60 text-xs flex flex-col items-center justify-center select-none"
-                              title="هذا الموعد محجوز مسبقاً لمريض آخر"
+                              title={
+                                isAr
+                                  ? 'هذا الموعد محجوز مسبقاً لمريض آخر'
+                                  : 'Already booked for another patient'
+                              }
                             >
-                              <span className="font-mono line-through text-[11px]">{slot.startTime}</span>
-                              <span className="text-[9px] text-destructive font-semibold">محجوز</span>
+                              <span className="font-mono line-through text-[11px]">
+                                {slot.startTime}
+                              </span>
+                              <span className="text-[9px] text-destructive font-semibold">
+                                {isAr ? 'محجوز' : 'Booked'}
+                              </span>
                             </div>
                           );
                         }
@@ -657,10 +739,10 @@ export function NewReceptionBookingDialog({
                             <div
                               key={slot.startTime}
                               className="p-1.5 rounded text-center border bg-muted/30 text-muted-foreground/60 cursor-not-allowed opacity-50 text-xs flex flex-col items-center justify-center select-none"
-                              title="هذا الوقت انقضى اليوم"
+                              title={isAr ? 'هذا الوقت انقضى اليوم' : 'This time has already passed today'}
                             >
                               <span className="font-mono text-[11px]">{slot.startTime}</span>
-                              <span className="text-[9px]">انقضى</span>
+                              <span className="text-[9px]">{isAr ? 'انقضى' : 'Passed'}</span>
                             </div>
                           );
                         }
@@ -673,13 +755,16 @@ export function NewReceptionBookingDialog({
                               setStartTime(slot.startTime);
                               setEndTime(slot.endTime);
                             }}
-                            className={`p-1.5 rounded text-center border text-xs transition-all flex flex-col items-center justify-center ${isSelected
+                            className={`p-1.5 rounded text-center border text-xs transition-all flex flex-col items-center justify-center ${
+                              isSelected
                                 ? 'bg-primary text-primary-foreground border-primary shadow-sm font-bold scale-[1.02]'
                                 : 'bg-background hover:bg-primary/10 hover:border-primary/50 text-foreground'
-                              }`}
+                            }`}
                           >
                             <span className="font-mono font-medium">{slot.startTime}</span>
-                            <span className="text-[9px] opacity-75">إلى {slot.endTime}</span>
+                            <span className="text-[9px] opacity-75">
+                              {isAr ? `إلى ${slot.endTime}` : `to ${slot.endTime}`}
+                            </span>
                           </button>
                         );
                       })}
@@ -690,7 +775,9 @@ export function NewReceptionBookingDialog({
                   <div className="pt-2 border-t mt-2">
                     <div className="grid grid-cols-2 gap-2 text-xs">
                       <div>
-                        <Label className="text-[11px] text-muted-foreground">الوقت المختار (من):</Label>
+                        <Label className="text-[11px] text-muted-foreground">
+                          {isAr ? 'الوقت المختار (من):' : 'Selected Start Time:'}
+                        </Label>
                         <Input
                           type="time"
                           value={startTime}
@@ -699,7 +786,9 @@ export function NewReceptionBookingDialog({
                         />
                       </div>
                       <div>
-                        <Label className="text-[11px] text-muted-foreground">الوقت المختار (إلى):</Label>
+                        <Label className="text-[11px] text-muted-foreground">
+                          {isAr ? 'الوقت المختار (إلى):' : 'Selected End Time:'}
+                        </Label>
                         <Input
                           type="time"
                           value={endTime}
@@ -717,7 +806,7 @@ export function NewReceptionBookingDialog({
                     <div className="space-y-1">
                       <Label className="text-xs flex items-center gap-1">
                         <Clock className="size-3.5 text-primary" />
-                        من الساعة
+                        {isAr ? 'من الساعة' : 'From Time'}
                       </Label>
                       <Input
                         type="time"
@@ -728,7 +817,7 @@ export function NewReceptionBookingDialog({
                     <div className="space-y-1">
                       <Label className="text-xs flex items-center gap-1">
                         <Clock className="size-3.5 text-primary" />
-                        إلى الساعة
+                        {isAr ? 'إلى الساعة' : 'To Time'}
                       </Label>
                       <Input
                         type="time"
@@ -741,7 +830,7 @@ export function NewReceptionBookingDialog({
               )}
 
               <div className="space-y-1">
-                <Label className="text-xs">نوع الكشف</Label>
+                <Label className="text-xs">{isAr ? 'نوع الكشف' : 'Examination Type'}</Label>
                 <div className="grid grid-cols-2 gap-2">
                   <Button
                     type="button"
@@ -749,7 +838,7 @@ export function NewReceptionBookingDialog({
                     size="sm"
                     onClick={() => setType('CONSULTATION')}
                   >
-                    كشف أول مرة (جديد)
+                    {isAr ? 'كشف أول مرة (جديد)' : 'New Examination'}
                   </Button>
                   <Button
                     type="button"
@@ -757,7 +846,7 @@ export function NewReceptionBookingDialog({
                     size="sm"
                     onClick={() => setType('FOLLOW_UP')}
                   >
-                    استشارة / إعادة كشف
+                    {isAr ? 'استشارة / إعادة كشف' : 'Follow-up Consultation'}
                   </Button>
                 </div>
               </div>
@@ -767,8 +856,8 @@ export function NewReceptionBookingDialog({
             <div className="space-y-3 pt-2 border-t">
               <div className="flex items-center justify-between">
                 <Label className="text-sm font-bold flex items-center gap-1.5">
-                  <Coins className="size-4 text-emerald-600" />
-                  3. الرسوم والمدفوعات المالية
+                  <Coins className="size-4 text-emerald-600 dark:text-emerald-400" />
+                  {isAr ? '3. الرسوم والمدفوعات المالية' : '3. Fees & Financial Payments'}
                 </Label>
 
                 {/* Exemption Switch */}
@@ -781,31 +870,48 @@ export function NewReceptionBookingDialog({
                       setPaidAmount('0');
                     }
                   }}
-                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border transition-all ${isExempt
+                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border transition-all ${
+                    isExempt
                       ? 'bg-emerald-500 text-white border-emerald-600 shadow-sm'
                       : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                    }`}
+                  }`}
                 >
                   <Gift className="size-3.5" />
-                  <span>{isExempt ? 'الكشف مجاني / معفي ✓' : 'إعفاء من الرسوم (مجاني)'}</span>
+                  <span>
+                    {isExempt
+                      ? isAr
+                        ? 'الكشف مجاني / معفي ✓'
+                        : 'Exempt / Free ✓'
+                      : isAr
+                        ? 'إعفاء من الرسوم (مجاني)'
+                        : 'Exempt from Fees (Free)'}
+                  </span>
                 </button>
               </div>
 
               {isExempt ? (
-                <div className="p-3 bg-emerald-50/70 border border-emerald-200 rounded-lg space-y-2">
-                  <div className="flex items-center gap-2 text-emerald-800 text-xs font-bold">
-                    <Gift className="size-4 text-emerald-600" />
-                    <span>تم تحديد هذا الكشف كـ مجاني / معفي بالكامل من الرسوم</span>
+                <div className="p-3 bg-emerald-50/70 border border-emerald-200 rounded-lg space-y-2 dark:bg-emerald-950/40 dark:border-emerald-800">
+                  <div className="flex items-center gap-2 text-emerald-800 text-xs font-bold dark:text-emerald-300">
+                    <Gift className="size-4 text-emerald-600 dark:text-emerald-400" />
+                    <span>
+                      {isAr
+                        ? 'تم تحديد هذا الكشف كـ مجاني / معفي بالكامل من الرسوم'
+                        : 'This examination is marked as 100% free / exempt from fees'}
+                    </span>
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs text-emerald-900">سبب الإعفاء:</Label>
+                    <Label className="text-xs text-emerald-900 dark:text-emerald-200">
+                      {isAr ? 'سبب الإعفاء:' : 'Exemption Reason:'}
+                    </Label>
                     <select
                       value={exemptionReason}
                       onChange={(e) => setExemptionReason(e.target.value)}
-                      className="w-full h-9 px-3 text-xs rounded-md border border-emerald-300 bg-white"
+                      className="w-full h-9 px-3 text-xs rounded-md border border-emerald-300 bg-background dark:border-emerald-700"
                     >
-                      {EXEMPTION_PRESETS.map((p) => (
-                        <option key={p} value={p}>{p}</option>
+                      {presets.map((p) => (
+                        <option key={p} value={p}>
+                          {p}
+                        </option>
                       ))}
                     </select>
                   </div>
@@ -815,8 +921,12 @@ export function NewReceptionBookingDialog({
                   {/* Total Amount Input */}
                   <div className="space-y-1">
                     <div className="flex items-center justify-between">
-                      <Label className="text-xs font-bold">إجمالي رسوم الكشف (ج.م) *</Label>
-                      <span className="text-[11px] text-muted-foreground">اكتب المبلغ بيدك أو اختر سريعاً</span>
+                      <Label className="text-xs font-bold">
+                        {isAr ? 'إجمالي رسوم الكشف (ج.م) *' : 'Total Examination Fee (EGP) *'}
+                      </Label>
+                      <span className="text-[11px] text-muted-foreground">
+                        {isAr ? 'اكتب المبلغ بيدك أو اختر سريعاً' : 'Type manually or pick quick preset'}
+                      </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="relative flex-1">
@@ -827,10 +937,12 @@ export function NewReceptionBookingDialog({
                           value={totalAmount}
                           onChange={(e) => setTotalAmount(e.target.value)}
                           className="font-bold text-base text-foreground font-mono"
-                          placeholder="مثال: 250"
+                          placeholder={isAr ? 'مثال: 250' : 'e.g. 250'}
                           required
                         />
-                        <span className="absolute left-3 top-2.5 text-xs text-muted-foreground font-bold">ج.م</span>
+                        <span className="absolute end-3 top-2.5 text-xs text-muted-foreground font-bold">
+                          {currency}
+                        </span>
                       </div>
                       <div className="flex gap-1 overflow-x-auto">
                         {COMMON_FEES.map((fee) => (
@@ -838,10 +950,11 @@ export function NewReceptionBookingDialog({
                             key={fee}
                             type="button"
                             onClick={() => setTotalAmount(String(fee))}
-                            className={`px-2 py-1.5 text-xs rounded border transition-colors ${totalAmount === String(fee)
+                            className={`px-2 py-1.5 text-xs rounded border transition-colors ${
+                              totalAmount === String(fee)
                                 ? 'bg-primary text-primary-foreground font-bold border-primary'
                                 : 'bg-muted hover:bg-muted/80 text-muted-foreground'
-                              }`}
+                            }`}
                           >
                             {fee}
                           </button>
@@ -853,8 +966,16 @@ export function NewReceptionBookingDialog({
                   {/* Partial Payment / Deposit Input */}
                   <div className="space-y-1 pt-1">
                     <div className="flex items-center justify-between">
-                      <Label className="text-xs font-bold text-emerald-700">المبلغ المدفوع الآن (عربون أو كامل)</Label>
-                      <span className="text-[11px] text-muted-foreground">يمكن دفع جزء لحجز الموعد والباقي لاحقاً</span>
+                      <Label className="text-xs font-bold text-emerald-700 dark:text-emerald-400">
+                        {isAr
+                          ? 'المبلغ المدفوع الآن (عربون أو كامل)'
+                          : 'Amount Paid Now (Deposit or Full)'}
+                      </Label>
+                      <span className="text-[11px] text-muted-foreground">
+                        {isAr
+                          ? 'يمكن دفع جزء لحجز الموعد والباقي لاحقاً'
+                          : 'Deposit can be paid now, remaining later'}
+                      </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="relative flex-1">
@@ -865,32 +986,36 @@ export function NewReceptionBookingDialog({
                           step="10"
                           value={paidAmount}
                           onChange={(e) => setPaidAmount(e.target.value)}
-                          className="font-bold text-base text-emerald-700 font-mono"
+                          className="font-bold text-base text-emerald-700 dark:text-emerald-400 font-mono"
                           placeholder="0"
                         />
-                        <span className="absolute left-3 top-2.5 text-xs text-muted-foreground font-bold">ج.م</span>
+                        <span className="absolute end-3 top-2.5 text-xs text-muted-foreground font-bold">
+                          {currency}
+                        </span>
                       </div>
                       <div className="flex gap-1">
                         <button
                           type="button"
                           onClick={() => setPaidAmount(String(numTotal))}
-                          className="px-2.5 py-1.5 text-xs font-semibold rounded border bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
+                          className="px-2.5 py-1.5 text-xs font-semibold rounded border bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800"
                         >
-                          دفع كامل ({numTotal})
+                          {isAr ? `دفع كامل (${numTotal})` : `Full (${numTotal})`}
                         </button>
                         <button
                           type="button"
                           onClick={() => setPaidAmount(String(Math.floor(numTotal / 2)))}
-                          className="px-2.5 py-1.5 text-xs font-semibold rounded border bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100"
+                          className="px-2.5 py-1.5 text-xs font-semibold rounded border bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800"
                         >
-                          دفع النصف ({Math.floor(numTotal / 2)})
+                          {isAr
+                            ? `دفع النصف (${Math.floor(numTotal / 2)})`
+                            : `Half (${Math.floor(numTotal / 2)})`}
                         </button>
                         <button
                           type="button"
                           onClick={() => setPaidAmount('0')}
                           className="px-2 py-1.5 text-xs rounded border bg-muted text-muted-foreground hover:bg-muted/80"
                         >
-                          بدون دفع (0)
+                          {isAr ? 'بدون دفع (0)' : 'No deposit (0)'}
                         </button>
                       </div>
                     </div>
@@ -899,23 +1024,37 @@ export function NewReceptionBookingDialog({
                   {/* Dynamic Summary Banner */}
                   <div className="p-3 bg-muted/40 rounded-lg border grid grid-cols-3 gap-2 text-center text-xs">
                     <div>
-                      <span className="text-muted-foreground block text-[11px]">إجمالي الكشف</span>
-                      <span className="font-bold text-foreground text-sm font-mono">{numTotal} ج.م</span>
+                      <span className="text-muted-foreground block text-[11px]">
+                        {isAr ? 'إجمالي الكشف' : 'Total Fee'}
+                      </span>
+                      <span className="font-bold text-foreground text-sm font-mono">
+                        {numTotal} {currency}
+                      </span>
                     </div>
                     <div className="border-x">
-                      <span className="text-emerald-700 block text-[11px] font-semibold">المدفوع (عربون)</span>
-                      <span className="font-bold text-emerald-700 text-sm font-mono">{numPaid} ج.م</span>
+                      <span className="text-emerald-700 dark:text-emerald-400 block text-[11px] font-semibold">
+                        {isAr ? 'المدفوع (عربون)' : 'Deposit Paid'}
+                      </span>
+                      <span className="font-bold text-emerald-700 dark:text-emerald-400 text-sm font-mono">
+                        {numPaid} {currency}
+                      </span>
                     </div>
                     <div>
-                      <span className="text-amber-700 block text-[11px] font-semibold">المتبقي على المريض</span>
-                      <span className="font-bold text-amber-700 text-sm font-mono">{numRemaining} ج.م</span>
+                      <span className="text-amber-700 dark:text-amber-400 block text-[11px] font-semibold">
+                        {isAr ? 'المتبقي على المريض' : 'Balance Remaining'}
+                      </span>
+                      <span className="font-bold text-amber-700 dark:text-amber-400 text-sm font-mono">
+                        {numRemaining} {currency}
+                      </span>
                     </div>
                   </div>
 
                   {/* Payment Method */}
                   {numPaid > 0 && (
                     <div className="space-y-1 pt-1">
-                      <Label className="text-xs">طريقة دفع العربون / المبلغ</Label>
+                      <Label className="text-xs">
+                        {isAr ? 'طريقة دفع العربون / المبلغ' : 'Payment Method'}
+                      </Label>
                       <div className="grid grid-cols-3 gap-2">
                         <Button
                           type="button"
@@ -923,7 +1062,7 @@ export function NewReceptionBookingDialog({
                           size="sm"
                           onClick={() => setPaymentMethod('CASH')}
                         >
-                          نقدي (كاش)
+                          {isAr ? 'نقدي (كاش)' : 'Cash'}
                         </Button>
                         <Button
                           type="button"
@@ -931,7 +1070,7 @@ export function NewReceptionBookingDialog({
                           size="sm"
                           onClick={() => setPaymentMethod('CARD')}
                         >
-                          بطاقة (فيزا)
+                          {isAr ? 'بطاقة (فيزا)' : 'Card'}
                         </Button>
                         <Button
                           type="button"
@@ -939,7 +1078,7 @@ export function NewReceptionBookingDialog({
                           size="sm"
                           onClick={() => setPaymentMethod('WALLET')}
                         >
-                          محفظة إلكترونية
+                          {isAr ? 'محفظة إلكترونية' : 'E-Wallet'}
                         </Button>
                       </div>
                     </div>
@@ -949,11 +1088,15 @@ export function NewReceptionBookingDialog({
 
               {/* Booking Notes */}
               <div className="space-y-1">
-                <Label className="text-xs">ملاحظات الحجز (اختياري)</Label>
+                <Label className="text-xs">{isAr ? 'ملاحظات الحجز (اختياري)' : 'Booking Notes (Optional)'}</Label>
                 <Input
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  placeholder="مثال: مريض قادم من طرف د. عاصم / دفع 50 ج.م عربون وباقي 150 ج.م"
+                  placeholder={
+                    isAr
+                      ? 'مثال: مريض قادم من طرف د. عاصم / دفع 50 ج.م عربون وباقي 150 ج.م'
+                      : 'e.g. Referred by Dr. Assem / Paid 50 deposit, 150 remaining'
+                  }
                 />
               </div>
             </div>
@@ -965,7 +1108,7 @@ export function NewReceptionBookingDialog({
                 onClick={() => setOpen(false)}
                 disabled={isPending}
               >
-                إلغاء
+                {t.common.cancel}
               </Button>
               <Button
                 type="submit"
@@ -975,12 +1118,12 @@ export function NewReceptionBookingDialog({
                 {isPending ? (
                   <>
                     <Loader2 className="size-4 animate-spin" />
-                    جاري الحجز والتسجيل...
+                    {isAr ? 'جاري الحجز والتسجيل...' : 'Booking in progress...'}
                   </>
                 ) : (
                   <>
-                    <span>تأكيد الحجز</span>
-                    <ArrowRight className="size-4 rotate-180" />
+                    <span>{isAr ? 'تأكيد الحجز' : 'Confirm Booking'}</span>
+                    <ArrowRight className="size-4 rtl:rotate-180" />
                   </>
                 )}
               </Button>

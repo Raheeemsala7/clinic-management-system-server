@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { NAV_ITEMS_BY_ROLE } from '@/components/shell/nav-config';
 import { type Role } from '@/lib/roles';
+import { useI18n } from '@/i18n/use-i18n';
 
 interface NavLinksProps {
   role: Role;
@@ -13,8 +14,10 @@ interface NavLinksProps {
   locale?: 'en' | 'ar';
 }
 
-export function NavLinks({ role, onNavigate, className, locale = 'ar' }: NavLinksProps) {
+export function NavLinks({ role, onNavigate, className, locale }: NavLinksProps) {
   const pathname = usePathname();
+  const { locale: i18nLocale } = useI18n();
+  const effectiveLocale = locale || i18nLocale || 'ar';
   const items = NAV_ITEMS_BY_ROLE[role] || [];
 
   return (
@@ -27,7 +30,7 @@ export function NavLinks({ role, onNavigate, className, locale = 'ar' }: NavLink
             item.href !== '/admin' &&
             pathname.startsWith(`${item.href}/`));
         const Icon = item.icon;
-        const label = locale === 'en' ? item.enLabel : item.arLabel;
+        const label = effectiveLocale === 'en' ? item.enLabel : item.arLabel;
 
         return (
           <Link

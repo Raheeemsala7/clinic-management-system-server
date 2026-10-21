@@ -4,10 +4,8 @@ import { Cairo, Inter } from 'next/font/google';
 import { hasLocale, NextIntlClientProvider } from 'next-intl';
 import { Toaster } from '@/components/ui/toast';
 import { routing } from '@/i18n/routing';
-import { notFound } from 'next/navigation';
 import { getMessages, setRequestLocale } from 'next-intl/server';
-
-
+import { cookies } from 'next/headers';
 
 const cairo = Cairo({
   subsets: ['arabic', 'latin'],
@@ -28,22 +26,23 @@ export const metadata: Metadata = {
 
 type Props = {
   children: React.ReactNode;
-  params: Promise<{ locale: string }>;
+  params?: Promise<{ locale?: string }>;
 };
 
-
 export default async function RootLayout({ children, params }: Props) {
-  const { locale } = await params;
+  const resolvedParams = params ? await params : undefined;
+  const cookieStore = await cookies();
+  const cookieLocale = cookieStore.get('NEXT_LOCALE')?.value;
+
+  const candidate = resolvedParams?.locale || cookieLocale;
+  const locale = hasLocale(routing.locales, candidate) ? candidate : routing.defaultLocale;
 
   setRequestLocale(locale);
   const messages = await getMessages();
-  const dir = locale === "ar" ? "rtl" : "ltr";
+  const dir = locale === 'ar' ? 'rtl' : 'ltr';
 
   return (
-    <html
-      lang={locale}
-      dir={dir}
-    >
+    <html lang={locale} dir={dir} className={`${cairo.variable} ${inter.variable}`}>
       <body className={`min-h-screen bg-background antialiased ${dir === 'rtl' ? 'font-sans' : 'font-sans'}`}>
         <NextIntlClientProvider locale={locale} messages={messages}>
           {children}
@@ -53,4 +52,3 @@ export default async function RootLayout({ children, params }: Props) {
     </html>
   );
 }
-

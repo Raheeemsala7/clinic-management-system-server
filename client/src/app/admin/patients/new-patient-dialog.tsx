@@ -15,11 +15,12 @@ import {
   DialogTrigger,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { ar } from '@/i18n/messages/ar';
+import { useI18n } from '@/i18n/use-i18n';
 import { computeAge } from '@/lib/utils';
 import { UserPlus, Loader2 } from 'lucide-react';
 
 export function NewPatientDialog() {
+  const { t, isAr } = useI18n();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -38,7 +39,7 @@ export function NewPatientDialog() {
         setOpen(false);
         router.refresh();
       } else {
-        setError(res.error ?? ar.errors.generic);
+        setError(res.error ?? t.errors.generic);
       }
     });
   };
@@ -48,12 +49,12 @@ export function NewPatientDialog() {
       <DialogTrigger asChild>
         <Button className="gap-2 shadow-sm">
           <UserPlus className="size-4" />
-          {ar.patients.newPatient}
+          {t.patients.newPatient}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{ar.patients.newPatient}</DialogTitle>
+          <DialogTitle>{t.patients.newPatient}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 py-2">
@@ -64,18 +65,24 @@ export function NewPatientDialog() {
           )}
 
           <div className="space-y-1.5">
-            <Label htmlFor="fullName">{ar.patients.name} *</Label>
-            <Input id="fullName" name="fullName" required placeholder="الاسم ثلاثي أو رباعي" disabled={isPending} />
+            <Label htmlFor="fullName">{t.patients.name} *</Label>
+            <Input
+              id="fullName"
+              name="fullName"
+              required
+              placeholder={isAr ? 'الاسم رباعي' : 'Full 4-part name'}
+              disabled={isPending}
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="phone">{ar.patients.phone} *</Label>
+              <Label htmlFor="phone">{t.patients.phone} *</Label>
               <Input id="phone" name="phone" required placeholder="01xxxxxxxxx" dir="ltr" disabled={isPending} />
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="gender">{ar.patients.gender} *</Label>
+              <Label htmlFor="gender">{t.patients.gender} *</Label>
               <select
                 id="gender"
                 name="gender"
@@ -83,15 +90,17 @@ export function NewPatientDialog() {
                 disabled={isPending}
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               >
-                <option value="MALE">{ar.patients.male}</option>
-                <option value="FEMALE">{ar.patients.female}</option>
+                <option value="MALE">{t.patients.male}</option>
+                <option value="FEMALE">{t.patients.female}</option>
               </select>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="age">العمر (بالسنوات) *</Label>
+              <Label htmlFor="age">
+                {isAr ? 'العمر (بالسنوات) *' : 'Age (years) *'}
+              </Label>
               <Input
                 id="age"
                 name="age"
@@ -101,13 +110,15 @@ export function NewPatientDialog() {
                 required
                 value={age}
                 onChange={(e) => setAge(e.target.value)}
-                placeholder="مثال: 32"
+                placeholder={isAr ? 'مثال: 32' : 'e.g. 32'}
                 disabled={isPending}
               />
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="dateOfBirth">تاريخ الميلاد (اختياري)</Label>
+              <Label htmlFor="dateOfBirth">
+                {isAr ? 'تاريخ الميلاد (اختياري)' : 'Date of Birth (optional)'}
+              </Label>
               <Input
                 id="dateOfBirth"
                 name="dateOfBirth"
@@ -126,17 +137,22 @@ export function NewPatientDialog() {
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="address">{ar.patients.address}</Label>
-            <Input id="address" name="address" placeholder="المدينة / المنطقة" disabled={isPending} />
+            <Label htmlFor="address">{t.patients.address}</Label>
+            <Input
+              id="address"
+              name="address"
+              placeholder={isAr ? 'المدينة / المنطقة' : 'City / Area'}
+              disabled={isPending}
+            />
           </div>
 
           <DialogFooter className="gap-2 sm:gap-0 pt-2 border-t">
             <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={isPending}>
-              {ar.common.cancel}
+              {t.common.cancel}
             </Button>
             <Button type="submit" disabled={isPending}>
               {isPending && <Loader2 className="size-4 animate-spin me-2" />}
-              {ar.patients.create}
+              {t.patients.create}
             </Button>
           </DialogFooter>
         </form>

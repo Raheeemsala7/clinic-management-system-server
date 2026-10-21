@@ -3,7 +3,7 @@
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
 import { api } from '@/lib/api/client';
-import { ar } from '@/i18n/messages/ar';
+import { getServerI18n } from '@/i18n/server';
 import { clearSessionCookies, setSessionCookies, type TokenResponse } from '@/lib/session';
 import { homePathForRole } from '@/lib/roles';
 
@@ -20,20 +20,22 @@ export async function loginAction(
   _prev: { error?: string } | undefined,
   formData: FormData,
 ): Promise<{ error?: string }> {
+  const { t } = await getServerI18n();
+
   const parsed = loginSchema.safeParse({
     username: formData.get('username'),
     password: formData.get('password'),
   });
 
   if (!parsed.success) {
-    return { error: ar.errors.VALIDATION_FAILED };
+    return { error: t.errors.VALIDATION_FAILED };
   }
 
   let data: TokenResponse;
   try {
     data = await api.post<TokenResponse>('/auth/login', parsed.data);
   } catch {
-    return { error: ar.auth.invalidCredentials };
+    return { error: t.auth.invalidCredentials };
   }
 
   await setSessionCookies(data);

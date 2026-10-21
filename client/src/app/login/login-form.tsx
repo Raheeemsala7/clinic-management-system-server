@@ -6,23 +6,24 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ar } from '@/i18n/messages/ar';
+import { useI18n } from '@/i18n/use-i18n';
 import { loginAction } from '@/features/auth/actions';
 
-function SubmitButton() {
+function SubmitButton({ label, loadingLabel }: { label: string; loadingLabel: string }) {
   const { pending } = useFormStatus();
   return (
     <Button type="submit" className="w-full" loading={pending}>
-      {pending ? ar.auth.loggingIn : ar.auth.login}
+      {pending ? loadingLabel : label}
     </Button>
   );
 }
 
 export function LoginForm() {
+  const { t } = useI18n();
   const [state, formAction] = useActionState(loginAction, {});
 
   return (
-    <form action={formAction} className="space-y-4" aria-label={ar.auth.title}>
+    <form action={formAction} className="space-y-4" aria-label={t.auth.title}>
       {state.error && (
         <Alert variant="destructive" role="alert">
           <AlertDescription>{state.error}</AlertDescription>
@@ -30,7 +31,7 @@ export function LoginForm() {
       )}
 
       <div className="space-y-2">
-        <Label htmlFor="username">{ar.auth.username}</Label>
+        <Label htmlFor="username">{t.auth.username}</Label>
         <Input
           id="username"
           name="username"
@@ -43,7 +44,7 @@ export function LoginForm() {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="password">{ar.auth.password}</Label>
+        <Label htmlFor="password">{t.auth.password}</Label>
         <Input
           id="password"
           name="password"
@@ -55,7 +56,7 @@ export function LoginForm() {
         />
       </div>
 
-      <SubmitButton />
+      <SubmitButton label={t.auth.login} loadingLabel={t.auth.loggingIn} />
     </form>
   );
 }

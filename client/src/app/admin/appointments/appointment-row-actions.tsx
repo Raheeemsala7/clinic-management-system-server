@@ -10,7 +10,7 @@ import {
   noShowAction,
   postponeAction,
 } from '@/features/queue/actions';
-import { ar } from '@/i18n/messages/ar';
+import { useI18n } from '@/i18n/use-i18n';
 import { Check, Play, UserX, Clock, X, CheckCheck } from 'lucide-react';
 
 interface AppointmentRowActionsProps {
@@ -19,6 +19,7 @@ interface AppointmentRowActionsProps {
 }
 
 export function AppointmentRowActions({ id, status }: AppointmentRowActionsProps) {
+  const { t, isAr } = useI18n();
   const [isPending, startTransition] = useTransition();
 
   const handleAction = (actionFn: (id: string) => Promise<{ success: boolean; error?: string }>) => {
@@ -37,7 +38,7 @@ export function AppointmentRowActions({ id, status }: AppointmentRowActionsProps
         disabled={isPending}
       >
         <Check className="size-3.5 me-1" />
-        {ar.queue.arrive}
+        {t.queue.arrive}
       </Button>
     );
   }
@@ -52,7 +53,7 @@ export function AppointmentRowActions({ id, status }: AppointmentRowActionsProps
           disabled={isPending}
         >
           <Play className="size-3 me-1 fill-white" />
-          {ar.queue.letIn}
+          {t.queue.letIn}
         </Button>
 
         <Button
@@ -61,7 +62,7 @@ export function AppointmentRowActions({ id, status }: AppointmentRowActionsProps
           className="h-8 px-2 text-xs"
           onClick={() => handleAction(postponeAction)}
           disabled={isPending}
-          title={ar.queue.postpone}
+          title={t.queue.postpone}
         >
           <Clock className="size-3" />
         </Button>
@@ -72,7 +73,7 @@ export function AppointmentRowActions({ id, status }: AppointmentRowActionsProps
           className="h-8 px-2 text-xs text-destructive hover:bg-destructive/10"
           onClick={() => handleAction(cancelAction)}
           disabled={isPending}
-          title={ar.queue.cancel}
+          title={t.queue.cancel}
         >
           <X className="size-3" />
         </Button>
@@ -89,7 +90,7 @@ export function AppointmentRowActions({ id, status }: AppointmentRowActionsProps
         disabled={isPending}
       >
         <CheckCheck className="size-3.5 me-1" />
-        إنهاء الفحص
+        {isAr ? 'إنهاء الفحص' : 'Complete Exam'}
       </Button>
     );
   }

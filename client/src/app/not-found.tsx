@@ -1,14 +1,16 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ar } from '@/i18n/messages/ar';
+import { getServerI18n } from '@/i18n/server';
 
-export default function NotFound() {
+export default async function NotFound() {
+  const { t } = await getServerI18n();
+
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 p-6 text-center">
       <h1 className="text-2xl font-bold">404</h1>
-      <p className="text-muted-foreground">{ar.common.notFound}</p>
+      <p className="text-muted-foreground">{t.common.notFound}</p>
       <Button asChild>
-        <Link href="/">{ar.common.back}</Link>
+        <Link href="/">{t.common.back}</Link>
       </Button>
     </div>
   );

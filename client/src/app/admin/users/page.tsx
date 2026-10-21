@@ -1,6 +1,6 @@
 import { requireRole } from '@/lib/session';
 import { api } from '@/lib/api/client';
-import { ar } from '@/i18n/messages/ar';
+import { getServerI18n } from '@/i18n/server';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
@@ -20,6 +20,7 @@ interface User {
 
 export default async function AdminUsersPage() {
   await requireRole(['ADMIN']);
+  const { t, isAr } = await getServerI18n();
 
   const result = await api.get<{ data: User[] }>('/users').catch(() => ({ data: [] }));
 
@@ -27,21 +28,25 @@ export default async function AdminUsersPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold">{ar.users.title}</h1>
-          <p className="text-sm text-muted-foreground">إدارة موظفي العيادة وتحديد الأدوار وصلاحيات الوصول</p>
+          <h1 className="text-2xl font-bold">{t.users.title}</h1>
+          <p className="text-sm text-muted-foreground">
+            {isAr
+              ? 'إدارة موظفي العيادة وتحديد الأدوار وصلاحيات الوصول'
+              : 'Manage clinic staff, assign roles, and configure access permissions'}
+          </p>
         </div>
         <a
           href="/admin/users/new"
           className="h-10 px-4 inline-flex items-center gap-2 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors shadow-sm"
         >
           <UserPlus className="size-4" />
-          {ar.users.newUser}
+          {t.users.newUser}
         </a>
       </div>
 
       <div className="space-y-3">
         {result.data.length === 0 ? (
-          <div className="text-center py-12 text-muted-foreground">{ar.common.noData}</div>
+          <div className="text-center py-12 text-muted-foreground">{t.common.noData}</div>
         ) : (
           result.data.map((user) => (
             <Card key={user.id} className="shadow-sm hover:shadow transition-shadow">
@@ -53,14 +58,14 @@ export default async function AdminUsersPage() {
                   <div>
                     <p className="font-semibold text-foreground">{user.name}</p>
                     <p className="text-xs text-muted-foreground font-mono">
-                      @{user.username} &bull; <span className="font-sans">{ar.roles[user.role]}</span>
+                      @{user.username} &bull; <span className="font-sans">{t.roles[user.role]}</span>
                     </p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-3">
                   <Badge variant={user.isActive ? 'default' : 'outline'} className={user.isActive ? 'bg-emerald-600' : 'text-muted-foreground'}>
-                    {user.isActive ? ar.users.active : ar.users.inactive}
+                    {user.isActive ? t.users.active : t.users.inactive}
                   </Badge>
 
                   <UserRowActions

@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { api, ApiError } from '@/lib/api/client';
 import { requireRole } from '@/lib/session';
-import { ar } from '@/i18n/messages/ar';
+import { getServerI18n } from '@/i18n/server';
 
 export interface PrescriptionItemInput {
   drugName: string;
@@ -31,9 +31,15 @@ export async function createPrescriptionAction(
   input: CreatePrescriptionInput,
 ): Promise<PrescriptionActionResult> {
   await requireRole(['DOCTOR', 'ADMIN']);
+  const { t, locale, isAr } = await getServerI18n();
 
   if (!input.items || input.items.length === 0) {
-    return { success: false, error: 'يجب إضافة دواء واحد على الأقل في الروشتة' };
+    return {
+      success: false,
+      error: isAr
+        ? 'يجب إضافة دواء واحد على الأقل في الروشتة'
+        : 'Please add at least one medication to the prescription',
+    };
   }
 
   try {
@@ -42,8 +48,8 @@ export async function createPrescriptionAction(
     revalidatePath('/doctor');
     return { success: true, prescriptionId: res.id };
   } catch (err) {
-    if (err instanceof ApiError) return { success: false, error: err.arabicMessage };
-    return { success: false, error: ar.errors.INTERNAL_SERVER_ERROR };
+    if (err instanceof ApiError) return { success: false, error: err.getLocalizedMessage(locale) };
+    return { success: false, error: t.errors.INTERNAL_SERVER_ERROR };
   }
 }
 
@@ -59,11 +65,12 @@ export async function searchDrugsAction(query: string): Promise<Array<{ id: stri
 
 export async function markPrescriptionPrintedAction(prescriptionId: string): Promise<PrescriptionActionResult> {
   await requireRole(['DOCTOR', 'ADMIN']);
+  const { t, locale } = await getServerI18n();
   try {
     await api.post(`/prescriptions/${prescriptionId}/mark-printed`);
     return { success: true };
   } catch (err) {
-    if (err instanceof ApiError) return { success: false, error: err.arabicMessage };
-    return { success: false, error: ar.errors.INTERNAL_SERVER_ERROR };
+    if (err instanceof ApiError) return { success: false, error: err.getLocalizedMessage(locale) };
+    return { success: false, error: t.errors.INTERNAL_SERVER_ERROR };
   }
 }

@@ -4,20 +4,8 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { api, ApiError } from '@/lib/api/client';
 import { requireRole } from '@/lib/session';
-import { ar } from '@/i18n/messages/ar';
-
+import { getServerI18n } from '@/i18n/server';
 import { validateFourPartName } from '@/lib/utils';
-
-const createPatientSchema = z.object({
-  fullName: z.string().refine((val) => validateFourPartName(val).isValid, {
-    message: 'يجب إدخال اسم المريض رباعياً على الأقل (أربعة مقاطع)',
-  }),
-  phone: z.string().min(10, 'رقم الهاتف مطلوب'),
-  gender: z.enum(['MALE', 'FEMALE']),
-  age: z.coerce.number().min(0, 'العمر يجب أن يكون 0 أو أكبر').max(130, 'العمر غير صالح'),
-  dateOfBirth: z.string().optional(),
-  address: z.string().optional(),
-});
 
 export interface PatientActionResult {
   success: boolean;
@@ -76,6 +64,26 @@ export async function createPatientAction(
   formData: FormData,
 ): Promise<PatientActionResult> {
   await requireRole(['ADMIN', 'DOCTOR', 'RECEPTION']);
+  const { t, locale, isAr } = await getServerI18n();
+
+  const createPatientSchema = z.object({
+    fullName: z.string().refine((val) => validateFourPartName(val).isValid, {
+      message: isAr
+        ? 'يجب إدخال اسم المريض رباعياً على الأقل (أربعة مقاطع)'
+        : 'Patient name must have at least 4 name parts',
+    }),
+    phone: z.string().min(
+      10,
+      isAr ? 'رقم الهاتف مطلوب (10 أرقام على الأقل)' : 'Phone number is required (at least 10 digits)'
+    ),
+    gender: z.enum(['MALE', 'FEMALE']),
+    age: z.coerce
+      .number()
+      .min(0, isAr ? 'العمر يجب أن يكون 0 أو أكبر' : 'Age must be 0 or greater')
+      .max(130, isAr ? 'العمر غير صالح' : 'Invalid age'),
+    dateOfBirth: z.string().optional(),
+    address: z.string().optional(),
+  });
 
   const parsed = createPatientSchema.safeParse({
     fullName: formData.get('fullName'),
@@ -88,7 +96,7 @@ export async function createPatientAction(
 
   if (!parsed.success) {
     const issue = parsed.error.issues[0]?.message;
-    return { success: false, error: issue || ar.errors.VALIDATION_FAILED };
+    return { success: false, error: issue || t.errors.VALIDATION_FAILED };
   }
 
   try {
@@ -97,8 +105,8 @@ export async function createPatientAction(
     revalidatePath('/admin/patients');
     return { success: true, patientId: patient.id };
   } catch (err) {
-    if (err instanceof ApiError) return { success: false, error: err.arabicMessage };
-    return { success: false, error: ar.errors.INTERNAL_SERVER_ERROR };
+    if (err instanceof ApiError) return { success: false, error: err.getLocalizedMessage(locale) };
+    return { success: false, error: t.errors.INTERNAL_SERVER_ERROR };
   }
 }
 
@@ -111,7 +119,9 @@ export async function getPatientSummaryAction(patientId: string) {
   }
 }
 
-export async function getPatientBookingSummaryAction(patientId: string): Promise<PatientBookingSummary | null> {
+export async function getPatientBookingSummaryAction(
+  patientId: string,
+): Promise<PatientBookingSummary | null> {
   await requireRole(['ADMIN', 'DOCTOR', 'RECEPTION']);
   try {
     return await api.get<PatientBookingSummary>(`/patients/${patientId}/booking-summary`);
@@ -142,12 +152,15 @@ export async function createQuickPatientAction(data: {
   address?: string;
 }) {
   await requireRole(['ADMIN', 'DOCTOR', 'RECEPTION']);
+  const { t, locale, isAr } = await getServerI18n();
 
   const nameCheck = validateFourPartName(data.fullName);
   if (!nameCheck.isValid) {
     return {
       success: false,
-      error: 'يجب إدخال اسم المريض رباعياً على الأقل (أربعة مقاطع)',
+      error: isAr
+        ? 'يجب إدخال اسم المريض رباعياً على الأقل (أربعة مقاطع)'
+        : 'Patient name must have at least 4 name parts',
     };
   }
 
@@ -160,8 +173,7 @@ export async function createQuickPatientAction(data: {
     revalidatePath('/admin/patients');
     return { success: true, patient };
   } catch (err) {
-    if (err instanceof ApiError) return { success: false, error: err.arabicMessage };
-    return { success: false, error: ar.errors.INTERNAL_SERVER_ERROR };
+    if (err instanceof ApiError) return { success: false, error: err.getLocalizedMessage(locale) };
+    return { success: false, error: t.errors.INTERNAL_SERVER_ERROR };
   }
 }
-

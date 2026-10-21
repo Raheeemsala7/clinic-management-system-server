@@ -8,12 +8,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { ar } from '@/i18n/messages/ar';
-import { Eye, EyeOff, UserPlus, ArrowRight, ShieldCheck, Stethoscope, UserCircle } from 'lucide-react';
+import { useI18n } from '@/i18n/use-i18n';
+import { Eye, EyeOff, UserPlus, ArrowRight, ArrowLeft, ShieldCheck, Stethoscope, UserCircle } from 'lucide-react';
 
 const initial: UserActionResult = { success: false };
 
 export function NewUserForm() {
+  const { t, isAr } = useI18n();
   const router = useRouter();
   const [state, formAction, isPending] = useActionState(createUserAction, initial);
   const [showPassword, setShowPassword] = useState(false);
@@ -29,23 +30,31 @@ export function NewUserForm() {
   const roles = [
     {
       value: 'RECEPTION',
-      title: ar.roles.RECEPTION,
-      description: 'إدارة قائمة الانتظار، حجز المواعيد، تسجيل المرضى، والمدفوعات',
+      title: t.roles.RECEPTION,
+      description: isAr
+        ? 'إدارة قائمة الانتظار، حجز المواعيد، تسجيل المرضى، والمدفوعات'
+        : 'Manage queue, book appointments, register patients, and record payments',
       icon: UserCircle,
     },
     {
       value: 'DOCTOR',
-      title: ar.roles.DOCTOR,
-      description: 'إجراء الفحوصات والزيارات الطبية، كتابة الوصفات، ومتابعة المرضى',
+      title: t.roles.DOCTOR,
+      description: isAr
+        ? 'إجراء الفحوصات والزيارات الطبية، كتابة الوصفات، ومتابعة المرضى'
+        : 'Conduct clinical exams, write prescriptions, and follow up patients',
       icon: Stethoscope,
     },
     {
       value: 'ADMIN',
-      title: ar.roles.ADMIN,
-      description: 'تحكم كامل في النظام: المستخدمون، الإعدادات، التقارير المالية والإغلاق',
+      title: t.roles.ADMIN,
+      description: isAr
+        ? 'تحكم كامل في النظام: المستخدمون، الإعدادات، التقارير المالية والإغلاق'
+        : 'Full system control: users, settings, financial reports, and daily closing',
       icon: ShieldCheck,
     },
   ] as const;
+
+  const BackIcon = isAr ? ArrowRight : ArrowLeft;
 
   return (
     <form action={formAction} className="space-y-6">
@@ -57,7 +66,7 @@ export function NewUserForm() {
 
       {/* Role Selection */}
       <div className="space-y-2">
-        <Label className="text-sm font-semibold">{ar.users.role}</Label>
+        <Label className="text-sm font-semibold">{t.users.role}</Label>
         <input type="hidden" name="role" value={selectedRole} />
         <div className="grid gap-3 sm:grid-cols-3">
           {roles.map((r) => {
@@ -68,15 +77,17 @@ export function NewUserForm() {
                 type="button"
                 key={r.value}
                 onClick={() => setSelectedRole(r.value)}
-                className={`flex flex-col text-start p-4 rounded-xl border-2 transition-all ${isSelected
+                className={`flex flex-col text-start p-4 rounded-xl border-2 transition-all ${
+                  isSelected
                     ? 'border-primary bg-primary/5 text-primary shadow-sm'
                     : 'border-border bg-card hover:bg-muted/50 text-foreground'
-                  }`}
+                }`}
               >
                 <div className="flex items-center gap-2 mb-2">
                   <div
-                    className={`size-8 rounded-lg flex items-center justify-center ${isSelected ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
-                      }`}
+                    className={`size-8 rounded-lg flex items-center justify-center ${
+                      isSelected ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+                    }`}
                   >
                     <Icon className="size-4" />
                   </div>
@@ -92,11 +103,11 @@ export function NewUserForm() {
       {/* Personal Info */}
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="name">{ar.users.name}</Label>
+          <Label htmlFor="name">{t.users.name}</Label>
           <Input
             id="name"
             name="name"
-            placeholder="مثال: د. أحمد حسن أو سارة محمد"
+            placeholder={isAr ? 'مثال: د. أحمد حسن أو سارة محمد' : 'e.g. Dr. John Doe or Sarah Smith'}
             required
             disabled={isPending}
             className="h-11"
@@ -104,11 +115,11 @@ export function NewUserForm() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="username">{ar.users.username}</Label>
+          <Label htmlFor="username">{t.users.username}</Label>
           <Input
             id="username"
             name="username"
-            placeholder="مثال: ahmed_doc أو receptionist1"
+            placeholder={isAr ? 'مثال: ahmed_doc أو receptionist1' : 'e.g. ahmed_doc or receptionist1'}
             required
             disabled={isPending}
             dir="ltr"
@@ -119,7 +130,7 @@ export function NewUserForm() {
 
       {/* Password */}
       <div className="space-y-2">
-        <Label htmlFor="password">{ar.users.password}</Label>
+        <Label htmlFor="password">{t.users.password}</Label>
         <div className="relative">
           <Input
             id="password"
@@ -137,25 +148,31 @@ export function NewUserForm() {
             onClick={() => setShowPassword(!showPassword)}
             className="absolute inset-y-0 end-0 flex items-center pe-3 text-muted-foreground hover:text-foreground"
             tabIndex={-1}
-            aria-label={showPassword ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور'}
+            aria-label={
+              showPassword
+                ? (isAr ? 'إخفاء كلمة المرور' : 'Hide password')
+                : (isAr ? 'إظهار كلمة المرور' : 'Show password')
+            }
           >
             {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
           </button>
         </div>
-        <p className="text-xs text-muted-foreground">يجب ألا تقل كلمة المرور عن 8 أحرف</p>
+        <p className="text-xs text-muted-foreground">
+          {isAr ? 'يجب ألا تقل كلمة المرور عن 8 أحرف' : 'Password must be at least 8 characters'}
+        </p>
       </div>
 
       {/* Actions */}
       <div className="flex items-center justify-end gap-3 pt-4 border-t">
         <Button variant="outline" asChild disabled={isPending}>
           <Link href="/admin/users" className="flex items-center gap-1.5">
-            <ArrowRight className="size-4" />
-            {ar.common.cancel}
+            <BackIcon className="size-4" />
+            {t.common.cancel}
           </Link>
         </Button>
         <Button type="submit" loading={isPending} className="min-w-[140px]">
           <UserPlus className="size-4 me-2" />
-          {ar.users.create}
+          {t.users.create}
         </Button>
       </div>
     </form>

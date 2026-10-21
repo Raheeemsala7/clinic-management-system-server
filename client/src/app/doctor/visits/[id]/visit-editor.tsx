@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useTransition } from 'react';
-import { ar } from '@/i18n/messages/ar';
+import { useI18n } from '@/i18n/use-i18n';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
@@ -29,6 +29,7 @@ interface VisitEditorProps {
 }
 
 export function VisitEditor({ visit }: VisitEditorProps) {
+  const { t, isAr } = useI18n();
   const [version, setVersion] = useState(visit.version);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'conflict'>('idle');
   const [conflictOpen, setConflictOpen] = useState(false);
@@ -57,7 +58,7 @@ export function VisitEditor({ visit }: VisitEditorProps) {
         setConflictOpen(true);
       } else if (!result.success) {
         setSaveStatus('idle');
-        toast.error(result.error ?? ar.errors.INTERNAL_SERVER_ERROR);
+        toast.error(result.error ?? t.errors.INTERNAL_SERVER_ERROR);
       }
     });
   };
@@ -76,23 +77,23 @@ export function VisitEditor({ visit }: VisitEditorProps) {
     <>
       {isClosed && (
         <Alert variant="warning">
-          <AlertTitle>{ar.visits.closed}</AlertTitle>
+          <AlertTitle>{t.visits.closed}</AlertTitle>
         </Alert>
       )}
 
       <form ref={formRef} className="space-y-4">
         {/* Save status */}
         <div className="flex items-center gap-2 text-xs text-muted-foreground h-5">
-          {saveStatus === 'saving' && <span>{ar.common.saving}</span>}
-          {saveStatus === 'saved' && <span className="text-green-600">âœ“ {ar.common.saved}</span>}
+          {saveStatus === 'saving' && <span>{t.common.saving}</span>}
+          {saveStatus === 'saved' && <span className="text-green-600">✓ {t.common.saved}</span>}
           {saveStatus === 'conflict' && (
-            <span className="text-destructive">{ar.visits.conflictTitle}</span>
+            <span className="text-destructive">{t.visits.conflictTitle}</span>
           )}
           <span className="ms-auto">v{version}</span>
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="complaint">{ar.visits.complaint}</Label>
+          <Label htmlFor="complaint">{t.visits.complaint}</Label>
           <Textarea
             id="complaint"
             name="complaint"
@@ -104,7 +105,7 @@ export function VisitEditor({ visit }: VisitEditorProps) {
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="diagnosis">{ar.visits.diagnosis}</Label>
+          <Label htmlFor="diagnosis">{t.visits.diagnosis}</Label>
           <Textarea
             id="diagnosis"
             name="diagnosis"
@@ -116,7 +117,7 @@ export function VisitEditor({ visit }: VisitEditorProps) {
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="notes">{ar.visits.notes}</Label>
+          <Label htmlFor="notes">{t.visits.notes}</Label>
           <Textarea
             id="notes"
             name="notes"
@@ -128,7 +129,7 @@ export function VisitEditor({ visit }: VisitEditorProps) {
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="instructions">{ar.visits.instructions}</Label>
+          <Label htmlFor="instructions">{t.visits.instructions}</Label>
           <Textarea
             id="instructions"
             name="instructions"
@@ -140,7 +141,7 @@ export function VisitEditor({ visit }: VisitEditorProps) {
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="followUpDate">{ar.visits.followUpDate}</Label>
+          <Label htmlFor="followUpDate">{t.visits.followUpDate}</Label>
           <Input
             id="followUpDate"
             name="followUpDate"
@@ -154,7 +155,9 @@ export function VisitEditor({ visit }: VisitEditorProps) {
         {!isClosed && (
           <div className="flex items-center justify-between pt-2">
             <span className="text-xs text-muted-foreground">
-              {saveStatus === 'saved' ? '✓ تم حفظ التغييرات تلقائياً' : 'يتم الحفظ التلقائي أثناء الكتابة'}
+              {saveStatus === 'saved'
+                ? (isAr ? '✓ تم حفظ التغييرات تلقائياً' : '✓ Changes autosaved')
+                : (isAr ? 'يتم الحفظ التلقائي أثناء الكتابة' : 'Autosaves while typing')}
             </span>
             <Button
               type="button"
@@ -163,7 +166,7 @@ export function VisitEditor({ visit }: VisitEditorProps) {
               size="sm"
               className="gap-2 px-5 font-semibold"
             >
-              حفظ الملاحظات الطبية
+              {isAr ? 'حفظ الملاحظات الطبية' : 'Save Clinical Notes'}
             </Button>
           </div>
         )}
@@ -173,9 +176,9 @@ export function VisitEditor({ visit }: VisitEditorProps) {
       <Dialog open={conflictOpen} onOpenChange={setConflictOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{ar.visits.conflictTitle}</DialogTitle>
+            <DialogTitle>{t.visits.conflictTitle}</DialogTitle>
             <DialogDescription>
-              {ar.visits.conflictDescription}
+              {t.visits.conflictDescription}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -186,7 +189,7 @@ export function VisitEditor({ visit }: VisitEditorProps) {
                 window.location.reload();
               }}
             >
-              {ar.visits.conflictReload}
+              {t.visits.conflictReload}
             </Button>
             <Button
               onClick={() => {
@@ -194,7 +197,7 @@ export function VisitEditor({ visit }: VisitEditorProps) {
                 setSaveStatus('idle');
               }}
             >
-              {ar.visits.conflictKeep}
+              {t.visits.conflictKeep}
             </Button>
           </DialogFooter>
         </DialogContent>

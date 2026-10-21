@@ -1,7 +1,7 @@
 import { requireRole } from '@/lib/session';
 import { api } from '@/lib/api/client';
 import { DoctorTodayScreen } from './doctor-today-screen';
-import { ar } from '@/i18n/messages/ar';
+import { getServerI18n } from '@/i18n/server';
 import type { QueueEntry, DoctorStatus } from '@/features/queue/queries';
 
 export const dynamic = 'force-dynamic';
@@ -21,6 +21,7 @@ interface Visit {
 
 export default async function DoctorTodayPage() {
   const user = await requireRole(['DOCTOR', 'ADMIN']);
+  const { t } = await getServerI18n();
 
   const [queue, doctorStatus] = await Promise.all([
     api.get<QueueEntry[]>(`/queue/today?doctorId=${user.id}`),
@@ -50,7 +51,7 @@ export default async function DoctorTodayPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-bold">{ar.nav.today}</h1>
+      <h1 className="text-2xl font-bold">{t.nav.today}</h1>
       <DoctorTodayScreen
         doctorId={user.id}
         initialQueue={queue}

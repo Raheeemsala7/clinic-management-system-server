@@ -4,19 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { api, ApiError } from '@/lib/api/client';
 import { requireRole } from '@/lib/session';
-import { ar } from '@/i18n/messages/ar';
-
-const createExpenseSchema = z.object({
-  categoryId: z.string().uuid('الفئة مطلوبة'),
-  amount: z.coerce.number().min(0, 'المبلغ يجب أن يكون موجباً'),
-  description: z.string().min(1, 'الوصف مطلوب'),
-  spentAt: z.string().min(1, 'التاريخ مطلوب'),
-});
-
-const reviewExpenseSchema = z.object({
-  expenseId: z.string().uuid(),
-  reason: z.string().optional(),
-});
+import { getServerI18n } from '@/i18n/server';
 
 export interface ExpenseActionResult {
   success: boolean;
@@ -28,6 +16,14 @@ export async function createExpenseAction(
   formData: FormData,
 ): Promise<ExpenseActionResult> {
   await requireRole(['ADMIN', 'RECEPTION']);
+  const { t, locale, isAr } = await getServerI18n();
+
+  const createExpenseSchema = z.object({
+    categoryId: z.string().uuid(isAr ? 'الفئة مطلوبة' : 'Category is required'),
+    amount: z.coerce.number().min(0, isAr ? 'المبلغ يجب أن يكون موجباً' : 'Amount must be positive'),
+    description: z.string().min(1, isAr ? 'الوصف مطلوب' : 'Description is required'),
+    spentAt: z.string().min(1, isAr ? 'التاريخ مطلوب' : 'Date is required'),
+  });
 
   const parsed = createExpenseSchema.safeParse({
     categoryId: formData.get('categoryId'),
@@ -38,7 +34,7 @@ export async function createExpenseAction(
 
   if (!parsed.success) {
     const firstError = parsed.error.errors[0]?.message;
-    return { success: false, error: firstError ?? ar.errors.VALIDATION_FAILED };
+    return { success: false, error: firstError ?? t.errors.VALIDATION_FAILED };
   }
 
   try {
@@ -47,20 +43,21 @@ export async function createExpenseAction(
     revalidatePath('/admin/expenses');
     return { success: true };
   } catch (err) {
-    if (err instanceof ApiError) return { success: false, error: err.arabicMessage };
-    return { success: false, error: ar.errors.INTERNAL_SERVER_ERROR };
+    if (err instanceof ApiError) return { success: false, error: err.getLocalizedMessage(locale) };
+    return { success: false, error: t.errors.INTERNAL_SERVER_ERROR };
   }
 }
 
 export async function approveExpenseAction(expenseId: string): Promise<ExpenseActionResult> {
   await requireRole(['ADMIN']);
+  const { t, locale } = await getServerI18n();
   try {
     await api.post(`/expenses/${expenseId}/approve`);
     revalidatePath('/admin/expenses');
     return { success: true };
   } catch (err) {
-    if (err instanceof ApiError) return { success: false, error: err.arabicMessage };
-    return { success: false, error: ar.errors.INTERNAL_SERVER_ERROR };
+    if (err instanceof ApiError) return { success: false, error: err.getLocalizedMessage(locale) };
+    return { success: false, error: t.errors.INTERNAL_SERVER_ERROR };
   }
 }
 
@@ -69,23 +66,29 @@ export async function rejectExpenseAction(
   formData: FormData,
 ): Promise<ExpenseActionResult> {
   await requireRole(['ADMIN']);
+  const { t, locale, isAr } = await getServerI18n();
+
+  const reviewExpenseSchema = z.object({
+    expenseId: z.string().uuid(),
+    reason: z.string().optional(),
+  });
 
   const parsed = reviewExpenseSchema.safeParse({
     expenseId: formData.get('expenseId'),
     reason: formData.get('reason'),
   });
 
-  if (!parsed.success) return { success: false, error: ar.errors.VALIDATION_FAILED };
+  if (!parsed.success) return { success: false, error: t.errors.VALIDATION_FAILED };
 
   try {
     await api.post(`/expenses/${parsed.data.expenseId}/reject`, {
-      reason: parsed.data.reason ?? 'لم يُحدد',
+      reason: parsed.data.reason ?? (isAr ? 'لم يُحدد' : 'Unspecified'),
     });
     revalidatePath('/admin/expenses');
     return { success: true };
   } catch (err) {
-    if (err instanceof ApiError) return { success: false, error: err.arabicMessage };
-    return { success: false, error: ar.errors.INTERNAL_SERVER_ERROR };
+    if (err instanceof ApiError) return { success: false, error: err.getLocalizedMessage(locale) };
+    return { success: false, error: t.errors.INTERNAL_SERVER_ERROR };
   }
 }
 
@@ -94,14 +97,15 @@ export async function rejectExpenseDirectAction(
   reason?: string,
 ): Promise<ExpenseActionResult> {
   await requireRole(['ADMIN']);
+  const { t, locale, isAr } = await getServerI18n();
   try {
     await api.post(`/expenses/${expenseId}/reject`, {
-      reason: reason || 'تم الرفض بواسطة الإدارة',
+      reason: reason || (isAr ? 'تم الرفض بواسطة الإدارة' : 'Rejected by administration'),
     });
     revalidatePath('/admin/expenses');
     return { success: true };
   } catch (err) {
-    if (err instanceof ApiError) return { success: false, error: err.arabicMessage };
-    return { success: false, error: ar.errors.INTERNAL_SERVER_ERROR };
+    if (err instanceof ApiError) return { success: false, error: err.getLocalizedMessage(locale) };
+    return { success: false, error: t.errors.INTERNAL_SERVER_ERROR };
   }
 }

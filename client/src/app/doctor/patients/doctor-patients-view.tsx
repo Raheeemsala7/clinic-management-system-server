@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ar } from '@/i18n/messages/ar';
+import { useI18n } from '@/i18n/use-i18n';
 import { computeAge, formatDate } from '@/lib/utils';
 import { PatientMedicalDrawer } from './patient-medical-drawer';
 import { FileText, Phone, MapPin, Calendar, AlertCircle, HeartPulse, Loader2, Search } from 'lucide-react';
@@ -28,6 +28,7 @@ export function DoctorPatientsView({
   currentPage,
   query,
 }: DoctorPatientsViewProps) {
+  const { t, isAr } = useI18n();
   const [selectedSummary, setSelectedSummary] = useState<PatientSummary | null>(null);
   const [loadingPatientId, setLoadingPatientId] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -83,17 +84,17 @@ export function DoctorPatientsView({
               <input
                 name="q"
                 defaultValue={query}
-                placeholder={ar.patients.searchPlaceholder}
+                placeholder={t.patients.searchPlaceholder}
                 className="flex h-10 w-full rounded-md border border-input bg-background ps-9 pe-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                aria-label={ar.patients.search}
+                aria-label={t.patients.search}
               />
             </div>
             <Button type="submit" size="sm" className="h-10 px-5">
-              {ar.common.search}
+              {t.common.search}
             </Button>
             {query && (
               <Button variant="outline" size="sm" asChild className="h-10">
-                <Link href="/doctor/patients">{ar.common.reset}</Link>
+                <Link href="/doctor/patients">{t.common.reset}</Link>
               </Button>
             )}
           </form>
@@ -104,13 +105,16 @@ export function DoctorPatientsView({
       <div className="space-y-3">
         {initialPatients.length === 0 ? (
           <div className="text-center py-16 text-muted-foreground bg-card rounded-lg border">
-            <p className="font-medium">{ar.common.noData}</p>
-            {query && <p className="text-xs text-muted-foreground mt-1">لا توجد نتائج مطابقة لبحثك</p>}
+            <p className="font-medium">{t.common.noData}</p>
+            {query && (
+              <p className="text-xs text-muted-foreground mt-1">
+                {isAr ? 'لا توجد نتائج مطابقة لبحثك' : 'No matching results found'}
+              </p>
+            )}
           </div>
         ) : (
           initialPatients.map((patient) => {
             const age = patient.dateOfBirth ? computeAge(patient.dateOfBirth) : null;
-            const isLoadingThis = loadingPatientId === patient.id;
 
             return (
               <Card
@@ -131,7 +135,7 @@ export function DoctorPatientsView({
                           {patient.fullName}
                         </p>
                         <Badge variant="outline" className="text-xs font-normal">
-                          {patient.gender === 'MALE' ? ar.patients.male : ar.patients.female}
+                          {patient.gender === 'MALE' ? t.patients.male : t.patients.female}
                         </Badge>
                       </div>
                       <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1 flex-wrap">
@@ -142,7 +146,7 @@ export function DoctorPatientsView({
                         {age !== null && (
                           <span className="flex items-center gap-1">
                             <Calendar className="size-3" />
-                            {age} {ar.patients.years}
+                            {age} {t.patients.years}
                           </span>
                         )}
                         {patient.address && (
@@ -164,7 +168,7 @@ export function DoctorPatientsView({
                     >
                       <Link href={`/doctor/patients/${patient.id}`}>
                         <FileText className="size-3.5" />
-                        زيارات وتقرير المريض
+                        {isAr ? 'زيارات وتقرير المريض' : 'Patient Visits & Report'}
                       </Link>
                     </Button>
                   </div>

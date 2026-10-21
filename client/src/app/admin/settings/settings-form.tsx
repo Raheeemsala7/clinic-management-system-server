@@ -1,12 +1,12 @@
 'use client';
 
-import { useActionState, useTransition } from 'react';
-import { ar } from '@/i18n/messages/ar';
+import * as React from 'react';
+import { useTransition, useState } from 'react';
+import { useI18n } from '@/i18n/use-i18n';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { api } from '@/lib/api/client';
 import { toast } from '@/components/ui/toast';
 
 interface SettingsFormProps {
@@ -14,8 +14,9 @@ interface SettingsFormProps {
 }
 
 export function SettingsForm({ initialSettings }: SettingsFormProps) {
+  const { t, isAr } = useI18n();
   const [isPending, startTransition] = useTransition();
-  const [error, setError] = React.useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -25,33 +26,32 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
 
     startTransition(async () => {
       try {
-        // Direct call via the server action would be better; this is client-side for simplicity
         const res = await fetch('/api/settings/update', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data),
         });
         if (res.ok) {
-          toast.success('تم حفظ الإعدادات');
+          toast.success(isAr ? 'تم حفظ الإعدادات' : 'Settings saved successfully');
           setError(null);
         } else {
-          setError(ar.errors.INTERNAL_SERVER_ERROR);
+          setError(t.errors.INTERNAL_SERVER_ERROR);
         }
       } catch {
-        setError(ar.errors.NETWORK_ERROR);
+        setError(t.errors.NETWORK_ERROR);
       }
     });
   };
 
   const fields = [
-    { key: 'clinicName', label: ar.settings.clinicName },
-    { key: 'doctorDisplayName', label: ar.settings.doctorDisplayName },
-    { key: 'specialty', label: ar.settings.specialty },
-    { key: 'address', label: ar.settings.address },
-    { key: 'phone', label: ar.settings.phone },
-    { key: 'workingHoursText', label: ar.settings.workingHours },
-    { key: 'defaultConsultationFee', label: ar.settings.defaultFee },
-    { key: 'currencyCode', label: ar.settings.currency },
+    { key: 'clinicName', label: t.settings.clinicName },
+    { key: 'doctorDisplayName', label: t.settings.doctorDisplayName },
+    { key: 'specialty', label: t.settings.specialty },
+    { key: 'address', label: t.settings.address },
+    { key: 'phone', label: t.settings.phone },
+    { key: 'workingHoursText', label: t.settings.workingHours },
+    { key: 'defaultConsultationFee', label: t.settings.defaultFee },
+    { key: 'currencyCode', label: t.settings.currency },
   ];
 
   return (
@@ -75,11 +75,8 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
       ))}
 
       <Button type="submit" loading={isPending} className="w-full">
-        {ar.settings.save}
+        {t.settings.save}
       </Button>
     </form>
   );
 }
-
-// Need React import for useState
-import * as React from 'react';

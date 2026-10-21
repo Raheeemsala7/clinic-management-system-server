@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { api, ApiError } from '@/lib/api/client';
 import { requireRole } from '@/lib/session';
-import { ar } from '@/i18n/messages/ar';
+import { getServerI18n } from '@/i18n/server';
 
 const appointmentTypeEnum = z.enum([
   'EXAMINATION',
@@ -25,8 +25,8 @@ const attachmentSchema = z.object({
 });
 
 const createAppointmentSchema = z.object({
-  patientId: z.string().min(1, 'معرف المريض مطلوب'),
-  doctorId: z.string().min(1, 'معرف الطبيب مطلوب'),
+  patientId: z.string().min(1),
+  doctorId: z.string().min(1),
   source: z.enum(['SCHEDULED', 'WALK_IN']),
   type: appointmentTypeEnum,
   clinicDate: z.string().optional(),
@@ -52,12 +52,16 @@ export async function uploadBookingAttachmentsAction(
   files: Array<{ name: string; data: string }>,
 ): Promise<{ success: boolean; attachments?: any[]; error?: string }> {
   await requireRole(['ADMIN', 'RECEPTION', 'DOCTOR']);
+  const { locale, isAr } = await getServerI18n();
   try {
     const res = await api.post<{ attachments: any[] }>('/attachments/upload', { files });
     return { success: true, attachments: res.attachments };
   } catch (err) {
-    if (err instanceof ApiError) return { success: false, error: err.arabicMessage };
-    return { success: false, error: 'فشل رفع المرفقات' };
+    if (err instanceof ApiError) return { success: false, error: err.getLocalizedMessage(locale) };
+    return {
+      success: false,
+      error: isAr ? 'فشل رفع المرفقات' : 'Failed to upload attachments',
+    };
   }
 }
 
@@ -66,6 +70,7 @@ export async function createAppointmentAction(
   formData: FormData,
 ): Promise<AppointmentActionResult> {
   await requireRole(['ADMIN', 'RECEPTION']);
+  const { t, locale } = await getServerI18n();
 
   const isExempt = formData.get('isExempt') === 'true' || formData.get('isExempt') === 'on';
 
@@ -98,7 +103,7 @@ export async function createAppointmentAction(
   });
 
   if (!parsed.success) {
-    return { success: false, error: ar.errors.VALIDATION_FAILED };
+    return { success: false, error: t.errors.VALIDATION_FAILED };
   }
 
   try {
@@ -112,8 +117,8 @@ export async function createAppointmentAction(
     revalidatePath('/admin/payments');
     return { success: true, appointmentId: appointment.id };
   } catch (err) {
-    if (err instanceof ApiError) return { success: false, error: err.arabicMessage };
-    return { success: false, error: ar.errors.INTERNAL_SERVER_ERROR };
+    if (err instanceof ApiError) return { success: false, error: err.getLocalizedMessage(locale) };
+    return { success: false, error: t.errors.INTERNAL_SERVER_ERROR };
   }
 }
 
@@ -133,6 +138,7 @@ export async function updateAppointmentAction(
   },
 ): Promise<AppointmentActionResult> {
   await requireRole(['ADMIN', 'RECEPTION']);
+  const { locale, isAr } = await getServerI18n();
 
   try {
     await api.put(`/appointments/${appointmentId}`, data);
@@ -144,8 +150,11 @@ export async function updateAppointmentAction(
     revalidatePath('/admin/appointments');
     return { success: true, appointmentId };
   } catch (err) {
-    if (err instanceof ApiError) return { success: false, error: err.arabicMessage };
-    return { success: false, error: 'فشل تحديث بيانات الحجز' };
+    if (err instanceof ApiError) return { success: false, error: err.getLocalizedMessage(locale) };
+    return {
+      success: false,
+      error: isAr ? 'فشل تحديث بيانات الحجز' : 'Failed to update appointment data',
+    };
   }
 }
 
@@ -156,6 +165,7 @@ export async function payRemainingAction(
   notes?: string,
 ): Promise<{ success: boolean; error?: string }> {
   await requireRole(['ADMIN', 'RECEPTION']);
+  const { locale, isAr } = await getServerI18n();
 
   try {
     await api.post(`/appointments/${appointmentId}/pay-remaining`, {
@@ -170,7 +180,10 @@ export async function payRemainingAction(
     revalidatePath('/admin/payments');
     return { success: true };
   } catch (err) {
-    if (err instanceof ApiError) return { success: false, error: err.arabicMessage };
-    return { success: false, error: 'فشل تسجيل سداد المبلغ المتبقي' };
+    if (err instanceof ApiError) return { success: false, error: err.getLocalizedMessage(locale) };
+    return {
+      success: false,
+      error: isAr ? 'فشل تسجيل سداد المبلغ المتبقي' : 'Failed to record remaining payment',
+    };
   }
 }

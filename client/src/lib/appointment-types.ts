@@ -113,3 +113,8 @@ export function getAppointmentTypeConfig(type?: string | null): AppointmentTypeC
   const normalized = normalizeAppointmentType(type);
   return APPOINTMENT_TYPES[normalized];
 }
+
+export function getAppointmentTypeLabel(type?: string | null, locale: string = 'ar'): string {
+  const config = getAppointmentTypeConfig(type);
+  return locale === 'en' ? config.enLabel : config.arLabel;
+}

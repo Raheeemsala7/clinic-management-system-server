@@ -1,6 +1,6 @@
 import { requireRole } from '@/lib/session';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { ar } from '@/i18n/messages/ar';
+import { Card, CardContent } from '@/components/ui/card';
+import { getServerI18n } from '@/i18n/server';
 import { NewUserForm } from './new-user-form';
 import { UserPlus } from 'lucide-react';
 
@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function NewUserPage() {
   await requireRole(['ADMIN']);
+  const { t, isAr } = await getServerI18n();
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
@@ -16,8 +17,10 @@ export default async function NewUserPage() {
           <UserPlus className="size-5" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold">{ar.users.newUser}</h1>
-          <p className="text-sm text-muted-foreground">إنشاء حساب مستخدم جديد وتحديد الصلاحيات</p>
+          <h1 className="text-2xl font-bold">{t.users.newUser}</h1>
+          <p className="text-sm text-muted-foreground">
+            {isAr ? 'إنشاء حساب مستخدم جديد وتحديد الصلاحيات' : 'Create a new user account and assign roles'}
+          </p>
         </div>
       </div>
 

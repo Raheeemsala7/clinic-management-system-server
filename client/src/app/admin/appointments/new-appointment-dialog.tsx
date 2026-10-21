@@ -15,7 +15,7 @@ import {
   DialogTrigger,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { ar } from '@/i18n/messages/ar';
+import { useI18n } from '@/i18n/use-i18n';
 import { todayClinicDate } from '@/lib/utils';
 import { CalendarPlus, Loader2, Search, Coins, Gift, Clock } from 'lucide-react';
 import type { DoctorOption } from '@/lib/doctor';
@@ -35,6 +35,7 @@ const COMMON_FEES = [100, 150, 200, 250, 300, 400];
 
 export function NewAppointmentDialog({ doctors, recentPatients }: NewAppointmentDialogProps) {
   const router = useRouter();
+  const { t, locale, isAr } = useI18n();
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -51,7 +52,9 @@ export function NewAppointmentDialog({ doctors, recentPatients }: NewAppointment
 
   // Pricing & Exemption
   const [isExempt, setIsExempt] = useState(false);
-  const [exemptionReason, setExemptionReason] = useState('حالة إنسانية / إعفاء إداري');
+  const [exemptionReason, setExemptionReason] = useState(
+    isAr ? 'حالة إنسانية / إعفاء إداري' : 'Humanitarian / Administrative Waiver'
+  );
   const [totalAmount, setTotalAmount] = useState('200');
   const [paidAmount, setPaidAmount] = useState('0');
   const [paymentMethod, setPaymentMethod] = useState<'CASH' | 'CARD' | 'WALLET'>('CASH');
@@ -60,20 +63,25 @@ export function NewAppointmentDialog({ doctors, recentPatients }: NewAppointment
   const numPaid = isExempt ? 0 : Math.min(numTotal, Math.max(0, Number(paidAmount) || 0));
   const numRemaining = isExempt ? 0 : Math.max(0, numTotal - numPaid);
 
-  const filteredPatients = recentPatients.filter((p) =>
-    p.fullName.toLowerCase().includes(patientSearch.toLowerCase()) ||
-    p.phone.includes(patientSearch),
+  const filteredPatients = recentPatients.filter(
+    (p) =>
+      p.fullName.toLowerCase().includes(patientSearch.toLowerCase()) ||
+      p.phone.includes(patientSearch)
   );
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!selectedPatientId) {
-      setError('يرجى اختيار مريض من القائمة');
+      setError(isAr ? 'يرجى اختيار مريض من القائمة' : 'Please select a patient from the list');
       return;
     }
     const today = todayClinicDate();
     if (clinicDate < today) {
-      setError('لا يمكن حجز موعد في تاريخ ماضٍ، يرجى اختيار تاريخ اليوم أو موعد قادم');
+      setError(
+        isAr
+          ? 'لا يمكن حجز موعد في تاريخ ماضٍ، يرجى اختيار تاريخ اليوم أو موعد قادم'
+          : 'Cannot book an appointment in the past. Please select today or a future date'
+      );
       return;
     }
     setError(null);
@@ -98,7 +106,7 @@ export function NewAppointmentDialog({ doctors, recentPatients }: NewAppointment
         setPatientSearch('');
         router.refresh();
       } else {
-        setError(res.error ?? ar.errors.generic);
+        setError(res.error ?? t.errors.generic);
       }
     });
   };
@@ -108,14 +116,14 @@ export function NewAppointmentDialog({ doctors, recentPatients }: NewAppointment
       <DialogTrigger asChild>
         <Button className="gap-2 shadow-sm font-bold bg-primary text-primary-foreground">
           <CalendarPlus className="size-4" />
-          {ar.queue.newAppointment}
+          {t.queue.newAppointment}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold flex items-center gap-2">
             <CalendarPlus className="size-5 text-primary" />
-            حجز موعد وتحديد الرسوم
+            {isAr ? 'حجز موعد وتحديد الرسوم' : 'Book Appointment & Set Fees'}
           </DialogTitle>
         </DialogHeader>
 
@@ -128,7 +136,9 @@ export function NewAppointmentDialog({ doctors, recentPatients }: NewAppointment
 
           {/* Doctor Selection */}
           <div className="space-y-1">
-            <Label htmlFor="doctorId" className="text-xs font-bold">{ar.common.doctor} *</Label>
+            <Label htmlFor="doctorId" className="text-xs font-bold">
+              {t.common.doctor} *
+            </Label>
             <select
               id="doctorId"
               name="doctorId"
@@ -138,7 +148,7 @@ export function NewAppointmentDialog({ doctors, recentPatients }: NewAppointment
             >
               {doctors.map((d) => (
                 <option key={d.id} value={d.id}>
-                  د. {d.name}
+                  {isAr ? 'د.' : 'Dr.'} {d.name}
                 </option>
               ))}
             </select>
@@ -146,11 +156,13 @@ export function NewAppointmentDialog({ doctors, recentPatients }: NewAppointment
 
           {/* Patient Selection */}
           <div className="space-y-1.5">
-            <Label className="text-xs font-bold">{ar.common.patient} *</Label>
+            <Label className="text-xs font-bold">{t.common.patient} *</Label>
             <div className="relative">
               <Search className="absolute start-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
               <Input
-                placeholder="ابحث باسم المريض أو رقم الهاتف..."
+                placeholder={
+                  isAr ? 'ابحث باسم المريض أو رقم الهاتف...' : 'Search by patient name or phone...'
+                }
                 value={patientSearch}
                 onChange={(e) => setPatientSearch(e.target.value)}
                 className="ps-9 h-9 text-sm"
@@ -161,7 +173,9 @@ export function NewAppointmentDialog({ doctors, recentPatients }: NewAppointment
             <div className="max-h-36 overflow-y-auto rounded-md border border-input p-1 space-y-1 bg-muted/20">
               {filteredPatients.length === 0 ? (
                 <p className="text-xs text-muted-foreground text-center py-4">
-                  لا يوجد مرضى مطابقين. يرجى إضافة المريض أولاً من قسم المرضى.
+                  {isAr
+                    ? 'لا يوجد مرضى مطابقين. يرجى إضافة المريض أولاً من قسم المرضى.'
+                    : 'No matching patients found. Please add the patient first in Patients.'}
                 </p>
               ) : (
                 filteredPatients.map((p) => {
@@ -171,13 +185,16 @@ export function NewAppointmentDialog({ doctors, recentPatients }: NewAppointment
                       type="button"
                       key={p.id}
                       onClick={() => setSelectedPatientId(p.id)}
-                      className={`w-full flex items-center justify-between px-3 py-2 text-xs rounded text-start transition-colors ${isSelected
+                      className={`w-full flex items-center justify-between px-3 py-2 text-xs rounded text-start transition-colors ${
+                        isSelected
                           ? 'bg-primary text-primary-foreground font-semibold'
                           : 'hover:bg-muted text-foreground'
-                        }`}
+                      }`}
                     >
                       <span>{p.fullName}</span>
-                      <span className="font-mono opacity-80">{p.phone}</span>
+                      <span className="font-mono opacity-80" dir="ltr">
+                        {p.phone}
+                      </span>
                     </button>
                   );
                 })
@@ -188,7 +205,7 @@ export function NewAppointmentDialog({ doctors, recentPatients }: NewAppointment
           {/* Date & Time */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 bg-muted/20 p-2.5 rounded-lg border">
             <div className="space-y-1">
-              <Label className="text-xs">تاريخ الحجز</Label>
+              <Label className="text-xs">{isAr ? 'تاريخ الحجز' : 'Clinic Date'}</Label>
               <Input
                 type="date"
                 value={clinicDate}
@@ -198,7 +215,7 @@ export function NewAppointmentDialog({ doctors, recentPatients }: NewAppointment
               />
             </div>
             <div className="space-y-1">
-              <Label className="text-xs">من الساعة</Label>
+              <Label className="text-xs">{isAr ? 'من الساعة' : 'Start Time'}</Label>
               <Input
                 type="time"
                 value={startTime}
@@ -206,7 +223,7 @@ export function NewAppointmentDialog({ doctors, recentPatients }: NewAppointment
               />
             </div>
             <div className="space-y-1">
-              <Label className="text-xs">إلى الساعة</Label>
+              <Label className="text-xs">{isAr ? 'إلى الساعة' : 'End Time'}</Label>
               <Input
                 type="time"
                 value={endTime}
@@ -218,7 +235,9 @@ export function NewAppointmentDialog({ doctors, recentPatients }: NewAppointment
           {/* Type & Source */}
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <Label htmlFor="source" className="text-xs">نوع الحضور</Label>
+              <Label htmlFor="source" className="text-xs">
+                {isAr ? 'نوع الحضور' : 'Attendance Type'}
+              </Label>
               <select
                 id="source"
                 name="source"
@@ -227,13 +246,17 @@ export function NewAppointmentDialog({ doctors, recentPatients }: NewAppointment
                 disabled={isPending}
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
               >
-                <option value="WALK_IN">حضور مباشر (طابور)</option>
-                <option value="SCHEDULED">حجز مسبق بميعاد</option>
+                <option value="WALK_IN">{isAr ? 'حضور مباشر (طابور)' : 'Walk-in (Queue)'}</option>
+                <option value="SCHEDULED">
+                  {isAr ? 'حجز مسبق بميعاد' : 'Scheduled Appointment'}
+                </option>
               </select>
             </div>
 
             <div className="space-y-1">
-              <Label htmlFor="type" className="text-xs">نوع الكشف</Label>
+              <Label htmlFor="type" className="text-xs">
+                {isAr ? 'نوع الكشف' : 'Examination Type'}
+              </Label>
               <select
                 id="type"
                 name="type"
@@ -242,8 +265,10 @@ export function NewAppointmentDialog({ doctors, recentPatients }: NewAppointment
                 disabled={isPending}
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
               >
-                <option value="CONSULTATION">كشف جديد</option>
-                <option value="FOLLOW_UP">استشارة / إعادة كشف</option>
+                <option value="CONSULTATION">{isAr ? 'كشف جديد' : 'New Examination'}</option>
+                <option value="FOLLOW_UP">
+                  {isAr ? 'استشارة / إعادة كشف' : 'Follow-up Consultation'}
+                </option>
               </select>
             </div>
           </div>
@@ -251,37 +276,48 @@ export function NewAppointmentDialog({ doctors, recentPatients }: NewAppointment
           {/* Financial Breakdown */}
           <div className="space-y-2 border-t pt-3">
             <div className="flex items-center justify-between">
-              <Label className="text-xs font-bold flex items-center gap-1.5 text-emerald-700">
+              <Label className="text-xs font-bold flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400">
                 <Coins className="size-4" />
-                المعاملة المالية والرسوم
+                {isAr ? 'المعاملة المالية والرسوم' : 'Financials & Fees'}
               </Label>
               <button
                 type="button"
                 onClick={() => setIsExempt(!isExempt)}
-                className={`text-xs px-2.5 py-1 rounded-full border transition-all ${isExempt
+                className={`text-xs px-2.5 py-1 rounded-full border transition-all ${
+                  isExempt
                     ? 'bg-emerald-600 text-white font-bold'
                     : 'bg-muted text-muted-foreground'
-                  }`}
+                }`}
               >
                 <Gift className="size-3.5 inline mr-1" />
-                {isExempt ? 'كشف معفي / مجاني ✓' : 'إعفاء من الرسوم'}
+                {isExempt
+                  ? isAr
+                    ? 'كشف معفي / مجاني ✓'
+                    : 'Exempt / Free ✓'
+                  : isAr
+                    ? 'إعفاء من الرسوم'
+                    : 'Exempt from Fees'}
               </button>
             </div>
 
             {isExempt ? (
-              <div className="p-2.5 bg-emerald-50 text-emerald-900 border border-emerald-200 rounded-md text-xs space-y-1">
-                <span>سبب الإعفاء:</span>
+              <div className="p-2.5 bg-emerald-50 text-emerald-900 border border-emerald-200 rounded-md text-xs space-y-1 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800">
+                <span>{isAr ? 'سبب الإعفاء:' : 'Exemption Reason:'}</span>
                 <Input
                   value={exemptionReason}
                   onChange={(e) => setExemptionReason(e.target.value)}
-                  placeholder="سبب إعفاء المريض من الرسوم"
+                  placeholder={
+                    isAr ? 'سبب إعفاء المريض من الرسوم' : 'Reason for fee exemption'
+                  }
                 />
               </div>
             ) : (
               <div className="space-y-2 bg-muted/30 p-3 rounded-lg border">
                 <div className="grid grid-cols-2 gap-2">
                   <div className="space-y-1">
-                    <Label className="text-xs font-bold">إجمالي الكشف (ج.م)</Label>
+                    <Label className="text-xs font-bold">
+                      {isAr ? 'إجمالي الكشف (ج.م)' : 'Total Fee (EGP)'}
+                    </Label>
                     <Input
                       type="number"
                       min="0"
@@ -292,39 +328,46 @@ export function NewAppointmentDialog({ doctors, recentPatients }: NewAppointment
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs font-bold text-emerald-700">المدفوع الآن (عربون)</Label>
+                    <Label className="text-xs font-bold text-emerald-700 dark:text-emerald-400">
+                      {isAr ? 'المدفوع الآن (عربون)' : 'Paid Now (Deposit)'}
+                    </Label>
                     <Input
                       type="number"
                       min="0"
                       max={numTotal}
                       value={paidAmount}
                       onChange={(e) => setPaidAmount(e.target.value)}
-                      className="font-bold text-sm font-mono text-emerald-700"
+                      className="font-bold text-sm font-mono text-emerald-700 dark:text-emerald-400"
                     />
                   </div>
                 </div>
 
                 <div className="flex items-center justify-between p-2 rounded bg-background border text-xs font-mono">
-                  <span>المتبقي: <strong className="text-amber-700 font-bold">{numRemaining} ج.م</strong></span>
+                  <span>
+                    {isAr ? 'المتبقي:' : 'Remaining:'}{' '}
+                    <strong className="text-amber-700 dark:text-amber-400 font-bold">
+                      {numRemaining} {isAr ? 'ج.م' : 'EGP'}
+                    </strong>
+                  </span>
                   <div className="flex gap-1">
                     <button
                       type="button"
                       onClick={() => setPaidAmount(String(numTotal))}
-                      className="px-2 py-0.5 text-[11px] rounded bg-emerald-50 text-emerald-700 border"
+                      className="px-2 py-0.5 text-[11px] rounded bg-emerald-50 text-emerald-700 border hover:bg-emerald-100 dark:bg-emerald-950/50 dark:text-emerald-300"
                     >
-                      كامل
+                      {isAr ? 'كامل' : 'Full'}
                     </button>
                     <button
                       type="button"
                       onClick={() => setPaidAmount(String(Math.floor(numTotal / 2)))}
-                      className="px-2 py-0.5 text-[11px] rounded bg-amber-50 text-amber-700 border"
+                      className="px-2 py-0.5 text-[11px] rounded bg-amber-50 text-amber-700 border hover:bg-amber-100 dark:bg-amber-950/50 dark:text-amber-300"
                     >
-                      نصف
+                      {isAr ? 'نصف' : 'Half'}
                     </button>
                     <button
                       type="button"
                       onClick={() => setPaidAmount('0')}
-                      className="px-2 py-0.5 text-[11px] rounded bg-muted text-muted-foreground border"
+                      className="px-2 py-0.5 text-[11px] rounded bg-muted text-muted-foreground border hover:bg-muted/80"
                     >
                       0
                     </button>
@@ -333,7 +376,7 @@ export function NewAppointmentDialog({ doctors, recentPatients }: NewAppointment
 
                 {numPaid > 0 && (
                   <div className="space-y-1 pt-1">
-                    <Label className="text-xs">طريقة الدفع</Label>
+                    <Label className="text-xs">{isAr ? 'طريقة الدفع' : 'Payment Method'}</Label>
                     <div className="grid grid-cols-3 gap-2">
                       <Button
                         type="button"
@@ -341,7 +384,7 @@ export function NewAppointmentDialog({ doctors, recentPatients }: NewAppointment
                         size="sm"
                         onClick={() => setPaymentMethod('CASH')}
                       >
-                        كاش
+                        {isAr ? 'كاش' : 'Cash'}
                       </Button>
                       <Button
                         type="button"
@@ -349,7 +392,7 @@ export function NewAppointmentDialog({ doctors, recentPatients }: NewAppointment
                         size="sm"
                         onClick={() => setPaymentMethod('CARD')}
                       >
-                        فيزا
+                        {isAr ? 'فيزا' : 'Card'}
                       </Button>
                       <Button
                         type="button"
@@ -357,7 +400,7 @@ export function NewAppointmentDialog({ doctors, recentPatients }: NewAppointment
                         size="sm"
                         onClick={() => setPaymentMethod('WALLET')}
                       >
-                        محفظة
+                        {isAr ? 'محفظة' : 'Wallet'}
                       </Button>
                     </div>
                   </div>
@@ -373,7 +416,7 @@ export function NewAppointmentDialog({ doctors, recentPatients }: NewAppointment
               onClick={() => setOpen(false)}
               disabled={isPending}
             >
-              {ar.common.cancel}
+              {t.common.cancel}
             </Button>
             <Button
               type="submit"
@@ -381,7 +424,7 @@ export function NewAppointmentDialog({ doctors, recentPatients }: NewAppointment
               className="gap-2 bg-primary text-primary-foreground font-bold"
             >
               {isPending && <Loader2 className="size-4 animate-spin" />}
-              {ar.common.save}
+              {t.common.save}
             </Button>
           </DialogFooter>
         </form>

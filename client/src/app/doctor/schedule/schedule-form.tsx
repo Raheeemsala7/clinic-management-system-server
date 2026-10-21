@@ -15,6 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Switch } from '@/components/ui/switch';
+import { useI18n } from '@/i18n/use-i18n';
 import {
   Clock,
   Plus,
@@ -27,22 +28,14 @@ import {
   Sparkles,
 } from 'lucide-react';
 
-const ARABIC_DAYS_CONFIG = [
-  { dayOfWeek: 0, name: 'الأحد', defaultWorking: true },
-  { dayOfWeek: 1, name: 'الاثنين', defaultWorking: true },
-  { dayOfWeek: 2, name: 'الثلاثاء', defaultWorking: true },
-  { dayOfWeek: 3, name: 'الأربعاء', defaultWorking: true },
-  { dayOfWeek: 4, name: 'الخميس', defaultWorking: true },
-  { dayOfWeek: 5, name: 'الجمعة', defaultWorking: false },
-  { dayOfWeek: 6, name: 'السبت', defaultWorking: false },
-];
-
-const SLOT_DURATIONS = [
-  { value: 15, label: '15 دقيقة' },
-  { value: 20, label: '20 دقيقة' },
-  { value: 30, label: '30 دقيقة (الافتراضي)' },
-  { value: 45, label: '45 دقيقة' },
-  { value: 60, label: '60 دقيقة (ساعة)' },
+const DAYS_CONFIG = [
+  { dayOfWeek: 0, arName: 'الأحد', enName: 'Sunday', defaultWorking: true },
+  { dayOfWeek: 1, arName: 'الاثنين', enName: 'Monday', defaultWorking: true },
+  { dayOfWeek: 2, arName: 'الثلاثاء', enName: 'Tuesday', defaultWorking: true },
+  { dayOfWeek: 3, arName: 'الأربعاء', enName: 'Wednesday', defaultWorking: true },
+  { dayOfWeek: 4, arName: 'الخميس', enName: 'Thursday', defaultWorking: true },
+  { dayOfWeek: 5, arName: 'الجمعة', enName: 'Friday', defaultWorking: false },
+  { dayOfWeek: 6, arName: 'السبت', enName: 'Saturday', defaultWorking: false },
 ];
 
 interface ScheduleFormProps {
@@ -52,11 +45,12 @@ interface ScheduleFormProps {
 }
 
 export function DoctorScheduleForm({ doctorId, doctorName, initialSchedule }: ScheduleFormProps) {
+  const { isAr, t } = useI18n();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [slotDuration, setSlotDuration] = useState<number>(initialSchedule.slotDurationMinutes || 30);
   const [weeklySchedule, setWeeklySchedule] = useState<DoctorDaySchedule[]>(() => {
-    return ARABIC_DAYS_CONFIG.map((day) => {
+    return DAYS_CONFIG.map((day) => {
       const existing = initialSchedule.weeklySchedule.find((s) => s.dayOfWeek === day.dayOfWeek);
       if (existing) return existing;
       return {
@@ -74,6 +68,14 @@ export function DoctorScheduleForm({ doctorId, doctorName, initialSchedule }: Sc
 
   const [error, setError] = useState<string | null>(null);
   const [savedSuccess, setSavedSuccess] = useState(false);
+
+  const slotDurations = [
+    { value: 15, label: isAr ? '15 دقيقة' : '15 minutes' },
+    { value: 20, label: isAr ? '20 دقيقة' : '20 minutes' },
+    { value: 30, label: isAr ? '30 دقيقة (الافتراضي)' : '30 minutes (Default)' },
+    { value: 45, label: isAr ? '45 دقيقة' : '45 minutes' },
+    { value: 60, label: isAr ? '60 دقيقة (ساعة)' : '60 minutes (1 hour)' },
+  ];
 
   const toggleDayAvailable = (dayOfWeek: number, isAvailable: boolean) => {
     setWeeklySchedule((prev) =>
@@ -148,9 +150,9 @@ export function DoctorScheduleForm({ doctorId, doctorName, initialSchedule }: Sc
 
   const applyDefaultPreset = () => {
     setWeeklySchedule(
-      ARABIC_DAYS_CONFIG.map((day) => ({
+      DAYS_CONFIG.map((day) => ({
         dayOfWeek: day.dayOfWeek,
-        isAvailable: day.dayOfWeek < 5, // الأحد - الخميس
+        isAvailable: day.dayOfWeek < 5, // Sun - Thu
         shifts:
           day.dayOfWeek < 5
             ? [
@@ -171,17 +173,31 @@ export function DoctorScheduleForm({ doctorId, doctorName, initialSchedule }: Sc
     // Validate shifts
     for (const day of weeklySchedule) {
       if (day.isAvailable) {
+        const dayConfig = DAYS_CONFIG.find((d) => d.dayOfWeek === day.dayOfWeek);
+        const dayName = isAr ? dayConfig?.arName : dayConfig?.enName;
         if (!day.shifts || day.shifts.length === 0) {
-          setError(`يرجى إضافة فترة عمل واحدة على الأقل ليوم ${ARABIC_DAYS_CONFIG.find((d) => d.dayOfWeek === day.dayOfWeek)?.name} أو تعيينه كيوم إجازة.`);
+          setError(
+            isAr
+              ? `يرجى إضافة فترة عمل واحدة على الأقل ليوم ${dayName} أو تعيينه كيوم إجازة.`
+              : `Please add at least one shift for ${dayName} or set it as off-day.`,
+          );
           return;
         }
         for (const shift of day.shifts) {
           if (!shift.startTime || !shift.endTime) {
-            setError('يرجى ملء جميع أوقات البدء والانتهاء لفترات العمل.');
+            setError(
+              isAr
+                ? 'يرجى ملء جميع أوقات البدء والانتهاء لفترات العمل.'
+                : 'Please fill all start and end times for work shifts.',
+            );
             return;
           }
           if (shift.startTime >= shift.endTime) {
-            setError(`وقت بدء الفترة (${shift.startTime}) يجب أن يسبق وقت الانتهاء (${shift.endTime}).`);
+            setError(
+              isAr
+                ? `وقت بدء الفترة (${shift.startTime}) يجب أن يسبق وقت الانتهاء (${shift.endTime}).`
+                : `Shift start time (${shift.startTime}) must precede end time (${shift.endTime}).`,
+            );
             return;
           }
         }
@@ -198,7 +214,7 @@ export function DoctorScheduleForm({ doctorId, doctorName, initialSchedule }: Sc
         setSavedSuccess(true);
         router.refresh();
       } else {
-        setError(res.error || 'حدث خطأ أثناء حفظ الجدول');
+        setError(res.error || (isAr ? 'حدث خطأ أثناء حفظ الجدول' : 'An error occurred while saving the schedule'));
       }
     });
   };
@@ -212,10 +228,12 @@ export function DoctorScheduleForm({ doctorId, doctorName, initialSchedule }: Sc
             <div className="space-y-1">
               <h2 className="text-xl font-bold flex items-center gap-2">
                 <CalendarDays className="size-5 text-primary" />
-                تحديد مواعيد العمل وفترات الكشف الأسبوعية
+                {isAr ? 'تحديد مواعيد العمل وفترات الكشف الأسبوعية' : 'Weekly Working Hours & Shifts'}
               </h2>
               <p className="text-sm text-muted-foreground">
-                حدد أيام وفترات عملك المتاحة حتى تظهر تلقائياً لموظفي الاستقبال لحجز المرضى دون تعارض
+                {isAr
+                  ? 'حدد أيام وفترات عملك المتاحة حتى تظهر تلقائياً لموظفي الاستقبال لحجز المرضى دون تعارض'
+                  : 'Define your available working days and shifts so reception staff can schedule appointments without conflicts'}
               </p>
             </div>
 
@@ -228,18 +246,22 @@ export function DoctorScheduleForm({ doctorId, doctorName, initialSchedule }: Sc
                 className="text-xs gap-1.5"
               >
                 <Sparkles className="size-3.5 text-primary" />
-                تطبيق الجدول النموذجي (الأحد-الخميس فترتين)
+                {isAr
+                  ? 'تطبيق الجدول النموذجي (الأحد-الخميس فترتين)'
+                  : 'Apply Typical Schedule (Sun-Thu 2 Shifts)'}
               </Button>
               <Button type="submit" disabled={isPending} className="gap-2 px-5">
                 {isPending ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
-                حفظ الجدول
+                {isAr ? 'حفظ الجدول' : 'Save Schedule'}
               </Button>
             </div>
           </div>
 
           <div className="mt-5 pt-4 border-t flex items-center gap-4 flex-wrap">
             <div className="space-y-1">
-              <Label className="text-xs font-semibold">مدة الكشف / الموعد التقريبي</Label>
+              <Label className="text-xs font-semibold">
+                {isAr ? 'مدة الكشف / الموعد التقريبي' : 'Appointment / Slot Duration'}
+              </Label>
               <select
                 value={slotDuration}
                 onChange={(e) => {
@@ -248,7 +270,7 @@ export function DoctorScheduleForm({ doctorId, doctorName, initialSchedule }: Sc
                 }}
                 className="h-9 px-3 rounded-md border border-input bg-background text-sm font-medium"
               >
-                {SLOT_DURATIONS.map((d) => (
+                {slotDurations.map((d) => (
                   <option key={d.value} value={d.value}>
                     {d.label}
                   </option>
@@ -256,7 +278,9 @@ export function DoctorScheduleForm({ doctorId, doctorName, initialSchedule }: Sc
               </select>
             </div>
             <p className="text-xs text-muted-foreground self-end pb-2">
-              يتم تقسيم فترات العمل تلقائياً إلى مواعيد قابلة للاختيار بناءً على هذه المدة (مثلاً من 8:00 إلى 12:00 = 8 فترات كشف).
+              {isAr
+                ? 'يتم تقسيم فترات العمل تلقائياً إلى مواعيد قابلة للاختيار بناءً على هذه المدة (مثلاً من 8:00 إلى 12:00 = 8 فترات كشف).'
+                : 'Working shifts are automatically divided into bookable slots based on this duration (e.g. 8:00 to 12:00 = 8 slots).'}
             </p>
           </div>
         </CardContent>
@@ -274,20 +298,23 @@ export function DoctorScheduleForm({ doctorId, doctorName, initialSchedule }: Sc
         <Alert className="border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-800 dark:text-emerald-200">
           <CheckCircle2 className="size-4 text-emerald-600 dark:text-emerald-400" />
           <AlertDescription className="font-medium">
-            تم حفظ جدول المواعيد الأسبوعي بنجاح! ستظهر هذه المواعيد لموظف الاستقبال عند اختيار أي يوم.
+            {isAr
+              ? 'تم حفظ جدول المواعيد الأسبوعي بنجاح! ستظهر هذه المواعيد لموظف الاستقبال عند اختيار أي يوم.'
+              : 'Weekly schedule saved successfully! These slots will now appear to reception when booking.'}
           </AlertDescription>
         </Alert>
       )}
 
       {/* Days of Week Cards */}
       <div className="space-y-3">
-        {ARABIC_DAYS_CONFIG.map((dayConfig) => {
+        {DAYS_CONFIG.map((dayConfig) => {
           const daySchedule = weeklySchedule.find((s) => s.dayOfWeek === dayConfig.dayOfWeek) || {
             dayOfWeek: dayConfig.dayOfWeek,
             isAvailable: false,
             shifts: [],
           };
           const isAvailable = daySchedule.isAvailable;
+          const dayName = isAr ? `يوم ${dayConfig.arName}` : dayConfig.enName;
 
           return (
             <Card
@@ -310,12 +337,14 @@ export function DoctorScheduleForm({ doctorId, doctorName, initialSchedule }: Sc
                         htmlFor={`day-${dayConfig.dayOfWeek}`}
                         className="text-base font-bold cursor-pointer"
                       >
-                        يوم {dayConfig.name}
+                        {dayName}
                       </Label>
                     </div>
 
                     <Badge variant={isAvailable ? 'default' : 'outline'} className="text-xs">
-                      {isAvailable ? 'متاح للعمل' : 'عطلة / غير متاح'}
+                      {isAvailable
+                        ? (isAr ? 'متاح للعمل' : 'Active / Working')
+                        : (isAr ? 'عطلة / غير متاح' : 'Off-day / Unavailable')}
                     </Badge>
                   </div>
 
@@ -324,7 +353,9 @@ export function DoctorScheduleForm({ doctorId, doctorName, initialSchedule }: Sc
                     <div className="flex-1 space-y-2">
                       <div className="flex items-center justify-between gap-2 flex-wrap">
                         <span className="text-xs text-muted-foreground font-medium">
-                          فترات العمل ({daySchedule.shifts.length} فترة):
+                          {isAr
+                            ? `فترات العمل (${daySchedule.shifts.length} فترة):`
+                            : `Working shifts (${daySchedule.shifts.length}):`}
                         </span>
                         <Button
                           type="button"
@@ -334,7 +365,7 @@ export function DoctorScheduleForm({ doctorId, doctorName, initialSchedule }: Sc
                           className="text-xs h-7 gap-1 text-primary hover:text-primary"
                         >
                           <Plus className="size-3.5" />
-                          إضافة فترة عمل أخرى
+                          {isAr ? 'إضافة فترة عمل أخرى' : 'Add another shift'}
                         </Button>
                       </div>
 
@@ -345,11 +376,11 @@ export function DoctorScheduleForm({ doctorId, doctorName, initialSchedule }: Sc
                             className="flex items-center gap-3 bg-muted/40 p-2.5 rounded-lg border flex-wrap text-sm"
                           >
                             <span className="text-xs font-semibold text-muted-foreground w-16">
-                              الفترة {idx + 1}:
+                              {isAr ? `الفترة ${idx + 1}:` : `Shift ${idx + 1}:`}
                             </span>
 
                             <div className="flex items-center gap-2">
-                              <span className="text-xs text-muted-foreground">من</span>
+                              <span className="text-xs text-muted-foreground">{isAr ? 'من' : 'From'}</span>
                               <Input
                                 type="time"
                                 value={shift.startTime}
@@ -362,7 +393,7 @@ export function DoctorScheduleForm({ doctorId, doctorName, initialSchedule }: Sc
                             </div>
 
                             <div className="flex items-center gap-2">
-                              <span className="text-xs text-muted-foreground">إلى</span>
+                              <span className="text-xs text-muted-foreground">{isAr ? 'إلى' : 'To'}</span>
                               <Input
                                 type="time"
                                 value={shift.endTime}
@@ -381,6 +412,7 @@ export function DoctorScheduleForm({ doctorId, doctorName, initialSchedule }: Sc
                                 size="sm"
                                 onClick={() => removeShift(dayConfig.dayOfWeek, idx)}
                                 className="h-8 px-2 text-destructive hover:bg-destructive/10 ms-auto"
+                                title={isAr ? 'حذف الفترة' : 'Delete shift'}
                               >
                                 <Trash2 className="size-3.5" />
                               </Button>
@@ -391,7 +423,11 @@ export function DoctorScheduleForm({ doctorId, doctorName, initialSchedule }: Sc
                     </div>
                   ) : (
                     <div className="text-sm text-muted-foreground italic flex items-center gap-1.5 py-1">
-                      <span>إجازة أسبوعية — لن تظهر أي مواعيد للاستقبال في هذا اليوم</span>
+                      <span>
+                        {isAr
+                          ? 'إجازة أسبوعية — لن تظهر أي مواعيد للاستقبال في هذا اليوم'
+                          : 'Weekly off-day — No booking slots will be generated for reception on this day'}
+                      </span>
                     </div>
                   )}
                 </div>
@@ -404,11 +440,11 @@ export function DoctorScheduleForm({ doctorId, doctorName, initialSchedule }: Sc
       {/* Bottom Save Bar */}
       <div className="flex items-center justify-end gap-3 pt-4 border-t sticky bottom-4 bg-background/95 p-4 rounded-lg shadow-md border backdrop-blur">
         <Button type="button" variant="outline" onClick={() => router.push('/doctor')}>
-          العودة
+          {isAr ? 'العودة' : 'Back'}
         </Button>
         <Button type="submit" disabled={isPending} className="gap-2 px-6">
           {isPending ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
-          حفظ التغييرات
+          {isAr ? 'حفظ التغييرات' : 'Save Changes'}
         </Button>
       </div>
     </form>
