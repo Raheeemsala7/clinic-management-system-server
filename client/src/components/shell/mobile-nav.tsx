@@ -2,21 +2,23 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Menu, X, Stethoscope, ShieldCheck, UserCheck, Stethoscope as StethoscopeIcon } from 'lucide-react';
+import { Menu, X, Stethoscope } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { NavLinks } from '@/components/shell/nav-links';
 import { homePathForRole } from '@/lib/roles';
 import { type Role } from '@/lib/roles';
-import { ar } from '@/i18n/messages/ar';
+import { useI18n } from '@/i18n/use-i18n';
 
 interface MobileNavProps {
   role: Role;
   locale?: 'en' | 'ar';
 }
 
-export function MobileNav({ role, locale = 'ar' }: MobileNavProps) {
+export function MobileNav({ role, locale: propLocale }: MobileNavProps) {
   const [open, setOpen] = useState(false);
+  const { t, locale: activeLocale } = useI18n();
+  const locale = propLocale || activeLocale;
 
   // Lock body scroll when open
   useEffect(() => {
@@ -46,7 +48,7 @@ export function MobileNav({ role, locale = 'ar' }: MobileNavProps) {
       <Button
         variant="ghost"
         size="icon"
-        aria-label={ar.nav.menu}
+        aria-label={t.nav.menu}
         onClick={() => setOpen(true)}
         className="size-10 rounded-lg hover:bg-muted"
       >
@@ -64,11 +66,12 @@ export function MobileNav({ role, locale = 'ar' }: MobileNavProps) {
 
       {/* Off-canvas Drawer (RTL start = Right side) */}
       <div
-        className={`fixed inset-y-0 start-0 z-50 w-72 sm:w-80 bg-card border-e shadow-2xl flex flex-col justify-between transition-transform duration-300 ease-in-out ${open ? 'translate-x-0' : '-translate-x-full rtl:translate-x-full'
-          }`}
+        className={`fixed inset-y-0 start-0 z-50 w-72 sm:w-80 bg-card border-e shadow-2xl flex flex-col justify-between transition-transform duration-300 ease-in-out ${
+          open ? 'translate-x-0' : '-translate-x-full rtl:translate-x-full'
+        }`}
         role="dialog"
         aria-modal="true"
-        aria-label={ar.nav.menu}
+        aria-label={t.nav.menu}
       >
         <div className="flex flex-col h-full overflow-y-auto p-4 space-y-4">
           {/* Drawer Header */}
@@ -81,7 +84,7 @@ export function MobileNav({ role, locale = 'ar' }: MobileNavProps) {
               <div className="size-8 rounded-lg bg-primary/10 flex items-center justify-center">
                 <Stethoscope className="size-5 text-primary" aria-hidden="true" />
               </div>
-              <span>{ar.common.appName}</span>
+              <span>{t.common.appName}</span>
             </Link>
 
             <Button
@@ -89,7 +92,7 @@ export function MobileNav({ role, locale = 'ar' }: MobileNavProps) {
               size="icon"
               onClick={() => setOpen(false)}
               className="size-8 rounded-md hover:bg-muted"
-              aria-label={ar.common.close}
+              aria-label={t.common.close}
             >
               <X className="size-4" />
             </Button>
@@ -97,9 +100,9 @@ export function MobileNav({ role, locale = 'ar' }: MobileNavProps) {
 
           {/* Role badge banner */}
           <div className="rounded-lg bg-muted/40 p-2.5 border flex items-center justify-between text-xs">
-            <span className="text-muted-foreground">صلاحية الحساب:</span>
+            <span className="text-muted-foreground">{t.common.role}</span>
             <Badge variant="secondary" className="font-semibold text-xs">
-              {ar.roles[role]}
+              {t.roles[role]}
             </Badge>
           </div>
 
@@ -111,8 +114,8 @@ export function MobileNav({ role, locale = 'ar' }: MobileNavProps) {
 
         {/* Drawer Footer */}
         <div className="p-4 border-t border-border/80 bg-muted/20 text-xs text-muted-foreground text-center">
-          <p className="font-medium text-foreground">{ar.common.appName}</p>
-          <p className="text-[11px] opacity-75 mt-0.5">نظام إدارة العيادات الطبية v1.0</p>
+          <p className="font-medium text-foreground">{t.common.appName}</p>
+          <p className="text-[11px] opacity-75 mt-0.5">{t.common.appSubtitle}</p>
         </div>
       </div>
     </div>

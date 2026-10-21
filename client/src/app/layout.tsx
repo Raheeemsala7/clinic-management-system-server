@@ -35,10 +35,6 @@ type Props = {
 export default async function RootLayout({ children, params }: Props) {
   const { locale } = await params;
 
-  if (!hasLocale(routing.locales, locale)) {
-    notFound();
-  }
-
   setRequestLocale(locale);
   const messages = await getMessages();
   const dir = locale === "ar" ? "rtl" : "ltr";

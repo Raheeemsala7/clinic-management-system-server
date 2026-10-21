@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useLocale } from 'next-intl';
 import { getAppointmentTypeConfig } from '@/lib/appointment-types';
 import { cn } from '@/lib/utils';
 
@@ -16,11 +17,13 @@ export function AppointmentTypeBadge({
   type,
   className,
   showDot = true,
-  locale = 'ar',
+  locale,
   size = 'md',
 }: AppointmentTypeBadgeProps) {
+  const currentLocale = useLocale() || 'ar';
+  const effectiveLocale = locale || currentLocale;
   const config = getAppointmentTypeConfig(type);
-  const label = locale === 'en' ? config.enLabel : config.arLabel;
+  const label = effectiveLocale === 'en' ? config.enLabel : config.arLabel;
 
   const sizeClasses = {
     sm: 'text-[10px] px-2 py-0.5 gap-1',
