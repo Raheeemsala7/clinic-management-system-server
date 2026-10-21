@@ -1,6 +1,6 @@
 import { requireRole } from '@/lib/session';
 import { api } from '@/lib/api/client';
-import { ar } from '@/i18n/messages/ar';
+import { getServerI18n } from '@/i18n/server';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -18,6 +18,7 @@ interface AdminPatientsPageProps {
 
 export default async function AdminPatientsPage({ searchParams }: AdminPatientsPageProps) {
   await requireRole(['ADMIN']);
+  const { t, isAr } = await getServerI18n();
 
   const resolvedParams = await searchParams;
   const q = resolvedParams.q ?? '';
@@ -35,9 +36,9 @@ export default async function AdminPatientsPage({ searchParams }: AdminPatientsP
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold">{ar.patients.title}</h1>
+          <h1 className="text-2xl font-bold">{t.patients.title}</h1>
           <p className="text-sm text-muted-foreground">
-            إدارة سجلات المرضى والبيانات الشخصية ({result.meta.total} {ar.patients.title})
+            {isAr ? 'إدارة سجلات المرضى والبيانات الشخصية' : 'Manage patient records and profiles'} ({result.meta.total} {t.patients.title})
           </p>
         </div>
         <NewPatientDialog />
@@ -52,17 +53,17 @@ export default async function AdminPatientsPage({ searchParams }: AdminPatientsP
               <input
                 name="q"
                 defaultValue={q}
-                placeholder={ar.patients.searchPlaceholder}
+                placeholder={t.patients.searchPlaceholder}
                 className="flex h-10 w-full rounded-md border border-input bg-background ps-9 pe-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                aria-label={ar.patients.search}
+                aria-label={t.patients.search}
               />
             </div>
             <Button type="submit" size="sm" className="h-10 px-5">
-              {ar.common.search}
+              {t.common.search}
             </Button>
             {q && (
               <Button variant="outline" size="sm" asChild className="h-10">
-                <Link href="/admin/patients">{ar.common.reset}</Link>
+                <Link href="/admin/patients">{t.common.reset}</Link>
               </Button>
             )}
           </form>
@@ -74,8 +75,12 @@ export default async function AdminPatientsPage({ searchParams }: AdminPatientsP
         {result.data.length === 0 ? (
           <div className="text-center py-16 text-muted-foreground bg-card rounded-lg border">
             <Users className="size-10 mx-auto mb-2 text-muted-foreground/50" />
-            <p className="font-medium">{ar.common.noData}</p>
-            {q && <p className="text-xs text-muted-foreground mt-1">جرب البحث بكلمات مختلفة أو رقم هاتف آخر</p>}
+            <p className="font-medium">{t.common.noData}</p>
+            {q && (
+              <p className="text-xs text-muted-foreground mt-1">
+                {isAr ? 'جرب البحث بكلمات مختلفة أو رقم هاتف آخر' : 'Try searching with different terms or phone number'}
+              </p>
+            )}
           </div>
         ) : (
           result.data.map((patient) => {
@@ -91,7 +96,7 @@ export default async function AdminPatientsPage({ searchParams }: AdminPatientsP
                       <div className="flex items-center gap-2">
                         <p className="font-semibold text-foreground">{patient.fullName}</p>
                         <Badge variant="outline" className="text-xs font-normal">
-                          {patient.gender === 'MALE' ? ar.patients.male : ar.patients.female}
+                          {patient.gender === 'MALE' ? t.patients.male : t.patients.female}
                         </Badge>
                       </div>
                       <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1 flex-wrap">
@@ -102,7 +107,7 @@ export default async function AdminPatientsPage({ searchParams }: AdminPatientsP
                         {age !== null && (
                           <span className="flex items-center gap-1">
                             <Calendar className="size-3 text-muted-foreground" />
-                            {age} {ar.patients.years}
+                            {age} {t.patients.years}
                           </span>
                         )}
                         {patient.address && (

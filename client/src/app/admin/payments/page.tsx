@@ -1,17 +1,15 @@
 import { requireRole } from '@/lib/session';
 import { api } from '@/lib/api/client';
-import { ar } from '@/i18n/messages/ar';
+import { getServerI18n } from '@/i18n/server';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { formatMoney, formatTime, todayClinicDate } from '@/lib/utils';
+import { formatMoney, formatTime } from '@/lib/utils';
 import { PayRemainingDialog } from '@/components/payments/pay-remaining-dialog';
 import { AppointmentTypeBadge } from '@/components/appointments/appointment-type-badge';
 import {
   CreditCard,
   Calendar,
-  User,
   Clock,
-  Coins,
   ShieldCheck,
   Receipt,
   Phone,
@@ -64,6 +62,7 @@ interface AdminPaymentsPageProps {
 
 export default async function AdminPaymentsPage({ searchParams }: AdminPaymentsPageProps) {
   await requireRole(['ADMIN']);
+  const { t, locale, isAr } = await getServerI18n();
 
   const resolved = searchParams ? await searchParams : {};
   const params = new URLSearchParams();
@@ -87,10 +86,12 @@ export default async function AdminPaymentsPage({ searchParams }: AdminPaymentsP
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <CreditCard className="size-6 text-primary" />
-            {ar.payments.title}
+            {t.payments.title}
           </h1>
           <p className="text-sm text-muted-foreground">
-            مراجعة كافة العمليات المالية والعربين وسدادات الحجز بالعيادة
+            {isAr
+              ? 'مراجعة كافة العمليات المالية والعربين وسدادات الحجز بالعيادة'
+              : 'Review all financial transactions, deposits, and payment balances'}
           </p>
         </div>
 
@@ -98,7 +99,7 @@ export default async function AdminPaymentsPage({ searchParams }: AdminPaymentsP
         <form method="GET" className="flex gap-2 items-center bg-card p-1.5 rounded-lg border shadow-sm">
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground pr-2">
             <Calendar className="size-3.5 text-primary" />
-            <span>التاريخ:</span>
+            <span>{isAr ? 'التاريخ:' : 'Date:'}</span>
           </div>
           <input
             type="date"
@@ -110,15 +111,22 @@ export default async function AdminPaymentsPage({ searchParams }: AdminPaymentsP
             type="submit"
             className="px-4 h-9 rounded-md bg-primary text-primary-foreground text-xs font-bold hover:bg-primary/90 transition-colors shadow-sm"
           >
-            {ar.reports.apply}
+            {t.reports.apply}
           </button>
         </form>
       </div>
 
       {/* Stats bar */}
       <div className="flex items-center justify-between bg-muted/30 p-3 rounded-lg border text-xs font-mono">
-        <span>إجمالي العمليات: <strong className="text-foreground">{result.meta?.total || payments.length}</strong> حركة</span>
-        <span>إجمالي المبالغ المحصلة: <strong className="text-emerald-700 font-bold">{formatMoney(totalAmountSum)}</strong></span>
+        <span>
+          {isAr ? 'إجمالي العمليات:' : 'Total Transactions:'}{' '}
+          <strong className="text-foreground">{result.meta?.total || payments.length}</strong>{' '}
+          {isAr ? 'حركة' : 'records'}
+        </span>
+        <span>
+          {isAr ? 'إجمالي المبالغ المحصلة:' : 'Total Collections:'}{' '}
+          <strong className="text-emerald-700 font-bold">{formatMoney(totalAmountSum, locale)}</strong>
+        </span>
       </div>
 
       {/* List */}
@@ -126,7 +134,7 @@ export default async function AdminPaymentsPage({ searchParams }: AdminPaymentsP
         {payments.length === 0 ? (
           <Card className="p-12 text-center text-muted-foreground border-dashed">
             <Receipt className="size-8 mx-auto mb-2 text-muted-foreground/60" />
-            لا توجد مدفوعات مسجلة لهذا التاريخ
+            {isAr ? 'لا توجد مدفوعات مسجلة لهذا التاريخ' : 'No payments recorded for this date'}
           </Card>
         ) : (
           payments.map((p) => {
@@ -140,7 +148,7 @@ export default async function AdminPaymentsPage({ searchParams }: AdminPaymentsP
                   <div className="space-y-1.5 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="text-lg font-bold text-foreground">
-                        {p.patient?.fullName || 'مريض غير مسجل'}
+                        {p.patient?.fullName || (isAr ? 'مريض غير مسجل' : 'Unregistered Patient')}
                       </span>
                       {p.patient?.phone && (
                         <span className="text-xs text-muted-foreground font-mono flex items-center gap-1">
@@ -152,34 +160,38 @@ export default async function AdminPaymentsPage({ searchParams }: AdminPaymentsP
                       {/* Payment type badge */}
                       {isDeposit ? (
                         <Badge className="bg-amber-100 text-amber-800 border-amber-200 text-xs">
-                          عربون حجز
+                          {t.payments.depositBadge}
                         </Badge>
                       ) : p.paymentType === 'REMAINING' ? (
                         <Badge className="bg-blue-100 text-blue-800 border-blue-200 text-xs">
-                          سداد متبقي
+                          {t.payments.remainingBadge}
                         </Badge>
                       ) : (
                         <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 text-xs">
-                          سداد كامل
+                          {t.payments.fullBadge}
                         </Badge>
                       )}
 
                       <Badge variant="outline" className="text-xs">
-                        {ar.payments[p.method as keyof typeof ar.payments] || p.method}
+                        {t.payments[p.method as keyof typeof t.payments] || p.method}
                       </Badge>
 
                       <Badge variant={p.status === 'VOIDED' ? 'destructive' : 'default'} className="text-xs">
-                        {ar.payments[p.status as keyof typeof ar.payments] || p.status}
+                        {t.payments[p.status as keyof typeof t.payments] || p.status}
                       </Badge>
                     </div>
 
                     <div className="text-xs text-muted-foreground space-y-1">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="flex items-center gap-1.5">
-                          <span>نوع الحجز:</span>
-                          <AppointmentTypeBadge type={p.appointment?.type || p.kind} size="sm" />
+                          <span>{t.payments.bookingType}</span>
+                          <AppointmentTypeBadge type={p.appointment?.type || p.kind} locale={locale} size="sm" />
                         </span>
-                        {p.doctor && <span>• الطبيب: <strong className="text-foreground">د. {p.doctor.name}</strong></span>}
+                        {p.doctor && (
+                          <span>
+                            • {t.payments.doctor} <strong className="text-foreground">{p.doctor.name}</strong>
+                          </span>
+                        )}
                       </div>
 
                       {p.notes && (
@@ -196,13 +208,13 @@ export default async function AdminPaymentsPage({ searchParams }: AdminPaymentsP
                             <span>•</span>
                             <span className="flex items-center gap-1">
                               <ShieldCheck className="size-3 text-primary" />
-                              المستلم: {p.receivedBy.name}
+                              {t.payments.collector} {p.receivedBy.name}
                             </span>
                           </>
                         )}
                         {p.voidReason && (
                           <span className="text-destructive font-semibold">
-                            • ملغى: {p.voidReason}
+                            • {isAr ? 'ملغى:' : 'Voided:'} {p.voidReason}
                           </span>
                         )}
                       </p>
@@ -212,26 +224,26 @@ export default async function AdminPaymentsPage({ searchParams }: AdminPaymentsP
                   {/* Right Column: Amount & Remaining */}
                   <div className="flex sm:flex-col items-end justify-between sm:justify-center gap-3 border-t sm:border-t-0 sm:border-r pt-3 sm:pt-0 pr-0 sm:pr-4 shrink-0">
                     <div className="text-left">
-                      <span className="text-xs text-muted-foreground block">المسدد بالإيصال</span>
+                      <span className="text-xs text-muted-foreground block">{t.payments.paidInReceipt}</span>
                       <span className="text-2xl font-bold font-mono text-emerald-700">
-                        {formatMoney(p.amount)}
+                        {formatMoney(p.amount, locale)}
                       </span>
                     </div>
 
                     {p.appointment && (
                       <div className="text-left space-y-1 font-mono text-xs">
                         <span className="text-muted-foreground text-[11px] block">
-                          إجمالي الحجز: {formatMoney(p.appointment.totalAmount)}
+                          {t.payments.totalFee}: {formatMoney(p.appointment.totalAmount, locale)}
                         </span>
                         {hasRemaining ? (
                           <div className="space-y-1">
                             <span className="inline-block px-2 py-0.5 rounded bg-amber-100 text-amber-800 font-bold text-xs border border-amber-200">
-                              متبقي: {formatMoney(p.appointment.remainingAmount)}
+                              {t.payments.remainingDue}: {formatMoney(p.appointment.remainingAmount, locale)}
                             </span>
                             <div>
                               <PayRemainingDialog
                                 appointmentId={p.appointment.id}
-                                patientName={p.patient?.fullName || 'المريض'}
+                                patientName={p.patient?.fullName || (isAr ? 'المريض' : 'Patient')}
                                 totalAmount={p.appointment.totalAmount}
                                 remainingAmount={p.appointment.remainingAmount}
                               />
@@ -239,7 +251,7 @@ export default async function AdminPaymentsPage({ searchParams }: AdminPaymentsP
                           </div>
                         ) : (
                           <span className="text-emerald-700 font-semibold text-[11px]">
-                            تم السداد بالكامل ✓
+                            {isAr ? 'تم السداد بالكامل ✓' : 'Fully Paid ✓'}
                           </span>
                         )}
                       </div>

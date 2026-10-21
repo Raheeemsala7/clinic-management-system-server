@@ -2,6 +2,7 @@ import { requireRole } from '@/lib/session';
 import { api } from '@/lib/api/client';
 import { todayClinicDate } from '@/lib/utils';
 import { getDoctors } from '@/lib/doctor';
+import { getServerI18n } from '@/i18n/server';
 import { AppointmentCalendar, type CalendarAppointment } from '@/components/appointments/appointment-calendar';
 import { type AvailableSlotsResponse } from '@/features/doctor-schedule/actions';
 import { CalendarDays } from 'lucide-react';
@@ -14,6 +15,7 @@ interface ReceptionAppointmentsPageProps {
 
 export default async function ReceptionAppointmentsPage({ searchParams }: ReceptionAppointmentsPageProps) {
   await requireRole(['RECEPTION', 'ADMIN']);
+  const { t } = await getServerI18n();
 
   const resolved = searchParams ? await searchParams : {};
   const today = todayClinicDate();
@@ -43,10 +45,10 @@ export default async function ReceptionAppointmentsPage({ searchParams }: Recept
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <CalendarDays className="size-6 text-primary" />
-            تقويم المواعيد والحجوزات
+            {t.calendar.receptionTitle}
           </h1>
           <p className="text-sm text-muted-foreground">
-            عرض الفترات الزمنية الشاغرة والمحجوزة بالساعة لكل طبيب وإدارة حجوزات العيادة
+            {t.calendar.receptionSubtitle}
           </p>
         </div>
       </div>
@@ -62,4 +64,3 @@ export default async function ReceptionAppointmentsPage({ searchParams }: Recept
     </div>
   );
 }
-

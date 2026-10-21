@@ -1,8 +1,8 @@
 import { requireRole } from '@/lib/session';
 import { api } from '@/lib/api/client';
-import { ar } from '@/i18n/messages/ar';
+import { getServerI18n } from '@/i18n/server';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { formatMoney, formatDate, todayClinicDate } from '@/lib/utils';
+import { formatMoney, todayClinicDate } from '@/lib/utils';
 import { BarChart3, TrendingUp, TrendingDown, DollarSign, Users, Calendar, Wallet } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
@@ -23,6 +23,7 @@ interface AdminReportsPageProps {
 
 export default async function AdminReportsPage({ searchParams }: AdminReportsPageProps) {
   await requireRole(['ADMIN']);
+  const { t, locale, isAr } = await getServerI18n();
 
   const today = todayClinicDate();
   const resolved = searchParams ? await searchParams : undefined;
@@ -49,17 +50,17 @@ export default async function AdminReportsPage({ searchParams }: AdminReportsPag
   const netNumber = parseFloat(summary.net || '0');
 
   const metrics = [
-    { label: ar.reports.income, value: formatMoney(summary.income), icon: TrendingUp, color: 'text-emerald-600 bg-emerald-50' },
-    { label: ar.reports.expenses, value: formatMoney(summary.expenses), icon: TrendingDown, color: 'text-red-600 bg-red-50' },
+    { label: t.reports.income, value: formatMoney(summary.income, locale), icon: TrendingUp, color: 'text-emerald-600 bg-emerald-50' },
+    { label: t.reports.expenses, value: formatMoney(summary.expenses, locale), icon: TrendingDown, color: 'text-red-600 bg-red-50' },
     {
-      label: ar.reports.net,
-      value: formatMoney(summary.net),
+      label: t.reports.net,
+      value: formatMoney(summary.net, locale),
       highlight: netNumber >= 0,
       icon: DollarSign,
       color: netNumber >= 0 ? 'text-primary bg-primary/10' : 'text-destructive bg-destructive/10',
     },
-    { label: ar.reports.visits, value: String(summary.visitCount), icon: Users, color: 'text-blue-600 bg-blue-50' },
-    { label: ar.reports.avgPerVisit, value: formatMoney(summary.avgPerVisit), icon: Wallet, color: 'text-amber-600 bg-amber-50' },
+    { label: t.reports.visits, value: String(summary.visitCount), icon: Users, color: 'text-blue-600 bg-blue-50' },
+    { label: t.reports.avgPerVisit, value: formatMoney(summary.avgPerVisit, locale), icon: Wallet, color: 'text-amber-600 bg-amber-50' },
   ];
 
   return (
@@ -69,17 +70,19 @@ export default async function AdminReportsPage({ searchParams }: AdminReportsPag
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <BarChart3 className="size-6 text-primary" />
-            {ar.reports.title}
+            {t.reports.title}
           </h1>
           <p className="text-xs text-muted-foreground mt-1">
-            تقرير الإيرادات والمصروفات وصافي الأرباح للفترة المحددة
+            {isAr
+              ? 'تقرير الإيرادات والمصروفات وصافي الأرباح للفترة المحددة'
+              : 'Revenue, expenses, and net profit report for the selected period'}
           </p>
         </div>
 
         <form method="GET" className="flex gap-2 items-center flex-wrap">
           <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
             <Calendar className="size-3.5 text-primary" />
-            <span>{ar.reports.from}:</span>
+            <span>{t.reports.from}:</span>
           </div>
           <input
             type="date"
@@ -89,7 +92,7 @@ export default async function AdminReportsPage({ searchParams }: AdminReportsPag
           />
 
           <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground ms-2">
-            <span>{ar.reports.to}:</span>
+            <span>{t.reports.to}:</span>
           </div>
           <input
             type="date"
@@ -102,7 +105,7 @@ export default async function AdminReportsPage({ searchParams }: AdminReportsPag
             type="submit"
             className="h-9 px-4 rounded-md bg-primary text-primary-foreground text-xs font-bold hover:bg-primary/90 transition-colors shadow-sm ms-2"
           >
-            {ar.reports.apply}
+            {t.reports.apply}
           </button>
         </form>
       </div>
@@ -134,25 +137,27 @@ export default async function AdminReportsPage({ searchParams }: AdminReportsPag
         <section className="space-y-3">
           <h2 className="text-base font-bold text-foreground flex items-center gap-2">
             <TrendingUp className="size-4 text-emerald-600" />
-            {ar.reports.incomeByDay}
+            {t.reports.incomeByDay}
           </h2>
           <Card className="shadow-sm overflow-hidden border">
             {byDay.length === 0 ? (
-              <p className="p-8 text-center text-xs text-muted-foreground">لا توجد إيرادات مسجلة في هذه الفترة</p>
+              <p className="p-8 text-center text-xs text-muted-foreground">
+                {isAr ? 'لا توجد إيرادات مسجلة في هذه الفترة' : 'No income recorded for this period'}
+              </p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead className="bg-muted/40 border-b">
                     <tr>
-                      <th className="px-4 py-2.5 text-start text-xs font-bold text-muted-foreground">{ar.common.date}</th>
-                      <th className="px-4 py-2.5 text-start text-xs font-bold text-muted-foreground">{ar.reports.income}</th>
+                      <th className="px-4 py-2.5 text-start text-xs font-bold text-muted-foreground">{t.common.date}</th>
+                      <th className="px-4 py-2.5 text-start text-xs font-bold text-muted-foreground">{t.reports.income}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">
                     {byDay.map((row) => (
                       <tr key={row.day} className="hover:bg-muted/20 transition-colors">
                         <td className="px-4 py-2.5 font-mono text-xs text-muted-foreground">{row.day}</td>
-                        <td className="px-4 py-2.5 font-bold text-emerald-600 text-sm">{formatMoney(row.total)}</td>
+                        <td className="px-4 py-2.5 font-bold text-emerald-600 text-sm">{formatMoney(row.total, locale)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -166,25 +171,27 @@ export default async function AdminReportsPage({ searchParams }: AdminReportsPag
         <section className="space-y-3">
           <h2 className="text-base font-bold text-foreground flex items-center gap-2">
             <TrendingDown className="size-4 text-red-600" />
-            {ar.reports.expensesByCategory}
+            {t.reports.expensesByCategory}
           </h2>
           <Card className="shadow-sm overflow-hidden border">
             {byCategory.length === 0 ? (
-              <p className="p-8 text-center text-xs text-muted-foreground">لا توجد مصروفات مسجلة في هذه الفترة</p>
+              <p className="p-8 text-center text-xs text-muted-foreground">
+                {isAr ? 'لا توجد مصروفات مسجلة في هذه الفترة' : 'No expenses recorded for this period'}
+              </p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead className="bg-muted/40 border-b">
                     <tr>
-                      <th className="px-4 py-2.5 text-start text-xs font-bold text-muted-foreground">{ar.expenses.category}</th>
-                      <th className="px-4 py-2.5 text-start text-xs font-bold text-muted-foreground">{ar.common.amount}</th>
+                      <th className="px-4 py-2.5 text-start text-xs font-bold text-muted-foreground">{t.expenses.category}</th>
+                      <th className="px-4 py-2.5 text-start text-xs font-bold text-muted-foreground">{t.common.amount}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">
                     {byCategory.map((row) => (
                       <tr key={row.category} className="hover:bg-muted/20 transition-colors">
                         <td className="px-4 py-2.5 font-medium text-xs text-foreground">{row.category}</td>
-                        <td className="px-4 py-2.5 font-bold text-red-600 text-sm">{formatMoney(row.total)}</td>
+                        <td className="px-4 py-2.5 font-bold text-red-600 text-sm">{formatMoney(row.total, locale)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -199,28 +206,30 @@ export default async function AdminReportsPage({ searchParams }: AdminReportsPag
       <section className="space-y-3">
         <h2 className="text-base font-bold text-foreground flex items-center gap-2">
           <Wallet className="size-4 text-primary" />
-          {ar.reports.paymentsByMethod}
+          {t.reports.paymentsByMethod}
         </h2>
         <Card className="shadow-sm overflow-hidden border">
           {byMethod.length === 0 ? (
-            <p className="p-8 text-center text-xs text-muted-foreground">لا توجد مدفوعات مسجلة في هذه الفترة</p>
+            <p className="p-8 text-center text-xs text-muted-foreground">
+              {isAr ? 'لا توجد مدفوعات مسجلة في هذه الفترة' : 'No payments recorded for this period'}
+            </p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="bg-muted/40 border-b">
                   <tr>
-                    <th className="px-4 py-2.5 text-start text-xs font-bold text-muted-foreground">{ar.payments.method}</th>
-                    <th className="px-4 py-2.5 text-start text-xs font-bold text-muted-foreground">{ar.common.amount}</th>
-                    <th className="px-4 py-2.5 text-start text-xs font-bold text-muted-foreground">العدد</th>
+                    <th className="px-4 py-2.5 text-start text-xs font-bold text-muted-foreground">{t.payments.method}</th>
+                    <th className="px-4 py-2.5 text-start text-xs font-bold text-muted-foreground">{t.common.amount}</th>
+                    <th className="px-4 py-2.5 text-start text-xs font-bold text-muted-foreground">{t.common.count}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
                   {byMethod.map((row) => (
                     <tr key={row.method} className="hover:bg-muted/20 transition-colors">
                       <td className="px-4 py-2.5 font-semibold text-xs text-foreground">
-                        {ar.payments[row.method as keyof typeof ar.payments] ?? row.method}
+                        {t.payments[row.method as keyof typeof t.payments] ?? row.method}
                       </td>
-                      <td className="px-4 py-2.5 font-bold text-foreground text-sm">{formatMoney(row.total)}</td>
+                      <td className="px-4 py-2.5 font-bold text-foreground text-sm">{formatMoney(row.total, locale)}</td>
                       <td className="px-4 py-2.5 font-mono text-xs text-muted-foreground">{row.count}</td>
                     </tr>
                   ))}

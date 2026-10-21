@@ -1,6 +1,7 @@
 import { requireRole } from '@/lib/session';
 import { api } from '@/lib/api/client';
 import { todayClinicDate } from '@/lib/utils';
+import { getServerI18n } from '@/i18n/server';
 import { AppointmentCalendar, type CalendarAppointment } from '@/components/appointments/appointment-calendar';
 import { type AvailableSlotsResponse } from '@/features/doctor-schedule/actions';
 import { CalendarDays, Settings } from 'lucide-react';
@@ -15,6 +16,7 @@ interface DoctorAppointmentsPageProps {
 
 export default async function DoctorAppointmentsPage({ searchParams }: DoctorAppointmentsPageProps) {
   const session = await requireRole(['DOCTOR', 'ADMIN']);
+  const { t } = await getServerI18n();
 
   const resolved = searchParams ? await searchParams : {};
   const today = todayClinicDate();
@@ -47,16 +49,16 @@ export default async function DoctorAppointmentsPage({ searchParams }: DoctorApp
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <CalendarDays className="size-6 text-primary" />
-            جدول مواعيدي والتقويم
+            {t.calendar.title}
           </h1>
           <p className="text-sm text-muted-foreground">
-            متابعة جدول المرضى والحجوزات بالساعة وفقاً لفترات عملك الأسبوعية
+            {t.calendar.subtitle}
           </p>
         </div>
         <Link href="/doctor/schedule">
           <Button variant="outline" size="sm" className="gap-2">
             <Settings className="size-4" />
-            تعديل أوقات العمل
+            {t.calendar.editWorkingHours}
           </Button>
         </Link>
       </div>
@@ -72,4 +74,3 @@ export default async function DoctorAppointmentsPage({ searchParams }: DoctorApp
     </div>
   );
 }
-

@@ -24,6 +24,8 @@ import {
   Receipt,
 } from 'lucide-react';
 
+import { useLocale } from 'next-intl';
+
 interface PatientSummaryPanelProps {
   summary: PatientBookingSummary;
   onClearPatient: () => void;
@@ -33,8 +35,10 @@ interface PatientSummaryPanelProps {
 export function PatientSummaryPanel({
   summary,
   onClearPatient,
-  locale = 'ar',
+  locale: propLocale,
 }: PatientSummaryPanelProps) {
+  const currentLocale = useLocale() || 'ar';
+  const locale = propLocale || currentLocale;
   const isAr = locale === 'ar';
   const [openSection, setOpenSection] = useState<'all' | 'clinical' | 'financial' | 'history'>('all');
 
@@ -77,7 +81,7 @@ export function PatientSummaryPanel({
             <Badge variant="destructive" className="animate-pulse text-2xs font-bold gap-1">
               <AlertCircle className="size-3" />
               {isAr ? 'متبقي سابق:' : 'Balance Due:'}{' '}
-              {formatMoney(financialSummary.outstandingBalance)}
+              {formatMoney(financialSummary.outstandingBalance, locale)}
             </Badge>
           )}
           <Button
@@ -172,14 +176,14 @@ export function PatientSummaryPanel({
                 <span className="text-2xs text-muted-foreground block">
                   {isAr ? 'إجمالي الرسوم' : 'Total Fees'}
                 </span>
-                <span className="font-semibold">{formatMoney(financialSummary.totalCharged)}</span>
+                <span className="font-semibold">{formatMoney(financialSummary.totalCharged, locale)}</span>
               </div>
               <div className="p-1.5 rounded bg-muted/20">
                 <span className="text-2xs text-muted-foreground block">
                   {isAr ? 'المدفوع سابقاً' : 'Paid to date'}
                 </span>
                 <span className="font-semibold text-emerald-600 dark:text-emerald-400">
-                  {formatMoney(financialSummary.totalPaid)}
+                  {formatMoney(financialSummary.totalPaid, locale)}
                 </span>
               </div>
             </div>
@@ -193,7 +197,7 @@ export function PatientSummaryPanel({
             >
               <span>{isAr ? 'الرصيد المتبقي:' : 'Outstanding:'}</span>
               <span className="font-mono text-sm">
-                {formatMoney(financialSummary.outstandingBalance)}
+                {formatMoney(financialSummary.outstandingBalance, locale)}
               </span>
             </div>
           </div>

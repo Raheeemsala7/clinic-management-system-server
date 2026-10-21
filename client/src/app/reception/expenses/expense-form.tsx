@@ -7,8 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { ar } from '@/i18n/messages/ar';
-import { Receipt, Loader2, Plus } from 'lucide-react';
+import { useI18n } from '@/i18n/use-i18n';
+import { Loader2, Plus } from 'lucide-react';
 
 interface ExpenseCategory {
   id: string;
@@ -23,6 +23,7 @@ const initial: ExpenseActionResult = { success: false };
 
 export function ExpenseForm({ categories }: ExpenseFormProps) {
   const router = useRouter();
+  const { t, isAr } = useI18n();
   const formRef = useRef<HTMLFormElement>(null);
   const [state, formAction, isPending] = useActionState(createExpenseAction, initial);
 
@@ -45,7 +46,11 @@ export function ExpenseForm({ categories }: ExpenseFormProps) {
 
       {state.success && (
         <Alert className="border-green-300 bg-green-50 text-green-900">
-          <AlertDescription>تم تسجيل المصروف بنجاح وبانتظار الموافقة ✓</AlertDescription>
+          <AlertDescription>
+            {isAr
+              ? 'تم تسجيل المصروف بنجاح وبانتظار الموافقة ✓'
+              : 'Expense recorded successfully and pending approval ✓'}
+          </AlertDescription>
         </Alert>
       )}
 
@@ -53,7 +58,7 @@ export function ExpenseForm({ categories }: ExpenseFormProps) {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="space-y-1.5">
-          <Label htmlFor="categoryId">{ar.expenses.category} *</Label>
+          <Label htmlFor="categoryId">{t.expenses.category} *</Label>
           <select
             id="categoryId"
             name="categoryId"
@@ -61,7 +66,7 @@ export function ExpenseForm({ categories }: ExpenseFormProps) {
             disabled={isPending}
             className="flex h-11 w-full rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
           >
-            <option value="">اختر فئة المصروف...</option>
+            <option value="">{isAr ? 'اختر فئة المصروف...' : 'Select expense category...'}</option>
             {categories.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
@@ -71,7 +76,7 @@ export function ExpenseForm({ categories }: ExpenseFormProps) {
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="amount">{ar.expenses.amount} *</Label>
+          <Label htmlFor="amount">{t.expenses.amount} *</Label>
           <Input
             id="amount"
             name="amount"
@@ -87,12 +92,12 @@ export function ExpenseForm({ categories }: ExpenseFormProps) {
       </div>
 
       <div className="space-y-1.5">
-        <Label htmlFor="description">{ar.expenses.description} *</Label>
+        <Label htmlFor="description">{t.expenses.description} *</Label>
         <Input
           id="description"
           name="description"
           type="text"
-          placeholder="تفاصيل المصروف (مثال: مستلزمات طبية، شاش وقطن، صيانة...)"
+          placeholder={isAr ? 'تفاصيل المصروف (مثال: مستلزمات طبية، صيانة...)' : 'Expense details (e.g. medical supplies, maintenance...)'}
           required
           disabled={isPending}
           className="h-11 text-sm"
@@ -101,7 +106,7 @@ export function ExpenseForm({ categories }: ExpenseFormProps) {
 
       <Button type="submit" disabled={isPending} className="gap-2 font-semibold px-6">
         {isPending ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
-        {ar.expenses.newExpense}
+        {t.expenses.newExpense}
       </Button>
     </form>
   );

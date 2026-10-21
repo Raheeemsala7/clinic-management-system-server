@@ -1,6 +1,6 @@
 import { requireRole } from '@/lib/session';
 import { api } from '@/lib/api/client';
-import { ar } from '@/i18n/messages/ar';
+import { getServerI18n } from '@/i18n/server';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatMoney, todayClinicDate } from '@/lib/utils';
 import { ClosingForm } from './closing-form';
@@ -16,6 +16,7 @@ interface ClosingPreview {
 
 export default async function ReceptionClosingPage() {
   await requireRole(['RECEPTION', 'ADMIN']);
+  const { t, locale } = await getServerI18n();
 
   const today = todayClinicDate();
   let preview: ClosingPreview | null = null;
@@ -36,32 +37,32 @@ export default async function ReceptionClosingPage() {
 
   return (
     <div className="space-y-4 max-w-lg">
-      <h1 className="text-2xl font-bold">{ar.closing.title}</h1>
+      <h1 className="text-2xl font-bold">{t.closing.title}</h1>
 
       {alreadyClosed ? (
         <Card>
           <CardContent className="py-6 text-center text-muted-foreground">
-            {ar.closing.alreadyClosed}
+            {t.closing.alreadyClosed}
           </CardContent>
         </Card>
       ) : preview ? (
         <>
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">{ar.closing.preview}</CardTitle>
+              <CardTitle className="text-base">{t.closing.preview}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span>{ar.closing.expectedCash}</span>
-                <span className="font-semibold">{formatMoney(preview.expectedCash)}</span>
+                <span>{t.closing.expectedCash}</span>
+                <span className="font-semibold">{formatMoney(preview.expectedCash, locale)}</span>
               </div>
               <div className="flex justify-between text-muted-foreground">
-                <span>{ar.closing.totalCashPayments}</span>
-                <span>{formatMoney(preview.totalCashPayments)}</span>
+                <span>{t.closing.totalCashPayments}</span>
+                <span>{formatMoney(preview.totalCashPayments, locale)}</span>
               </div>
               <div className="flex justify-between text-muted-foreground">
-                <span>{ar.closing.totalApprovedExpenses}</span>
-                <span>- {formatMoney(preview.totalApprovedExpenses)}</span>
+                <span>{t.closing.totalApprovedExpenses}</span>
+                <span>- {formatMoney(preview.totalApprovedExpenses, locale)}</span>
               </div>
             </CardContent>
           </Card>
@@ -69,7 +70,7 @@ export default async function ReceptionClosingPage() {
           <ClosingForm expectedCash={preview.expectedCash} />
         </>
       ) : (
-        <div className="text-center py-12 text-muted-foreground">{ar.common.loading}</div>
+        <div className="text-center py-12 text-muted-foreground">{t.common.loading}</div>
       )}
     </div>
   );

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { ar } from '@/i18n/messages/ar';
+import { useI18n } from '@/i18n/use-i18n';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,9 +9,9 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { formatMoney, formatDate, formatTime } from '@/lib/utils';
-import { submitClosingAction, reopenClosingAction, type ClosingActionResult } from '@/features/closing/actions';
-import { Lock, Unlock, AlertTriangle, CheckCircle2, History, TrendingUp, TrendingDown, ArrowDownLeft, ArrowUpRight } from 'lucide-react';
+import { formatMoney, formatTime } from '@/lib/utils';
+import { submitClosingAction, reopenClosingAction } from '@/features/closing/actions';
+import { Lock, Unlock, AlertTriangle, CheckCircle2, History, ArrowDownLeft, ArrowUpRight } from 'lucide-react';
 
 export interface ClosingPreview {
   clinicDate: string;
@@ -43,6 +43,7 @@ interface AdminClosingViewProps {
 }
 
 export function AdminClosingView({ preview, currentClosing, history }: AdminClosingViewProps) {
+  const { t, locale, isAr } = useI18n();
   const [isPending, startTransition] = useTransition();
   const [actualInput, setActualInput] = useState<string>('');
   const [notesInput, setNotesInput] = useState<string>('');
@@ -65,9 +66,9 @@ export function AdminClosingView({ preview, currentClosing, history }: AdminClos
     startTransition(async () => {
       const res = await submitClosingAction({ success: false }, formData);
       if (!res.success) {
-        setErrorMessage(res.error ?? ar.errors.generic);
+        setErrorMessage(res.error ?? t.errors.serverError);
       } else {
-        setSuccessMessage(ar.closing.closed);
+        setSuccessMessage(t.closing.closed);
         setActualInput('');
         setNotesInput('');
       }
@@ -75,16 +76,16 @@ export function AdminClosingView({ preview, currentClosing, history }: AdminClos
   };
 
   const handleReopen = (closingId: string) => {
-    if (!confirm(ar.closing.reopenConfirm)) return;
+    if (!confirm(t.closing.reopenConfirm)) return;
     setErrorMessage(null);
     setSuccessMessage(null);
 
     startTransition(async () => {
       const res = await reopenClosingAction(closingId);
       if (!res.success) {
-        setErrorMessage(res.error ?? ar.errors.generic);
+        setErrorMessage(res.error ?? t.errors.serverError);
       } else {
-        setSuccessMessage(ar.closing.reopened);
+        setSuccessMessage(t.closing.reopened);
       }
     });
   };
@@ -113,19 +114,19 @@ export function AdminClosingView({ preview, currentClosing, history }: AdminClos
         <Card className="shadow-sm">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-base font-semibold">{ar.closing.preview}</CardTitle>
+              <CardTitle className="text-base font-semibold">{t.closing.preview}</CardTitle>
               <Badge variant={isClosedToday ? 'outline' : 'default'} className={isClosedToday ? 'border-amber-400 text-amber-700 bg-amber-50' : 'bg-emerald-600'}>
-                {isClosedToday ? ar.closing.alreadyClosed : 'الصندوق مفتوح اليوم'}
+                {isClosedToday ? t.closing.alreadyClosed : (isAr ? 'الصندوق مفتوح اليوم' : 'Cashbox Open Today')}
               </Badge>
             </div>
-            <CardDescription>{ar.common.today} ({preview?.clinicDate})</CardDescription>
+            <CardDescription>{t.common.today} ({preview?.clinicDate})</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="rounded-lg bg-muted/50 p-4 border flex items-center justify-between">
               <div>
-                <p className="text-xs text-muted-foreground font-medium">{ar.closing.expectedCash}</p>
+                <p className="text-xs text-muted-foreground font-medium">{t.closing.expectedCash}</p>
                 <p className="text-2xl font-bold text-foreground mt-0.5">
-                  {formatMoney(preview?.expectedCash ?? '0')}
+                  {formatMoney(preview?.expectedCash ?? '0', locale)}
                 </p>
               </div>
               <div className="size-10 rounded-full bg-primary/10 text-primary flex items-center justify-center">
@@ -137,19 +138,19 @@ export function AdminClosingView({ preview, currentClosing, history }: AdminClos
               <div className="flex items-center justify-between py-1.5 border-b border-border/60">
                 <span className="flex items-center gap-1.5 text-muted-foreground">
                   <ArrowDownLeft className="size-4 text-emerald-600" />
-                  {ar.closing.totalCashPayments}
+                  {t.closing.totalCashPayments}
                 </span>
                 <span className="font-semibold text-emerald-700">
-                  {formatMoney(preview?.totalCashPayments ?? '0')}
+                  {formatMoney(preview?.totalCashPayments ?? '0', locale)}
                 </span>
               </div>
               <div className="flex items-center justify-between py-1.5">
                 <span className="flex items-center gap-1.5 text-muted-foreground">
                   <ArrowUpRight className="size-4 text-destructive" />
-                  {ar.closing.totalApprovedExpenses}
+                  {t.closing.totalApprovedExpenses}
                 </span>
                 <span className="font-semibold text-destructive">
-                  - {formatMoney(preview?.totalApprovedExpenses ?? '0')}
+                  - {formatMoney(preview?.totalApprovedExpenses ?? '0', locale)}
                 </span>
               </div>
             </div>
@@ -160,10 +161,12 @@ export function AdminClosingView({ preview, currentClosing, history }: AdminClos
         <Card className="shadow-sm flex flex-col justify-between">
           <CardHeader className="pb-3">
             <CardTitle className="text-base font-semibold">
-              {isClosedToday ? ar.closing.alreadyClosed : ar.closing.title}
+              {isClosedToday ? t.closing.alreadyClosed : t.closing.title}
             </CardTitle>
             <CardDescription>
-              {isClosedToday ? 'بيانات إغلاق صندوق اليوم' : 'تسجيل النقدية الفعلية وإغلاق الصندوق لهذا اليوم'}
+              {isClosedToday
+                ? (isAr ? 'بيانات إغلاق صندوق اليوم' : 'Today Closing Details')
+                : (isAr ? 'تسجيل النقدية الفعلية وإغلاق الصندوق لهذا اليوم' : 'Record actual cash and close register for today')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -171,31 +174,32 @@ export function AdminClosingView({ preview, currentClosing, history }: AdminClos
               <div className="space-y-4">
                 <div className="rounded-lg border bg-amber-50/50 border-amber-200 p-4 text-sm space-y-2.5">
                   <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground">{ar.closing.actualCash}:</span>
+                    <span className="text-muted-foreground">{t.closing.actualCash}:</span>
                     <span className="font-bold text-base text-foreground">
-                      {formatMoney(currentClosing.actualCash)}
+                      {formatMoney(currentClosing.actualCash, locale)}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground">{ar.closing.difference}:</span>
+                    <span className="text-muted-foreground">{t.closing.difference}:</span>
                     <span
-                      className={`font-semibold text-sm px-2 py-0.5 rounded ${parseFloat(currentClosing.difference) === 0
+                      className={`font-semibold text-sm px-2 py-0.5 rounded ${
+                        parseFloat(currentClosing.difference) === 0
                           ? 'bg-emerald-100 text-emerald-800'
                           : parseFloat(currentClosing.difference) > 0
                             ? 'bg-blue-100 text-blue-800'
                             : 'bg-red-100 text-red-800'
-                        }`}
+                      }`}
                     >
-                      {formatMoney(currentClosing.difference)}
+                      {formatMoney(currentClosing.difference, locale)}
                       {parseFloat(currentClosing.difference) === 0
-                        ? ` (${ar.closing.balanced})`
+                        ? ` (${t.closing.balanced})`
                         : parseFloat(currentClosing.difference) > 0
-                          ? ` (${ar.closing.overage})`
-                          : ` (${ar.closing.shortage})`}
+                          ? ` (${t.closing.overage})`
+                          : ` (${t.closing.shortage})`}
                     </span>
                   </div>
                   <div className="flex justify-between text-xs text-muted-foreground pt-1 border-t border-amber-200/60">
-                    <span>{ar.closing.closedBy}: {currentClosing.closedBy?.name ?? '-'}</span>
+                    <span>{t.closing.closedBy}: {currentClosing.closedBy?.name ?? '-'}</span>
                     <span>{formatTime(currentClosing.closedAt)}</span>
                   </div>
                   {currentClosing.notes && (
@@ -212,13 +216,13 @@ export function AdminClosingView({ preview, currentClosing, history }: AdminClos
                   disabled={isPending}
                 >
                   <Unlock className="size-4" />
-                  {ar.closing.reopen}
+                  {t.closing.reopen}
                 </Button>
               </div>
             ) : (
               <form onSubmit={handleCloseDay} className="space-y-4">
                 <div className="space-y-1.5">
-                  <Label htmlFor="actualCash">{ar.closing.actualCash}</Label>
+                  <Label htmlFor="actualCash">{t.closing.actualCash}</Label>
                   <Input
                     id="actualCash"
                     type="number"
@@ -232,40 +236,41 @@ export function AdminClosingView({ preview, currentClosing, history }: AdminClos
                   />
                   {actualInput && (
                     <div className="flex items-center justify-between text-xs pt-1 px-1">
-                      <span className="text-muted-foreground">{ar.closing.difference}:</span>
+                      <span className="text-muted-foreground">{t.closing.difference}:</span>
                       <span
-                        className={`font-semibold ${liveDiff === 0
+                        className={`font-semibold ${
+                          liveDiff === 0
                             ? 'text-emerald-700'
                             : liveDiff > 0
                               ? 'text-blue-700'
                               : 'text-destructive'
-                          }`}
+                        }`}
                       >
-                        {formatMoney(liveDiff)}
+                        {formatMoney(liveDiff, locale)}
                         {liveDiff === 0
-                          ? ` (${ar.closing.balanced})`
+                          ? ` (${t.closing.balanced})`
                           : liveDiff > 0
-                            ? ` (${ar.closing.overage})`
-                            : ` (${ar.closing.shortage})`}
+                            ? ` (${t.closing.overage})`
+                            : ` (${t.closing.shortage})`}
                       </span>
                     </div>
                   )}
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label htmlFor="notes">{ar.common.notes} ({ar.common.optional})</Label>
+                  <Label htmlFor="notes">{t.common.notes} ({t.common.optional})</Label>
                   <Input
                     id="notes"
                     value={notesInput}
                     onChange={(e) => setNotesInput(e.target.value)}
-                    placeholder="ملاحظات حول الإغلاق أو أسباب الفروقات..."
+                    placeholder={isAr ? 'ملاحظات حول الإغلاق أو أسباب الفروقات...' : 'Closing notes or explanation for discrepancies...'}
                     disabled={isPending}
                   />
                 </div>
 
                 <Button type="submit" disabled={isPending} className="w-full">
                   <Lock className="size-4 ms-2" />
-                  {ar.closing.submit}
+                  {t.closing.submit}
                 </Button>
               </form>
             )}
@@ -278,26 +283,28 @@ export function AdminClosingView({ preview, currentClosing, history }: AdminClos
         <CardHeader className="pb-3">
           <div className="flex items-center gap-2">
             <History className="size-5 text-muted-foreground" />
-            <CardTitle className="text-base font-semibold">{ar.closing.history}</CardTitle>
+            <CardTitle className="text-base font-semibold">{t.closing.history}</CardTitle>
           </div>
-          <CardDescription>سجل الإغلاقات اليومية السابقة وإعادة الفتح</CardDescription>
+          <CardDescription>
+            {isAr ? 'سجل الإغلاقات اليومية السابقة وإعادة الفتح' : 'History of previous daily closings and reopens'}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {history.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">{ar.common.noData}</div>
+            <div className="text-center py-12 text-muted-foreground">{t.common.noData}</div>
           ) : (
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>{ar.common.date}</TableHead>
-                    <TableHead>{ar.closing.expectedCash}</TableHead>
-                    <TableHead>{ar.closing.actualCash}</TableHead>
-                    <TableHead>{ar.closing.difference}</TableHead>
-                    <TableHead>{ar.closing.closedBy}</TableHead>
-                    <TableHead>{ar.common.status}</TableHead>
-                    <TableHead>{ar.common.notes}</TableHead>
-                    <TableHead className="text-start">{ar.common.actions}</TableHead>
+                    <TableHead>{t.common.date}</TableHead>
+                    <TableHead>{t.closing.expectedCash}</TableHead>
+                    <TableHead>{t.closing.actualCash}</TableHead>
+                    <TableHead>{t.closing.difference}</TableHead>
+                    <TableHead>{t.closing.closedBy}</TableHead>
+                    <TableHead>{t.common.status}</TableHead>
+                    <TableHead>{t.common.notes}</TableHead>
+                    <TableHead className="text-start">{t.common.actions}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -310,22 +317,23 @@ export function AdminClosingView({ preview, currentClosing, history }: AdminClos
                           {record.clinicDate}
                         </TableCell>
                         <TableCell className="whitespace-nowrap">
-                          {formatMoney(record.expectedCash)}
+                          {formatMoney(record.expectedCash, locale)}
                         </TableCell>
                         <TableCell className="whitespace-nowrap font-semibold">
-                          {formatMoney(record.actualCash)}
+                          {formatMoney(record.actualCash, locale)}
                         </TableCell>
                         <TableCell className="whitespace-nowrap">
                           <span
-                            className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${diffNum === 0
+                            className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                              diffNum === 0
                                 ? 'bg-emerald-100 text-emerald-800'
                                 : diffNum > 0
                                   ? 'bg-blue-100 text-blue-800'
                                   : 'bg-red-100 text-red-800'
-                              }`}
+                            }`}
                           >
                             {diffNum > 0 ? '+' : ''}
-                            {formatMoney(record.difference)}
+                            {formatMoney(record.difference, locale)}
                           </span>
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
@@ -334,11 +342,11 @@ export function AdminClosingView({ preview, currentClosing, history }: AdminClos
                         <TableCell className="whitespace-nowrap">
                           {isReopened ? (
                             <Badge variant="outline" className="border-amber-400 text-amber-700 bg-amber-50">
-                              أُعيد فتحه
+                              {isAr ? 'أُعيد فتحه' : 'Reopened'}
                             </Badge>
                           ) : (
                             <Badge variant="default" className="bg-emerald-600">
-                              مغلق
+                              {isAr ? 'مغلق' : 'Closed'}
                             </Badge>
                           )}
                         </TableCell>
@@ -355,7 +363,7 @@ export function AdminClosingView({ preview, currentClosing, history }: AdminClos
                               disabled={isPending}
                             >
                               <Unlock className="size-3.5 me-1" />
-                              {ar.closing.reopen}
+                              {t.closing.reopen}
                             </Button>
                           )}
                         </TableCell>

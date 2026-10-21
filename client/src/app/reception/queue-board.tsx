@@ -1,13 +1,12 @@
 'use client';
 
-import { useState, useTransition, useCallback, useEffect } from 'react';
-import { ar } from '@/i18n/messages/ar';
+import { useState, useTransition } from 'react';
+import { useI18n, type Messages } from '@/i18n/use-i18n';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { AppointmentTypeBadge } from '@/components/appointments/appointment-type-badge';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { DoctorStatusBadge } from '@/components/shell/doctor-status-badge';
-import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from '@/components/ui/toast';
 import { useQueueRealtime } from '@/hooks/use-queue-realtime';
 import {
@@ -33,6 +32,7 @@ export function QueueBoard({
   initialDoctorStatus,
   doctorId,
 }: QueueBoardProps) {
+  const { t, locale } = useI18n();
   const [queue, setQueue] = useState<QueueEntry[]>(initialQueue);
   const [doctorStatus, setDoctorStatus] = useState(initialDoctorStatus.status);
   const [doneAlert, setDoneAlert] = useState<{ patientName: string; queueNumber: number } | null>(null);
@@ -70,7 +70,7 @@ export function QueueBoard({
     startTransition(async () => {
       const result = await fn(id);
       if (!result.success) {
-        toast.error(result.error ?? ar.errors.INTERNAL_SERVER_ERROR);
+        toast.error(result.error ?? t.errors.serverError);
       }
     });
   };
@@ -98,19 +98,19 @@ export function QueueBoard({
             aria-live="polite"
           >
             <span className="h-2 w-2 rounded-full bg-amber-400" aria-hidden="true" />
-            {ar.common.connectionLost}
+            {t.common.connectionLost}
             <button
               onClick={() => void reconnect()}
               className="underline ms-1"
               type="button"
             >
-              {ar.common.retry}
+              {t.common.retry}
             </button>
           </span>
         )}
         {wsStatus === 'connecting' && (
           <span className="text-xs text-muted-foreground" aria-live="polite">
-            {ar.common.reconnecting}
+            {t.common.reconnecting}
           </span>
         )}
       </div>
@@ -123,10 +123,10 @@ export function QueueBoard({
           role="alert"
           aria-live="assertive"
         >
-          <AlertTitle className="text-accent font-bold">{ar.queue.doneAlert}</AlertTitle>
+          <AlertTitle className="text-accent font-bold">{t.queue.doneAlert}</AlertTitle>
           <AlertDescription>
             <p>
-              {doneAlert.patientName} — رقم {doneAlert.queueNumber}
+              {doneAlert.patientName} — #{doneAlert.queueNumber}
             </p>
             <Button
               variant="amber"
@@ -135,7 +135,7 @@ export function QueueBoard({
               onClick={handleLetInNext}
               disabled={isPending}
             >
-              {ar.queue.letInNext}
+              {t.queue.letInNext}
             </Button>
           </AlertDescription>
         </Alert>
@@ -144,19 +144,19 @@ export function QueueBoard({
       {/* Queue table */}
       {activeQueue.length === 0 ? (
         <div className="flex items-center justify-center h-40 rounded-lg border border-dashed text-muted-foreground">
-          {ar.queue.empty}
+          {t.queue.empty}
         </div>
       ) : (
         <div className="overflow-x-auto rounded-lg border">
-          <table className="w-full text-sm" role="grid" aria-label={ar.queue.title}>
+          <table className="w-full text-sm" role="grid" aria-label={t.queue.title}>
             <thead>
               <tr className="border-b bg-muted/40">
-                <th className="px-3 py-3 text-start font-medium" scope="col">{ar.queue.number}</th>
-                <th className="px-3 py-3 text-start font-medium" scope="col">{ar.queue.patient}</th>
-                <th className="px-3 py-3 text-start font-medium" scope="col">نوع الموعد</th>
-                <th className="px-3 py-3 text-start font-medium" scope="col">{ar.queue.status}</th>
-                <th className="px-3 py-3 text-start font-medium" scope="col">{ar.queue.waitingTime}</th>
-                <th className="px-3 py-3 text-start font-medium" scope="col">{ar.common.actions}</th>
+                <th className="px-3 py-3 text-start font-medium" scope="col">{t.queue.number}</th>
+                <th className="px-3 py-3 text-start font-medium" scope="col">{t.queue.patient}</th>
+                <th className="px-3 py-3 text-start font-medium" scope="col">{t.queue.appointmentType}</th>
+                <th className="px-3 py-3 text-start font-medium" scope="col">{t.queue.status}</th>
+                <th className="px-3 py-3 text-start font-medium" scope="col">{t.queue.waitingTime}</th>
+                <th className="px-3 py-3 text-start font-medium" scope="col">{t.common.actions}</th>
               </tr>
             </thead>
             <tbody>
@@ -164,6 +164,8 @@ export function QueueBoard({
                 <QueueRow
                   key={entry.id}
                   entry={entry}
+                  t={t}
+                  locale={locale}
                   isPending={isPending}
                   onArrive={() => handleAction(arriveAction, entry.id)}
                   onStart={() => handleAction(startAction, entry.id)}
@@ -183,6 +185,8 @@ export function QueueBoard({
 
 interface QueueRowProps {
   entry: QueueEntry;
+  t: Messages;
+  locale: string;
   isPending: boolean;
   onArrive: () => void;
   onStart: () => void;
@@ -192,60 +196,60 @@ interface QueueRowProps {
   onPostpone: () => void;
 }
 
-function QueueRow({ entry, isPending, onArrive, onStart, onComplete, onCancel, onNoShow, onPostpone }: QueueRowProps) {
-  const statusLabel = ar.appointmentStatus[entry.status as keyof typeof ar.appointmentStatus];
+function QueueRow({ entry, t, locale, isPending, onArrive, onStart, onComplete, onCancel, onNoShow, onPostpone }: QueueRowProps) {
+  const statusLabel = t.appointmentStatus[entry.status as keyof typeof t.appointmentStatus] || entry.status;
 
   return (
     <tr className="border-b last:border-0 hover:bg-muted/20 transition-colors">
       <td className="px-3 py-3 font-mono font-semibold text-primary">
         #{entry.queueNumber}
         {entry.postponedCount > 0 && (
-          <span className="ms-1 text-xs text-muted-foreground">
-            (م{entry.postponedCount})
+          <span className="ms-1 text-xs text-muted-foreground font-mono">
+            ({t.queue.postponedShort}{entry.postponedCount})
           </span>
         )}
       </td>
       <td className="px-3 py-3 font-medium">{entry.patientName}</td>
       <td className="px-3 py-3">
-        <AppointmentTypeBadge type={entry.type} size="sm" />
+        <AppointmentTypeBadge type={entry.type} locale={locale} size="sm" />
       </td>
       <td className="px-3 py-3">
         <Badge variant={entry.status as keyof typeof Badge}>{statusLabel}</Badge>
       </td>
-      <td className="px-3 py-3 text-muted-foreground">
-        {entry.waitingMinutes !== null ? `${entry.waitingMinutes} ${ar.queue.min}` : '—'}
+      <td className="px-3 py-3 text-muted-foreground font-mono">
+        {entry.waitingMinutes !== null ? `${entry.waitingMinutes} ${t.queue.min}` : '—'}
       </td>
       <td className="px-3 py-3">
         <div className="flex gap-1.5 flex-wrap">
           {entry.status === 'BOOKED' && (
             <>
               <Button size="sm" variant="outline" onClick={onArrive} disabled={isPending}>
-                {ar.queue.arrive}
+                {t.queue.arrive}
               </Button>
               <Button size="sm" variant="ghost" onClick={onCancel} disabled={isPending}>
-                {ar.queue.cancel}
+                {t.queue.cancel}
               </Button>
               <Button size="sm" variant="ghost" onClick={onNoShow} disabled={isPending}>
-                {ar.queue.noShow}
+                {t.queue.noShow}
               </Button>
             </>
           )}
           {entry.status === 'WAITING' && (
             <>
               <Button size="sm" onClick={onStart} disabled={isPending}>
-                {ar.queue.letIn}
+                {t.queue.letIn}
               </Button>
               <Button size="sm" variant="outline" onClick={onPostpone} disabled={isPending}>
-                {ar.queue.postpone}
+                {t.queue.postpone}
               </Button>
               <Button size="sm" variant="ghost" onClick={onCancel} disabled={isPending}>
-                {ar.queue.cancel}
+                {t.queue.cancel}
               </Button>
             </>
           )}
           {entry.status === 'IN_PROGRESS' && (
             <Button size="sm" variant="secondary" onClick={onComplete} disabled={isPending}>
-              {ar.visits.done}
+              {t.visits.done}
             </Button>
           )}
         </div>

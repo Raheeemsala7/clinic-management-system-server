@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Coins, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { useI18n } from '@/i18n/use-i18n';
 
 interface PayRemainingDialogProps {
   appointmentId: string;
@@ -33,6 +34,7 @@ export function PayRemainingDialog({
   triggerButton,
 }: PayRemainingDialogProps) {
   const router = useRouter();
+  const { t, isAr } = useI18n();
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [amount, setAmount] = useState(String(remainingAmount));
@@ -41,13 +43,15 @@ export function PayRemainingDialog({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
+  const currency = isAr ? 'ج.م' : 'EGP';
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
     const numAmount = Number(amount);
     if (!numAmount || numAmount <= 0) {
-      setError('يرجى إدخال مبلغ صحيح أكبر من صفر');
+      setError(t.payRemaining.invalidAmount);
       return;
     }
 
@@ -61,7 +65,7 @@ export function PayRemainingDialog({
           setSuccess(false);
         }, 1300);
       } else {
-        setError(res.error || 'فشل سداد المبلغ');
+        setError(res.error || t.payRemaining.error);
       }
     });
   };
@@ -72,7 +76,7 @@ export function PayRemainingDialog({
         {triggerButton ?? (
           <Button size="sm" variant="outline" className="text-xs gap-1 border-amber-300 text-amber-800 bg-amber-50 hover:bg-amber-100">
             <Coins className="size-3.5" />
-            سداد المتبقي ({remainingAmount} ج.م)
+            {t.payRemaining.buttonLabel} ({remainingAmount} {currency})
           </Button>
         )}
       </DialogTrigger>
@@ -81,7 +85,7 @@ export function PayRemainingDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base font-bold">
             <Coins className="size-5 text-amber-600" />
-            تحصيل المبلغ المتبقي من الحجز
+            {t.payRemaining.dialogTitle}
           </DialogTitle>
         </DialogHeader>
 
@@ -95,20 +99,26 @@ export function PayRemainingDialog({
         {success ? (
           <div className="py-6 text-center space-y-2">
             <CheckCircle2 className="size-12 text-emerald-500 mx-auto animate-bounce" />
-            <p className="font-bold text-foreground">تم تسجيل سداد المبلغ بنجاح!</p>
+            <p className="font-bold text-foreground">{t.payRemaining.success}</p>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4 pt-2">
             <div className="p-3 bg-muted/30 rounded-lg space-y-1 text-xs">
-              <p>المريض: <span className="font-bold text-foreground">{patientName}</span></p>
+              <p>
+                {isAr ? 'المريض:' : 'Patient:'} <span className="font-bold text-foreground">{patientName}</span>
+              </p>
               <div className="flex justify-between font-mono pt-1 text-muted-foreground border-t">
-                <span>إجمالي الحجز: {totalAmount} ج.م</span>
-                <span className="font-bold text-amber-700">المتبقي المطلوب: {remainingAmount} ج.م</span>
+                <span>{isAr ? 'إجمالي الحجز:' : 'Total Fee:'} {totalAmount} {currency}</span>
+                <span className="font-bold text-amber-700">
+                  {isAr ? 'المتبقي المطلوب:' : 'Remaining Due:'} {remainingAmount} {currency}
+                </span>
               </div>
             </div>
 
             <div className="space-y-1">
-              <Label className="text-xs font-bold">المبلغ المدفوع الآن (ج.م) *</Label>
+              <Label className="text-xs font-bold">
+                {t.payRemaining.amountToPay} ({currency}) *
+              </Label>
               <Input
                 type="number"
                 min="1"
@@ -121,7 +131,7 @@ export function PayRemainingDialog({
             </div>
 
             <div className="space-y-1">
-              <Label className="text-xs">طريقة الدفع</Label>
+              <Label className="text-xs">{isAr ? 'طريقة الدفع' : 'Payment Method'}</Label>
               <div className="grid grid-cols-3 gap-2">
                 <Button
                   type="button"
@@ -129,7 +139,7 @@ export function PayRemainingDialog({
                   size="sm"
                   onClick={() => setMethod('CASH')}
                 >
-                  كاش
+                  {t.payRemaining.cash}
                 </Button>
                 <Button
                   type="button"
@@ -137,7 +147,7 @@ export function PayRemainingDialog({
                   size="sm"
                   onClick={() => setMethod('CARD')}
                 >
-                  فيزا
+                  {t.payRemaining.card}
                 </Button>
                 <Button
                   type="button"
@@ -145,26 +155,26 @@ export function PayRemainingDialog({
                   size="sm"
                   onClick={() => setMethod('WALLET')}
                 >
-                  محفظة
+                  {t.payRemaining.wallet}
                 </Button>
               </div>
             </div>
 
             <div className="space-y-1">
-              <Label className="text-xs">ملاحظات التحصيل (اختياري)</Label>
+              <Label className="text-xs">{t.payRemaining.notes} ({t.common.optional})</Label>
               <Input
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                placeholder="سداد باقي قيمة الحجز عند الحضور"
+                placeholder={t.payRemaining.notesPlaceholder}
               />
             </div>
 
             <DialogFooter className="pt-2 flex justify-between gap-2">
               <Button type="button" variant="ghost" onClick={() => setOpen(false)}>
-                إلغاء
+                {t.payRemaining.cancel}
               </Button>
               <Button type="submit" disabled={isPending} className="bg-primary text-primary-foreground font-bold">
-                {isPending ? <Loader2 className="size-4 animate-spin" /> : 'تأكيد السداد وإصدار الإيصال'}
+                {isPending ? <Loader2 className="size-4 animate-spin" /> : t.payRemaining.confirm}
               </Button>
             </DialogFooter>
           </form>

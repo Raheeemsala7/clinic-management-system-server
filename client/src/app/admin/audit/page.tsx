@@ -1,8 +1,8 @@
 import { requireRole } from '@/lib/session';
 import { api } from '@/lib/api/client';
-import { ar } from '@/i18n/messages/ar';
+import { getServerI18n } from '@/i18n/server';
 import { formatDateTime } from '@/lib/utils';
-import { ShieldCheck, Search, Calendar, Filter } from 'lucide-react';
+import { ShieldCheck, Calendar } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 
 export const dynamic = 'force-dynamic';
@@ -30,6 +30,7 @@ interface AdminAuditPageProps {
 
 export default async function AdminAuditPage({ searchParams }: AdminAuditPageProps) {
   await requireRole(['ADMIN']);
+  const { t, isAr } = await getServerI18n();
 
   const resolved = searchParams ? await searchParams : {};
   const params = new URLSearchParams();
@@ -56,10 +57,10 @@ export default async function AdminAuditPage({ searchParams }: AdminAuditPagePro
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <ShieldCheck className="size-6 text-primary" />
-            {ar.audit.title}
+            {t.audit.title}
           </h1>
           <p className="text-xs text-muted-foreground mt-1">
-            سجل العمليات والأمان لجميع الحركات داخل النظام
+            {isAr ? 'سجل العمليات والأمان لجميع الحركات داخل النظام' : 'Security and audit log for all system actions'}
           </p>
         </div>
       </div>
@@ -71,14 +72,14 @@ export default async function AdminAuditPage({ searchParams }: AdminAuditPagePro
             <input
               name="entityType"
               defaultValue={resolved.entityType ?? ''}
-              placeholder="نوع العنصر (مثال: Patient, Appointment)"
+              placeholder={isAr ? 'نوع العنصر (مثال: Patient, Appointment)' : 'Entity type (e.g. Patient, Appointment)'}
               className="h-9 w-full rounded-md border border-input bg-background px-3 text-xs focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
 
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <Calendar className="size-3.5 text-primary" />
-            <span>من:</span>
+            <span>{t.reports.from}:</span>
             <input
               type="date"
               name="from"
@@ -88,7 +89,7 @@ export default async function AdminAuditPage({ searchParams }: AdminAuditPagePro
           </div>
 
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <span>إلى:</span>
+            <span>{t.reports.to}:</span>
             <input
               type="date"
               name="to"
@@ -101,30 +102,30 @@ export default async function AdminAuditPage({ searchParams }: AdminAuditPagePro
             type="submit"
             className="h-9 px-4 rounded-md bg-primary text-primary-foreground text-xs font-bold hover:bg-primary/90 transition-colors shadow-sm"
           >
-            {ar.reports.apply}
+            {t.reports.apply}
           </button>
         </form>
       </Card>
 
       <p className="text-xs text-muted-foreground font-semibold">
-        الإجمالي: {result.meta.total} سجل
+        {isAr ? 'الإجمالي:' : 'Total:'} {result.meta.total} {isAr ? 'سجل' : 'records'}
       </p>
 
       <Card className="shadow-sm border overflow-hidden">
         {result.data.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground text-xs">
-            لا توجد سجلات أمان مطابقة للبحث
+            {isAr ? 'لا توجد سجلات أمان مطابقة للبحث' : 'No audit records match the search'}
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-muted/40 border-b">
                 <tr>
-                  <th className="px-4 py-2.5 text-start text-xs font-bold text-muted-foreground">{ar.audit.time}</th>
-                  <th className="px-4 py-2.5 text-start text-xs font-bold text-muted-foreground">{ar.audit.user}</th>
-                  <th className="px-4 py-2.5 text-start text-xs font-bold text-muted-foreground">{ar.audit.action}</th>
-                  <th className="px-4 py-2.5 text-start text-xs font-bold text-muted-foreground">{ar.audit.entity}</th>
-                  <th className="px-4 py-2.5 text-start text-xs font-bold text-muted-foreground">{ar.audit.ip}</th>
+                  <th className="px-4 py-2.5 text-start text-xs font-bold text-muted-foreground">{t.audit.time}</th>
+                  <th className="px-4 py-2.5 text-start text-xs font-bold text-muted-foreground">{t.audit.user}</th>
+                  <th className="px-4 py-2.5 text-start text-xs font-bold text-muted-foreground">{t.audit.action}</th>
+                  <th className="px-4 py-2.5 text-start text-xs font-bold text-muted-foreground">{t.audit.entity}</th>
+                  <th className="px-4 py-2.5 text-start text-xs font-bold text-muted-foreground">{t.audit.ip}</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
@@ -137,7 +138,7 @@ export default async function AdminAuditPage({ searchParams }: AdminAuditPagePro
                       <span className="font-semibold text-foreground text-xs">{log.user.name}</span>
                       <br />
                       <span className="text-[10px] text-muted-foreground font-medium">
-                        {ar.roles[log.user.role as keyof typeof ar.roles] ?? log.user.role}
+                        {t.roles[log.user.role as keyof typeof t.roles] ?? log.user.role}
                       </span>
                     </td>
                     <td className="px-4 py-2.5 font-mono text-xs font-bold text-primary">{log.action}</td>

@@ -1,10 +1,9 @@
 import { requireRole } from '@/lib/session';
 import { api } from '@/lib/api/client';
-import { ar } from '@/i18n/messages/ar';
+import { getServerI18n } from '@/i18n/server';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { formatMoney, formatDate } from '@/lib/utils';
-
 import { ExpenseForm } from './expense-form';
 
 export const dynamic = 'force-dynamic';
@@ -21,6 +20,7 @@ interface Expense {
 
 export default async function ReceptionExpensesPage() {
   await requireRole(['RECEPTION', 'ADMIN']);
+  const { t, locale, isAr } = await getServerI18n();
 
   const [expenses, categories] = await Promise.all([
     api.get<{ data: Expense[] }>('/expenses').catch(() => ({ data: [] })),
@@ -30,8 +30,10 @@ export default async function ReceptionExpensesPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-2">
-        <h1 className="text-2xl font-bold">{ar.expenses.title}</h1>
-        <p className="text-sm text-muted-foreground">تسجيل مصروفات العيادة ومتابعة حالة الاعتماد</p>
+        <h1 className="text-2xl font-bold">{t.expenses.title}</h1>
+        <p className="text-sm text-muted-foreground">
+          {isAr ? 'تسجيل مصروفات العيادة ومتابعة حالة الاعتماد' : 'Record clinic expenses and track approval status'}
+        </p>
       </div>
 
       {/* Add expense form */}
@@ -44,7 +46,7 @@ export default async function ReceptionExpensesPage() {
       {/* Expenses list */}
       <div className="space-y-2">
         {expenses.data.length === 0 ? (
-          <div className="text-center py-10 text-muted-foreground">{ar.common.empty}</div>
+          <div className="text-center py-10 text-muted-foreground">{t.common.empty}</div>
         ) : (
           expenses.data.map((e) => (
             <Card key={e.id}>
@@ -52,7 +54,7 @@ export default async function ReceptionExpensesPage() {
                 <div className="flex-1">
                   <p className="font-medium">{e.description}</p>
                   <p className="text-sm text-muted-foreground">
-                    {formatMoney(e.amount)} â€¢ {formatDate(e.spentAt)}
+                    {formatMoney(e.amount, locale)} • {formatDate(e.spentAt)}
                   </p>
                 </div>
                 <Badge
@@ -64,7 +66,7 @@ export default async function ReceptionExpensesPage() {
                         : 'outline'
                   }
                 >
-                  {ar.expenses[e.status]}
+                  {t.expenses[e.status as keyof typeof t.expenses] || e.status}
                 </Badge>
               </CardContent>
             </Card>

@@ -3,9 +3,8 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useLocale } from 'next-intl';
 import { formatTime, todayClinicDate } from '@/lib/utils';
-import { ar } from '@/i18n/messages/ar';
+import { useI18n } from '@/i18n/use-i18n';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -87,7 +86,8 @@ export function AppointmentCalendar({
   initialScheduleData,
 }: AppointmentCalendarProps) {
   const router = useRouter();
-  const locale = useLocale();
+  const { t, locale, isAr } = useI18n();
+  const currency = isAr ? 'ج.م' : 'EGP';
   const today = todayClinicDate();
   const [selectedDate, setSelectedDate] = useState(initialDate || today);
   const [selectedDoctorId, setSelectedDoctorId] = useState(currentDoctorId || doctors[0]?.id || '');
@@ -101,11 +101,10 @@ export function AppointmentCalendar({
       return;
     }
 
-    // If initialScheduleData matches current selection on first mount, use it
     if (
       initialScheduleData &&
-      initialScheduleData.date === selectedDate &&
-      currentDoctorId === selectedDoctorId
+      initialScheduleData.doctorId === selectedDoctorId &&
+      selectedDate === (initialDate || today)
     ) {
       setScheduleData(initialScheduleData);
       return;
@@ -167,7 +166,6 @@ export function AppointmentCalendar({
   }, [initialAppointments, selectedDate, selectedDoctorId]);
 
   // Active working slots: ONLY show the doctor's available working shifts for this date!
-  // If doctor is off or unavailable, activeSlots will be empty [].
   const activeSlots = useMemo(() => {
     if (scheduleData) {
       if (!scheduleData.isWorkingDay) {
@@ -212,7 +210,6 @@ export function AppointmentCalendar({
   const totalRemaining = appointmentsForDate.reduce((acc, a) => acc + (a.remainingAmount || 0), 0);
   const totalExempt = appointmentsForDate.filter((a) => a.isExempt).length;
 
-  const selectedDoctorName = doctors.find((d) => d.id === selectedDoctorId)?.name;
   const isOffDay = scheduleData && !scheduleData.isWorkingDay;
 
   return (
@@ -242,7 +239,7 @@ export function AppointmentCalendar({
             onClick={handleToday}
             className="text-xs font-bold"
           >
-            اليوم
+            {t.common.today}
           </Button>
 
           {/* Doctor filter dropdown for Reception and Admin */}
@@ -261,10 +258,10 @@ export function AppointmentCalendar({
                 }}
                 className="h-9 px-3 text-xs font-semibold rounded-lg border border-input bg-background"
               >
-                <option value="">جميع الأطباء</option>
+                <option value="">{t.calendar.allDoctors}</option>
                 {doctors.map((d) => (
                   <option key={d.id} value={d.id}>
-                    د. {d.name}
+                    {t.calendar.doctorPrefix} {d.name}
                   </option>
                 ))}
               </select>
@@ -291,25 +288,25 @@ export function AppointmentCalendar({
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <Card className="bg-primary/5 border-primary/20">
           <CardContent className="p-3 text-center">
-            <span className="text-xs text-muted-foreground block">مواعيد اليوم</span>
+            <span className="text-xs text-muted-foreground block">{t.calendar.todayAppointments}</span>
             <span className="text-2xl font-bold text-primary font-mono">{totalBooked}</span>
           </CardContent>
         </Card>
         <Card className="bg-emerald-50/70 border-emerald-200">
           <CardContent className="p-3 text-center">
-            <span className="text-xs text-emerald-800 block font-medium">المدفوع / العربين</span>
-            <span className="text-2xl font-bold text-emerald-700 font-mono">{totalPaid} ج.م</span>
+            <span className="text-xs text-emerald-800 block font-medium">{t.calendar.paidDeposits}</span>
+            <span className="text-2xl font-bold text-emerald-700 font-mono">{totalPaid} {currency}</span>
           </CardContent>
         </Card>
         <Card className="bg-amber-50/70 border-amber-200">
           <CardContent className="p-3 text-center">
-            <span className="text-xs text-amber-800 block font-medium">المتبقي للتحصيل</span>
-            <span className="text-2xl font-bold text-amber-700 font-mono">{totalRemaining} ج.م</span>
+            <span className="text-xs text-amber-800 block font-medium">{t.calendar.remainingToCollect}</span>
+            <span className="text-2xl font-bold text-amber-700 font-mono">{totalRemaining} {currency}</span>
           </CardContent>
         </Card>
         <Card className="bg-purple-50/70 border-purple-200">
           <CardContent className="p-3 text-center">
-            <span className="text-xs text-purple-800 block font-medium">حالات معفية (مجاني)</span>
+            <span className="text-xs text-purple-800 block font-medium">{t.calendar.exemptCases}</span>
             <span className="text-2xl font-bold text-purple-700 font-mono">{totalExempt}</span>
           </CardContent>
         </Card>
@@ -320,7 +317,7 @@ export function AppointmentCalendar({
         <CardHeader className="py-3 px-4 border-b bg-muted/20 flex flex-row items-center justify-between flex-wrap gap-2">
           <CardTitle className="text-base font-bold flex items-center gap-2">
             <Clock className="size-4 text-primary" />
-            <span>جدول الفترات المتاحة والمحجوزة</span>
+            <span>{t.calendar.slotsTableTitle}</span>
             <span className="text-xs font-normal text-muted-foreground">({selectedDate})</span>
             {isLoadingSchedule && <Loader2 className="size-3.5 animate-spin text-muted-foreground" />}
           </CardTitle>
@@ -331,18 +328,18 @@ export function AppointmentCalendar({
               {!scheduleData.isWorkingDay ? (
                 <Badge variant="destructive" className="font-semibold gap-1">
                   <CalendarX className="size-3" />
-                  إجازة أسبوعية / غير متاح للعمل
+                  {t.calendar.weeklyOff}
                 </Badge>
               ) : (
                 <>
                   <span className="text-muted-foreground font-mono">
-                    فترات العمل: {scheduleData.shifts.map((s) => `${s.startTime} - ${s.endTime}`).join(' | ')}
+                    {t.calendar.workingShifts}: {scheduleData.shifts.map((s) => `${s.startTime} - ${s.endTime}`).join(' | ')}
                   </span>
                   <Badge variant="outline" className="font-mono text-[11px]">
-                    {scheduleData.slotDurationMinutes} دقيقة / كشف
+                    {scheduleData.slotDurationMinutes} {t.calendar.minPerExam}
                   </Badge>
                   <Badge className="bg-emerald-100 text-emerald-800 text-[11px] font-mono">
-                    {scheduleData.availableCount} شاغر
+                    {scheduleData.availableCount} {t.calendar.vacant}
                   </Badge>
                 </>
               )}
@@ -359,10 +356,10 @@ export function AppointmentCalendar({
               </div>
               <div className="space-y-1">
                 <h3 className="font-bold text-base text-foreground">
-                  الطبيب غير متاح للعمل في هذا اليوم ({scheduleData.dayName})
+                  {t.calendar.doctorNotAvailable} ({scheduleData.dayName})
                 </h3>
                 <p className="text-xs text-muted-foreground max-w-md mx-auto">
-                  هذا اليوم محدد كإجازة أسبوعية في جدول الطبيب، لذلك لا تظهر أي فترات زمنية متاحة للحجز.
+                  {t.calendar.doctorOffDesc}
                 </p>
               </div>
               {userRole === 'DOCTOR' && (
@@ -370,7 +367,7 @@ export function AppointmentCalendar({
                   <Link href="/doctor/schedule">
                     <Button variant="outline" size="sm" className="gap-2 text-xs border-amber-300 hover:bg-amber-100/50">
                       <Settings className="size-3.5" />
-                      تعديل جدول العمل الأسبوعي
+                      {t.calendar.editWorkingHours}
                     </Button>
                   </Link>
                 </div>
@@ -402,7 +399,9 @@ export function AppointmentCalendar({
                   <div>
                     <span className="text-xs font-bold text-foreground block font-mono">{slotTime}</span>
                     <span className="text-[11px] text-muted-foreground">
-                      {isBooked ? `${bookedAppts.length} مريض محجوز` : 'فترة شاغرة'}
+                      {isBooked
+                        ? `${bookedAppts.length} ${bookedAppts.length === 1 ? t.calendar.bookedPatient : t.calendar.bookedPatients}`
+                        : t.calendar.availableSlot}
                     </span>
                   </div>
                 </div>
@@ -415,7 +414,7 @@ export function AppointmentCalendar({
                         <div className="space-y-0.5">
                           <div className="flex items-center gap-2">
                             <span className="font-bold text-foreground text-sm">
-                              {appt.patient?.fullName || 'مريض غير محدد'}
+                              {appt.patient?.fullName || t.calendar.unspecifiedPatient}
                             </span>
                             <Badge variant="outline" className="text-[10px] px-1.5 py-0 font-mono">
                               #{appt.queueNumber}
@@ -424,7 +423,7 @@ export function AppointmentCalendar({
                           </div>
                           <p className="text-xs text-muted-foreground font-mono flex items-center gap-2">
                             <span>{appt.patient?.phone}</span>
-                            {appt.doctor && <span>• د. {appt.doctor.name}</span>}
+                            {appt.doctor && <span>• {t.calendar.doctorPrefix} {appt.doctor.name}</span>}
                           </p>
                         </div>
 
@@ -433,17 +432,17 @@ export function AppointmentCalendar({
                           {appt.isExempt ? (
                             <Badge className="bg-purple-100 text-purple-800 border-purple-200 gap-1 text-xs">
                               <Gift className="size-3" />
-                              <span>معفي / مجاني</span>
+                              <span>{t.calendar.exemptBadge}</span>
                             </Badge>
                           ) : (appt.remainingAmount ?? 0) > 0 ? (
                             <Badge className="bg-amber-100 text-amber-800 border-amber-200 gap-1 text-xs font-mono">
                               <Coins className="size-3" />
-                              <span>عربون: باقي {appt.remainingAmount} ج.م</span>
+                              <span>{t.calendar.depositRemaining} {appt.remainingAmount} {currency}</span>
                             </Badge>
                           ) : (
                             <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 gap-1 text-xs font-mono">
                               <CheckCircle className="size-3" />
-                              <span>مدفوع بالكامل ({appt.totalAmount} ج.م)</span>
+                              <span>{t.calendar.fullyPaid} ({appt.totalAmount} {currency})</span>
                             </Badge>
                           )}
 
@@ -459,7 +458,7 @@ export function AppointmentCalendar({
                             }
                             className="text-xs"
                           >
-                            {ar.appointmentStatus[appt.status] || appt.status}
+                            {t.appointmentStatus[appt.status as keyof typeof t.appointmentStatus] || appt.status}
                           </Badge>
 
                           {userRole !== 'DOCTOR' && (
@@ -506,8 +505,8 @@ export function AppointmentCalendar({
             <div className="pt-4 border-t mt-4">
               <h4 className="text-xs font-bold text-muted-foreground mb-2">
                 {isOffDay
-                  ? 'حجوزات مسجلة مسبقاً في هذا اليوم:'
-                  : 'حجوزات إضافية / حضور مباشر غير مقترنة بفترة شاغرة:'}
+                  ? (locale === 'en' ? 'Bookings registered for this date:' : 'حجوزات مسجلة مسبقاً في هذا اليوم:')
+                  : (locale === 'en' ? 'Additional / Walk-in bookings:' : 'حجوزات إضافية / حضور مباشر غير مقترنة بفترة شاغرة:')}
               </h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {slotMap.unassigned.map((a) => (
@@ -515,17 +514,19 @@ export function AppointmentCalendar({
                     <div>
                       <p className="font-bold">{a.patient?.fullName}</p>
                       <p className="text-muted-foreground font-mono">
-                        {a.startTime ? `${a.startTime} • ` : ''}طابور #{a.queueNumber}
+                        {a.startTime ? `${a.startTime} • ` : ''}{t.calendar.queueNumber} #{a.queueNumber}
                       </p>
                     </div>
                     <div className="flex items-center gap-2 flex-wrap">
                       <AppointmentTypeBadge type={a.type} locale={locale} size="sm" />
                       {a.isExempt ? (
-                        <Badge className="bg-purple-100 text-purple-800">معفي</Badge>
+                        <Badge className="bg-purple-100 text-purple-800">{isAr ? 'معفي' : 'Exempt'}</Badge>
                       ) : (a.remainingAmount ?? 0) > 0 ? (
-                        <Badge className="bg-amber-100 text-amber-800 font-mono">باقي {a.remainingAmount} ج.م</Badge>
+                        <Badge className="bg-amber-100 text-amber-800 font-mono">
+                          {isAr ? 'باقي' : 'Due'} {a.remainingAmount} {currency}
+                        </Badge>
                       ) : (
-                        <Badge className="bg-emerald-100 text-emerald-800 font-mono">مدفوع</Badge>
+                        <Badge className="bg-emerald-100 text-emerald-800 font-mono">{isAr ? 'مدفوع' : 'Paid'}</Badge>
                       )}
                       {userRole !== 'DOCTOR' && (
                         <Button asChild variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground">
@@ -548,4 +549,3 @@ export function AppointmentCalendar({
     </div>
   );
 }
-
