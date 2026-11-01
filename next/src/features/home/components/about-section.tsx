@@ -1,14 +1,13 @@
 'use client';
 
 import React from 'react';
-import { motion } from 'framer-motion';
 import { useTranslations, useLocale } from 'next-intl';
 import { TIMELINE_MILESTONES } from '../constants';
 import { Stethoscope } from 'lucide-react';
 import { cn } from 'cn';
 
 /**
- * قسم نبذة والمؤهلات - خط زمني سريع الاستجابة وإطار صورة الطبيب بالألوان الهندسية
+ * قسم نبذة والمؤهلات - ظهور فوري ومباشر دون تأخير
  */
 export const AboutSection = () => {
   const t = useTranslations('About');
@@ -43,14 +42,10 @@ export const AboutSection = () => {
                   : 'pl-6 border-l-2 border-[#1D4ED8]'
               )}
             >
-              {TIMELINE_MILESTONES.map((milestone, idx) => (
-                <motion.div
+              {TIMELINE_MILESTONES.map((milestone) => (
+                <div
                   key={milestone.id}
-                  initial={{ opacity: 0, x: isArabic ? 12 : -12 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true, amount: 0.2 }}
-                  transition={{ duration: 0.25, delay: idx * 0.05, ease: [0.16, 1, 0.3, 1] }}
-                  className="relative group text-start"
+                  className="relative group text-start transition-transform duration-150 hover:-translate-y-0.5"
                 >
                   {/* النقطة الصفراء على الخط الزمني */}
                   <span
@@ -72,20 +67,14 @@ export const AboutSection = () => {
                   <p className="text-sm text-slate-500">
                     {milestone.institution}
                   </p>
-                </motion.div>
+                </div>
               ))}
             </div>
           </div>
 
           {/* إطار صورة الدكتور */}
           <div className="lg:col-span-5 order-2 flex justify-center">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.98 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true, amount: 0.2 }}
-              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-              className="relative w-full max-w-[360px]"
-            >
+            <div className="relative w-full max-w-[360px] transition-transform duration-200 hover:scale-[1.01]">
               <div
                 className="absolute -top-3.5 -right-3.5 w-24 h-24 bg-[#1D4ED8] rounded-3xl -z-10"
                 aria-hidden="true"
@@ -106,7 +95,7 @@ export const AboutSection = () => {
                   {t('photoBadge')}
                 </span>
               </div>
-            </motion.div>
+            </div>
           </div>
         </div>
       </div>

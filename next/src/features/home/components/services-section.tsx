@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import { motion } from 'framer-motion';
 import { useTranslations, useLocale } from 'next-intl';
 import { SERVICES_LIST, getWhatsAppUrl } from '../constants';
 import { ServiceItem } from '../types';
@@ -10,7 +9,7 @@ import { WhatsAppIcon } from '@/shared/components/whatsapp-icon';
 import { cn } from 'cn';
 
 /**
- * قسم الخدمات الطبية - أنيميشن سريع ومحسن للأداء مع دعم اللغتين
+ * قسم الخدمات الطبية - ظهور فوري وتفاعل ناعم فائق السرعة عبر CSS
  */
 export const ServicesSection = () => {
   const t = useTranslations('Services');
@@ -41,11 +40,10 @@ export const ServicesSection = () => {
 
         {/* شبكة البطاقات (9 خدمات) */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
-          {SERVICES_LIST.map((service, index) => (
+          {SERVICES_LIST.map((service) => (
             <ServiceCard
               key={service.id}
               service={service}
-              index={index}
               buttonText={t('bookConsultation')}
               isArabic={isArabic}
             />
@@ -58,7 +56,6 @@ export const ServicesSection = () => {
 
 interface ServiceCardProps {
   service: ServiceItem;
-  index: number;
   buttonText: string;
   isArabic: boolean;
 }
@@ -66,7 +63,7 @@ interface ServiceCardProps {
 /**
  * بطاقة خدمة فردية - خفيفة وسريعة التفاعل مع تحويل مباشر إلى واتساب
  */
-const ServiceCard = ({ service, index, buttonText, isArabic }: ServiceCardProps) => {
+const ServiceCard = ({ service, buttonText, isArabic }: ServiceCardProps) => {
   const isNavy = service.theme === 'navy';
 
   const badgeClasses = {
@@ -83,17 +80,12 @@ const ServiceCard = ({ service, index, buttonText, isArabic }: ServiceCardProps)
   const whatsappHref = getWhatsAppUrl(`مرحباً د. إسلام، أود حجز استشارة بخصوص: ${service.title}`);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.1 }}
-      transition={{ duration: 0.25, delay: Math.min(index * 0.03, 0.2), ease: [0.16, 1, 0.3, 1] }}
-      whileHover={{ y: -3, transition: { duration: 0.15 } }}
+    <div
       className={cn(
-        'group relative rounded-2xl p-6 sm:p-7 flex flex-col justify-between transition-shadow duration-200',
+        'group relative rounded-2xl p-6 sm:p-7 flex flex-col justify-between transition-all duration-200 hover:-translate-y-1.5 hover:shadow-xl active:scale-[0.99] cursor-pointer',
         isNavy
-          ? 'bg-[#0A164E] text-white shadow-md hover:shadow-xl'
-          : 'bg-white text-[#0A164E] border border-slate-100 shadow-xs hover:shadow-md'
+          ? 'bg-[#0A164E] text-white shadow-md'
+          : 'bg-white text-[#0A164E] border border-slate-100 shadow-xs'
       )}
     >
       <div>
@@ -137,13 +129,13 @@ const ServiceCard = ({ service, index, buttonText, isArabic }: ServiceCardProps)
           href={whatsappHref}
           target="_blank"
           rel="noopener noreferrer"
-          className={cn('inline-flex items-center gap-1.5 cursor-pointer', linkColorClass)}
+          className={cn('inline-flex items-center gap-1.5', linkColorClass)}
         >
           <WhatsAppIcon className="w-3.5 h-3.5" />
           <span>{buttonText}</span>
           <span aria-hidden="true">{isArabic ? '←' : '→'}</span>
         </a>
       </div>
-    </motion.div>
+    </div>
   );
 };

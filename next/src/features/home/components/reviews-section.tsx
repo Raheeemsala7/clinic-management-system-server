@@ -1,14 +1,13 @@
 'use client';
 
 import React from 'react';
-import { motion } from 'framer-motion';
 import { useTranslations } from 'next-intl';
 import { PATIENT_REVIEWS } from '../constants';
 import { Star } from 'lucide-react';
 import { cn } from 'cn';
 
 /**
- * قسم آراء المرضى - أنيميشن سلس وبطاقات بأشرطة ألوان وتقييم النجوم
+ * قسم آراء المرضى - تحميل مباشر دون انتظار
  */
 export const ReviewsSection = () => {
   const t = useTranslations('Reviews');
@@ -28,7 +27,7 @@ export const ReviewsSection = () => {
 
         {/* شبكة البطاقات الثلاث */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6">
-          {PATIENT_REVIEWS.map((review, idx) => {
+          {PATIENT_REVIEWS.map((review) => {
             const borderTopClass = {
               yellow: 'border-t-4 border-[#F5B800]',
               blue: 'border-t-4 border-[#1D4ED8]',
@@ -36,15 +35,10 @@ export const ReviewsSection = () => {
             }[review.accent];
 
             return (
-              <motion.div
+              <div
                 key={review.id}
-                initial={{ opacity: 0, y: 12 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.15 }}
-                transition={{ duration: 0.25, delay: idx * 0.05, ease: [0.16, 1, 0.3, 1] }}
-                whileHover={{ y: -3 }}
                 className={cn(
-                  'bg-white rounded-3xl p-6 sm:p-7 shadow-xs border border-slate-100 flex flex-col justify-between transition-shadow duration-200 hover:shadow-md',
+                  'bg-white rounded-3xl p-6 sm:p-7 shadow-xs border border-slate-100 flex flex-col justify-between transition-all duration-200 hover:-translate-y-1 hover:shadow-lg',
                   borderTopClass
                 )}
               >
@@ -79,7 +73,7 @@ export const ReviewsSection = () => {
                     </span>
                   </div>
                 </div>
-              </motion.div>
+              </div>
             );
           })}
         </div>

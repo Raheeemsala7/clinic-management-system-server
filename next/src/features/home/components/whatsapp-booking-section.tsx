@@ -1,13 +1,12 @@
 'use client';
 
 import React from 'react';
-import { motion } from 'framer-motion';
 import { useTranslations } from 'next-intl';
 import { getWhatsAppUrl } from '../constants';
 import { WhatsAppIcon } from '@/shared/components/whatsapp-icon';
 
 /**
- * قسم الحجز عبر الواتساب (مطابق للموك أب الجديد بالحرف)
+ * قسم الحجز عبر الواتساب - ظهور فوري للمحتوى دون أي بطء أو تأخير في التحميل
  */
 export const WhatsAppBookingSection = () => {
   const t = useTranslations('WhatsAppBooking');
@@ -19,7 +18,7 @@ export const WhatsAppBookingSection = () => {
   ];
 
   return (
-    <section id="booking" className="py-20 bg-gradient-to-br from-[#08143D] via-[#0A164E] to-[#060F2E] text-white relative overflow-hidden">
+    <section id="booking" className="py-16 sm:py-20 bg-gradient-to-br from-[#08143D] via-[#0A164E] to-[#060F2E] text-white relative overflow-hidden">
       {/* إضاءات جمالية خفيفة في الخلفية */}
       <div
         className="absolute top-10 left-10 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl pointer-events-none"
@@ -33,13 +32,7 @@ export const WhatsAppBookingSection = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
           {/* الجانب الأيمن (في RTL): النصوص والخطوات وزر الحجز */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.2 }}
-            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-            className="lg:col-span-7 text-right"
-          >
+          <div className="lg:col-span-7 text-start">
             <span className="text-[#F5B800] text-xs font-bold tracking-widest uppercase block mb-3">
               {t('kicker')}
             </span>
@@ -71,22 +64,16 @@ export const WhatsAppBookingSection = () => {
               href={getWhatsAppUrl()}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-3 bg-[#F5B800] hover:bg-amber-400 text-slate-950 font-black text-base sm:text-lg px-8 py-4 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-200 active:scale-95 cursor-pointer group"
+              className="inline-flex items-center justify-center gap-3 bg-[#F5B800] hover:bg-amber-400 text-slate-950 font-black text-base sm:text-lg px-8 py-4 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-150 hover:scale-102 active:scale-95 cursor-pointer group"
             >
-              <WhatsAppIcon className="w-6 h-6 text-[#0A164E] group-hover:scale-110 transition-transform" />
+              <WhatsAppIcon className="w-6 h-6 text-[#0A164E] group-hover:scale-110 transition-transform duration-150" />
               <span>{t('bookBtn')}</span>
             </a>
-          </motion.div>
+          </div>
 
           {/* الجانب الأيسر (في RTL): بطاقة بيانات التواصل ومواعيد العمل */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.98 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true, amount: 0.2 }}
-            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-            className="lg:col-span-5"
-          >
-            <div className="bg-[#0F205C]/60 backdrop-blur-md border border-white/10 rounded-3xl p-7 sm:p-9 shadow-2xl relative">
+          <div className="lg:col-span-5">
+            <div className="bg-[#0F205C]/60 backdrop-blur-md border border-white/10 rounded-3xl p-7 sm:p-9 shadow-2xl relative transition-transform duration-200 hover:scale-[1.01]">
               {/* أيقونة الواتساب في الزاوية العلوية داخل مربع أزرق */}
               <div className="w-12 h-12 rounded-2xl bg-[#1D4ED8] text-white flex items-center justify-center mb-6 shadow-md">
                 <WhatsAppIcon className="w-6 h-6" />
@@ -101,7 +88,7 @@ export const WhatsAppBookingSection = () => {
                   href={getWhatsAppUrl()}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-2xl sm:text-3xl font-black text-white hover:text-[#F5B800] transition-colors dir-ltr block text-right tracking-tight"
+                  className="text-2xl sm:text-3xl font-black text-white hover:text-[#F5B800] transition-colors dir-ltr block text-start tracking-tight"
                 >
                   {t('phoneValue')}
                 </a>
@@ -131,10 +118,9 @@ export const WhatsAppBookingSection = () => {
                 </p>
               </div>
             </div>
-          </motion.div>
+          </div>
         </div>
       </div>
     </section>
   );
 };
-

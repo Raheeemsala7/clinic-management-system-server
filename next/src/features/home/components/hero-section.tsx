@@ -2,13 +2,12 @@
 
 import React from 'react';
 import Image from 'next/image';
-import { motion } from 'framer-motion';
 import { useTranslations } from 'next-intl';
 import { getWhatsAppUrl } from '../constants';
 import { WhatsAppIcon } from '@/shared/components/whatsapp-icon';
 
 /**
- * قسم الهيرو الرئيسي - أنيميشن فائق السرعة والسلاسة ومطابقة تامة للموك أب
+ * قسم الهيرو الرئيسي - ظهور فوري للمحتوى دون أي بطء أو تأخير في التحميل
  */
 export const HeroSection = () => {
   const t = useTranslations('Hero');
@@ -37,12 +36,7 @@ export const HeroSection = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
           {/* الجانب الأيمن (في RTL): النصوص والمعلومات وأزرار الإجراء */}
-          <motion.div
-            initial={{ opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-            className="lg:col-span-7 flex flex-col items-start text-start order-1"
-          >
+          <div className="lg:col-span-7 flex flex-col items-start text-start order-1">
             {/* العنوان الإنجليزي الصغير باللون الأصفر الذهبي */}
             <span className="text-[#F5B800] text-xs sm:text-sm font-bold tracking-widest uppercase mb-2 inline-block">
               {t('kicker')}
@@ -67,7 +61,7 @@ export const HeroSection = () => {
                 href={getWhatsAppUrl()}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="bg-[#F5B800] hover:bg-amber-400 text-slate-950 font-bold px-7 py-3 rounded-xl transition-all duration-150 shadow-lg hover:shadow-xl active:scale-95 text-sm sm:text-base inline-flex items-center justify-center gap-2 cursor-pointer"
+                className="bg-[#F5B800] hover:bg-amber-400 text-slate-950 font-bold px-7 py-3 rounded-xl transition-all duration-150 shadow-lg hover:shadow-xl hover:scale-102 active:scale-95 text-sm sm:text-base inline-flex items-center justify-center gap-2 cursor-pointer"
               >
                 <WhatsAppIcon className="w-5 h-5 text-slate-950" />
                 <span>{t('bookCheckup')}</span>
@@ -76,7 +70,7 @@ export const HeroSection = () => {
               {/* زر الخدمات الطبية للتمرير السلس */}
               <a
                 href="#services"
-                className="border border-white/85 hover:border-white text-white hover:bg-white/10 font-medium px-7 py-3 rounded-xl transition-all duration-150 text-sm sm:text-base inline-flex items-center justify-center"
+                className="border border-white/85 hover:border-white text-white hover:bg-white/10 font-medium px-7 py-3 rounded-xl transition-all duration-150 hover:scale-102 active:scale-95 text-sm sm:text-base inline-flex items-center justify-center"
               >
                 {t('medicalServices')}
               </a>
@@ -95,15 +89,10 @@ export const HeroSection = () => {
                 </div>
               ))}
             </div>
-          </motion.div>
+          </div>
 
           {/* الجانب الأيسر (في RTL): خلفية الأشكال وصورة الدكتور */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-            className="lg:col-span-5 flex justify-center items-center order-2 relative"
-          >
+          <div className="lg:col-span-5 flex justify-center items-center order-2 relative">
             {/* الحاوية النسبية بأبعاد (560 x 710) المتوافقة تماماً مع الـ SVG وصورة الدكتور */}
             <div className="relative w-full max-w-[430px] aspect-[560/710] mx-auto select-none">
               <Image
@@ -132,7 +121,7 @@ export const HeroSection = () => {
                 />
               </div>
             </div>
-          </motion.div>
+          </div>
         </div>
       </div>
     </section>
