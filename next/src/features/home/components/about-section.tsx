@@ -58,14 +58,16 @@ export const AboutSection = () => {
                   transition={{ duration: 0.3, delay: idx * 0.06, ease: [0.16, 1, 0.3, 1] }}
                   className="relative group text-start transition-transform duration-150 hover:-translate-y-0.5"
                 >
-                  {/* النقطة الصفراء على الخط الزمني مع تأثير نبض لطيف */}
+                  {/* النقطة الصفراء على الخط الزمني مع تأثير نبض حيوي ورنين ناعم */}
                   <span
                     className={cn(
-                      'absolute top-1.5 w-3.5 h-3.5 bg-[#F5B800] rounded-xs ring-4 ring-white group-hover:scale-125 transition-transform duration-150',
+                      'absolute top-1.5 w-3.5 h-3.5 bg-[#F5B800] rounded-xs ring-4 ring-white group-hover:scale-125 transition-transform duration-200 flex items-center justify-center',
                       isArabic ? '-right-[31px]' : '-left-[31px]'
                     )}
                     aria-hidden="true"
-                  />
+                  >
+                    <span className="absolute inset-0 rounded-xs bg-[#F5B800] animate-ping opacity-40 pointer-events-none" />
+                  </span>
 
                   <span className="text-xs sm:text-sm font-bold text-[#1D4ED8] block mb-1">
                     {t(`milestones.${milestone.id}.year`)}
@@ -109,9 +111,13 @@ export const AboutSection = () => {
               />
 
               <div className="w-full aspect-[4/5] min-h-[350px] bg-white/90 backdrop-blur-xs border-2 border-dashed border-[#1D4ED8] rounded-3xl flex flex-col items-center justify-center p-6 text-center shadow-lg hover:shadow-2xl transition-shadow duration-300">
-                <div className="w-14 h-14 rounded-full bg-blue-50 text-[#1D4ED8] flex items-center justify-center mb-3">
+                <motion.div
+                  animate={{ scale: [1, 1.08, 1] }}
+                  transition={{ duration: 2.8, repeat: Infinity, ease: 'easeInOut' }}
+                  className="w-14 h-14 rounded-full bg-blue-50 text-[#1D4ED8] flex items-center justify-center mb-3 shadow-xs"
+                >
                   <Stethoscope className="w-7 h-7" />
-                </div>
+                </motion.div>
                 <p className="text-slate-600 font-bold text-sm sm:text-base leading-relaxed">
                   {t('photoPlaceholder')}
                 </p>

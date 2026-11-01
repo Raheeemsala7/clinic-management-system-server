@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Menu, X } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { useTranslations, useLocale } from 'next-intl';
 import { BrandLogo } from './brand-logo';
 import { getWhatsAppUrl } from '../constants';
@@ -71,16 +72,18 @@ export const Navbar = () => {
             {/* زر تبديل اللغة */}
             <SwitchLanguageBtn variant="light" />
 
-            {/* زر احجز الآن المباشر عبر واتساب */}
-            <a
+            {/* زر احجز الآن المباشر عبر واتساب مع تأثير هوفر وانتقال رشيق */}
+            <motion.a
+              whileHover={{ scale: 1.04 }}
+              whileTap={{ scale: 0.96 }}
               href={whatsappHref}
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-[#F5B800] hover:bg-amber-400 text-slate-950 font-bold text-xs sm:text-sm px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl transition-all duration-150 shadow-md hover:shadow-lg active:scale-95 inline-flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap"
+              className="bg-[#F5B800] hover:bg-amber-400 text-slate-950 font-bold text-xs sm:text-sm px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl shadow-md hover:shadow-xl inline-flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap transition-colors duration-150 group"
             >
-              <WhatsAppIcon className="w-4 h-4 text-slate-950" />
+              <WhatsAppIcon className="w-4 h-4 text-slate-950 group-hover:rotate-12 transition-transform duration-200" />
               <span>{t('bookNow')}</span>
-            </a>
+            </motion.a>
 
             {/* زر قائمة الجوال للشاشات الصغيرة */}
             <button
