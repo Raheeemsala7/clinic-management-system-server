@@ -1,22 +1,23 @@
 'use client';
 
 import React from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { BrandLogo } from './brand-logo';
 import { getWhatsAppUrl } from '../constants';
 import { WhatsAppIcon } from '@/shared/components/whatsapp-icon';
 
 /**
- * تذييل الصفحة (Footer) مطابق تماماً للموك أب في الصورة الجديدة مع دعم اللغتين
+ * تذييل الصفحة (Footer) مع دعم كامل للغتين (عربي/إنجليزي)
  */
 export const Footer = () => {
   const t = useTranslations('Footer');
+  const locale = useLocale();
 
   return (
     <footer className="bg-[#060F2E] text-white pt-16 pb-12 border-t border-white/10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
-          {/* العمود الأول (يمين في RTL): الشعار ونبذة الطبيب */}
+          {/* العمود الأول: الشعار ونبذة الطبيب */}
           <div className="space-y-4">
             <BrandLogo variant="light" />
             <p className="text-sm text-white/70 leading-relaxed max-w-xs">
@@ -32,22 +33,22 @@ export const Footer = () => {
             <ul className="space-y-2.5 text-sm text-white/70">
               <li>
                 <a href="#hero" className="hover:text-[#F5B800] transition-colors">
-                  الرئيسية
+                  {t('links.home')}
                 </a>
               </li>
               <li>
                 <a href="#about" className="hover:text-[#F5B800] transition-colors">
-                  نبذة والمؤهلات
+                  {t('links.about')}
                 </a>
               </li>
               <li>
                 <a href="#clinic" className="hover:text-[#F5B800] transition-colors">
-                  عيادتنا
+                  {t('links.clinic')}
                 </a>
               </li>
               <li>
                 <a href="#reviews" className="hover:text-[#F5B800] transition-colors">
-                  آراء المرضى
+                  {t('links.reviews')}
                 </a>
               </li>
             </ul>
@@ -56,32 +57,32 @@ export const Footer = () => {
           {/* العمود الثالث: الخدمات */}
           <div>
             <h4 className="text-base font-bold text-white mb-4">
-              {t('services')}
+              {t('servicesTitle')}
             </h4>
             <ul className="space-y-2.5 text-sm text-white/70">
               <li>
                 <a href="#services" className="hover:text-[#F5B800] transition-colors">
-                  مناظير الأنف والجيوب
+                  {t('links.sinus')}
                 </a>
               </li>
               <li>
                 <a href="#services" className="hover:text-[#F5B800] transition-colors">
-                  جراحات الأذن
+                  {t('links.earSurgery')}
                 </a>
               </li>
               <li>
                 <a href="#services" className="hover:text-[#F5B800] transition-colors">
-                  اللوزتين واللحمية
+                  {t('links.tonsils')}
                 </a>
               </li>
               <li>
                 <a href="#services" className="hover:text-[#F5B800] transition-colors">
-                  مناظير الحنجرة
+                  {t('links.larynx')}
                 </a>
               </li>
               <li>
                 <a href="#services" className="hover:text-[#F5B800] transition-colors">
-                  التجميل الوظيفي
+                  {t('links.rhinoplasty')}
                 </a>
               </li>
             </ul>
@@ -94,13 +95,13 @@ export const Footer = () => {
             </h4>
             <div className="space-y-3 text-sm text-white/70">
               <a
-                href={getWhatsAppUrl()}
+                href={getWhatsAppUrl(undefined, locale)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 hover:text-[#F5B800] transition-colors"
               >
                 <WhatsAppIcon className="w-4 h-4 text-[#F5B800] shrink-0" />
-                <span>{t('whatsapp')}: +20 10 50792622</span>
+                <span className="dir-ltr text-right font-medium">+20 10 50792622</span>
               </a>
               <p className="hover:text-white transition-colors cursor-pointer">
                 {t('facebook')}

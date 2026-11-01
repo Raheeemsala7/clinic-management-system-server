@@ -9,7 +9,7 @@ import { WhatsAppIcon } from '@/shared/components/whatsapp-icon';
 import { cn } from 'cn';
 
 /**
- * قسم الخدمات الطبية - ظهور فوري وتفاعل ناعم فائق السرعة عبر CSS
+ * قسم الخدمات الطبية - يدعم الترجمة الكاملة (عربي/إنجليزي) وظهور فوري عبر CSS
  */
 export const ServicesSection = () => {
   const t = useTranslations('Services');
@@ -45,6 +45,9 @@ export const ServicesSection = () => {
               key={service.id}
               service={service}
               buttonText={t('bookConsultation')}
+              title={t(`items.${service.id}.title`)}
+              description={t(`items.${service.id}.description`)}
+              locale={locale}
               isArabic={isArabic}
             />
           ))}
@@ -57,13 +60,23 @@ export const ServicesSection = () => {
 interface ServiceCardProps {
   service: ServiceItem;
   buttonText: string;
+  title: string;
+  description: string;
+  locale: string;
   isArabic: boolean;
 }
 
 /**
- * بطاقة خدمة فردية - خفيفة وسريعة التفاعل مع تحويل مباشر إلى واتساب
+ * بطاقة خدمة فردية - خفيفة وسريعة التفاعل مع تحويل مباشر إلى واتساب ودعم كامل للغتين
  */
-const ServiceCard = ({ service, buttonText, isArabic }: ServiceCardProps) => {
+const ServiceCard = ({
+  service,
+  buttonText,
+  title,
+  description,
+  locale,
+  isArabic,
+}: ServiceCardProps) => {
   const isNavy = service.theme === 'navy';
 
   const badgeClasses = {
@@ -77,7 +90,11 @@ const ServiceCard = ({ service, buttonText, isArabic }: ServiceCardProps) => {
       ? 'text-[#F5B800] group-hover:text-amber-300'
       : 'text-[#1D4ED8] group-hover:text-blue-700';
 
-  const whatsappHref = getWhatsAppUrl(`مرحباً د. إسلام، أود حجز استشارة بخصوص: ${service.title}`);
+  const consultationMsg = isArabic
+    ? `مرحباً د. إسلام، أود حجز استشارة بخصوص: ${title}`
+    : `Hello Dr. Eslam, I would like to book a consultation regarding: ${title}`;
+
+  const whatsappHref = getWhatsAppUrl(consultationMsg, locale);
 
   return (
     <div
@@ -106,7 +123,7 @@ const ServiceCard = ({ service, buttonText, isArabic }: ServiceCardProps) => {
             isNavy ? 'text-white' : 'text-[#0A164E]'
           )}
         >
-          {service.title}
+          {title}
         </h3>
 
         <p
@@ -115,7 +132,7 @@ const ServiceCard = ({ service, buttonText, isArabic }: ServiceCardProps) => {
             isNavy ? 'text-slate-300' : 'text-slate-500'
           )}
         >
-          {service.description}
+          {description}
         </p>
       </div>
 

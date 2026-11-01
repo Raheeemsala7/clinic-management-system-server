@@ -7,7 +7,7 @@ import { Star } from 'lucide-react';
 import { cn } from 'cn';
 
 /**
- * قسم آراء المرضى - تحميل مباشر دون انتظار
+ * قسم آراء المرضى - تحميل مباشر ودعم كامل للترجمة (عربي/إنجليزي)
  */
 export const ReviewsSection = () => {
   const t = useTranslations('Reviews');
@@ -55,7 +55,7 @@ export const ReviewsSection = () => {
 
                   {/* نص المراجعة */}
                   <p className="text-slate-600 text-sm sm:text-base leading-relaxed mb-6">
-                    {review.text}
+                    {t(`items.${review.id}.text`)}
                   </p>
                 </div>
 
@@ -66,7 +66,7 @@ export const ReviewsSection = () => {
                   </div>
                   <div>
                     <h4 className="font-bold text-sm text-[#0A164E]">
-                      {review.patientName}
+                      {t(`items.${review.id}.name`)}
                     </h4>
                     <span className="text-xs text-slate-400">
                       {t('verifiedPatient')}

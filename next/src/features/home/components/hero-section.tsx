@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Image from 'next/image';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { getWhatsAppUrl } from '../constants';
 import { WhatsAppIcon } from '@/shared/components/whatsapp-icon';
 
@@ -11,12 +11,15 @@ import { WhatsAppIcon } from '@/shared/components/whatsapp-icon';
  */
 export const HeroSection = () => {
   const t = useTranslations('Hero');
+  const locale = useLocale();
 
   const stats = [
     { title: t('stat1Title'), desc: t('stat1Desc') },
     { title: t('stat2Title'), desc: t('stat2Desc') },
     { title: t('stat3Title'), desc: t('stat3Desc') },
   ];
+
+  const whatsappHref = getWhatsAppUrl(undefined, locale);
 
   return (
     <section
@@ -58,7 +61,7 @@ export const HeroSection = () => {
             <div className="flex flex-wrap items-center gap-3 sm:gap-4 mb-10">
               {/* زر احجز كشف ينقل مباشرة إلى واتساب مع أيقونة واتساب الرسمية */}
               <a
-                href={getWhatsAppUrl()}
+                href={whatsappHref}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="bg-[#F5B800] hover:bg-amber-400 text-slate-950 font-bold px-7 py-3 rounded-xl transition-all duration-150 shadow-lg hover:shadow-xl hover:scale-102 active:scale-95 text-sm sm:text-base inline-flex items-center justify-center gap-2 cursor-pointer"

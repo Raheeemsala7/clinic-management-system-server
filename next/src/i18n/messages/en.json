@@ -1,4 +1,11 @@
 {
+  "Common": {
+    "whatsappChat": "WhatsApp Chat",
+    "whatsappAria": "Contact via WhatsApp at +20 10 50792622",
+    "bookViaWhatsApp": "Book Your Appointment Now via WhatsApp",
+    "whatsappMsgGeneral": "Hello Dr. Eslam, I would like to book an appointment at the ENT clinic.",
+    "whatsappMsgConsultation": "Hello Dr. Eslam, I would like to book a consultation regarding: {service}"
+  },
   "Nav": {
     "home": "Home",
     "about": "About & Credentials",
@@ -26,25 +33,106 @@
     "kicker": "OUR SERVICES",
     "title": "Medical Services",
     "subtitle": "Comprehensive ENT care utilizing advanced endoscopic and precision surgical techniques.",
-    "bookConsultation": "Book Consultation"
+    "bookConsultation": "Book Consultation",
+    "items": {
+      "s-01": {
+        "title": "Nose & Sinus Endoscopy",
+        "description": "Diagnosis and endoscopic management of sinus and nasal septum conditions."
+      },
+      "s-02": {
+        "title": "Microscopic Ear Surgery",
+        "description": "Precision microscopic surgeries to improve hearing and treat ear diseases."
+      },
+      "s-03": {
+        "title": "Endoscopic Ear Surgery",
+        "description": "State-of-the-art minimally invasive endoscopic ear interventions."
+      },
+      "s-04": {
+        "title": "Tonsillectomy & Adenoidectomy",
+        "description": "Modern surgical techniques for both pediatric and adult patients."
+      },
+      "s-05": {
+        "title": "Laryngeal & Tracheal Endoscopy",
+        "description": "Comprehensive evaluation of voice, swallowing, and airway disorders."
+      },
+      "s-06": {
+        "title": "Foreign Body Extraction",
+        "description": "Safe, gentle endoscopic foreign body removal from ear, nose, and throat."
+      },
+      "s-07": {
+        "title": "Snoring & Sleep Apnea Surgery",
+        "description": "Assessment and surgical management of snoring causes when indicated."
+      },
+      "s-08": {
+        "title": "Functional Rhinoplasty",
+        "description": "Restoring nasal airway function while preserving natural cosmetic contours."
+      },
+      "s-09": {
+        "title": "Otoplasty (Prominent Ear Correction)",
+        "description": "Aesthetic and corrective ear reshaping for children and adults."
+      }
+    }
   },
   "About": {
     "kicker": "ABOUT THE DOCTOR",
     "title": "About & Credentials",
     "subtitle": "[Write a brief bio about the doctor and clinical philosophy here]",
     "photoPlaceholder": "[Doctor's clinical work photo]",
-    "photoBadge": "Microscopic Endoscopic Surgeries"
+    "photoBadge": "Microscopic Endoscopic Surgeries",
+    "milestones": {
+      "m-1": {
+        "year": "[Year]",
+        "degree": "[Bachelor of Medicine & Surgery (MBBCh)]",
+        "institution": "[University]"
+      },
+      "m-2": {
+        "year": "[Year]",
+        "degree": "[Master's Degree / Diploma]",
+        "institution": "[Institution]"
+      },
+      "m-3": {
+        "year": "[Year]",
+        "degree": "[Doctorate / Fellowship]",
+        "institution": "[Authority]"
+      },
+      "m-4": {
+        "year": "[Year — Present]",
+        "degree": "[Current Position]",
+        "institution": "[Hospital / Clinic]"
+      }
+    }
   },
   "Clinic": {
     "kicker": "OUR CLINIC",
     "title": "Our Clinic",
-    "receptionDesc": "Designed with the highest standards of patient comfort and medical sterilization."
+    "receptionDesc": "Designed with the highest standards of patient comfort and medical sterilization.",
+    "facilities": {
+      "c-main": "[Reception & Front Desk Photo]",
+      "c-checkup": "[Examination Room]",
+      "c-devices": "[Medical Devices]",
+      "c-endoscopy": "[Endoscopy Suite]",
+      "c-waiting": "[Waiting Lounge]"
+    }
   },
   "Reviews": {
     "kicker": "PATIENT REVIEWS",
     "title": "Patient Reviews",
     "verifiedPatient": "Verified Patient",
-    "photo": "Photo"
+    "photo": "Photo",
+    "items": {
+      "r-1": {
+        "text": "[Patient review statement as written]",
+        "name": "[Patient Name]"
+      },
+      "r-2": {
+        "text": "[Patient review statement as written]",
+        "name": "[Patient Name]"
+      },
+      "r-3": {
+        "text": "[Patient review statement as written]",
+        "name": "[Patient Name]"
+      }
+    }
   },
   "WhatsAppBooking": {
     "kicker": "BOOK VIA WHATSAPP",
@@ -64,12 +152,23 @@
   "Footer": {
     "aboutDoctor": "Specialist in ENT diseases and surgeries using the latest diagnosis and treatment technologies.",
     "quickLinks": "Quick Links",
-    "services": "Services",
+    "servicesTitle": "Services",
     "contactUs": "Contact Us",
     "whatsapp": "WhatsApp",
     "facebook": "Facebook: [Page Link]",
     "address": "[Clinic Address]",
     "rights": "© Dr. Eslam Abdallah Kareema — ENT Clinic. All rights reserved.",
-    "developer": "Design & Development [Your Name]"
+    "developer": "Design & Development [Your Name]",
+    "links": {
+      "home": "Home",
+      "about": "About & Credentials",
+      "clinic": "Our Clinic",
+      "reviews": "Patient Reviews",
+      "sinus": "Nose & Sinus Endoscopy",
+      "earSurgery": "Ear Surgeries",
+      "tonsils": "Tonsils & Adenoids",
+      "larynx": "Larynx Endoscopy",
+      "rhinoplasty": "Functional Rhinoplasty"
+    }
   }
 }

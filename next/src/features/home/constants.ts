@@ -13,12 +13,14 @@ import {
 export const CLINIC_WHATSAPP_NUMBER = '201050792622';
 
 /**
- * دالة لإنشاء رابط الواتساب المباشر مع رسالة مسبقة
+ * دالة لإنشاء رابط الواتساب المباشر مع رسالة مسبقة تدعم اللغتين
  */
-export const getWhatsAppUrl = (message?: string): string => {
-  const text = message
-    ? encodeURIComponent(message)
-    : encodeURIComponent('مرحباً د. إسلام، أود حجز موعد كشف في عيادة الأنف والأذن والحنجرة.');
+export const getWhatsAppUrl = (message?: string, locale: string = 'ar'): string => {
+  const defaultMsg =
+    locale === 'en'
+      ? 'Hello Dr. Eslam, I would like to book an appointment at the ENT clinic.'
+      : 'مرحباً د. إسلام، أود حجز موعد كشف في عيادة الأنف والأذن والحنجرة.';
+  const text = message ? encodeURIComponent(message) : encodeURIComponent(defaultMsg);
   return `https://wa.me/${CLINIC_WHATSAPP_NUMBER}?text=${text}`;
 };
 

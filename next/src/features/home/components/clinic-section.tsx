@@ -8,7 +8,7 @@ import { Building2, Stethoscope, Eye, Clock, Laptop } from 'lucide-react';
 import { cn } from 'cn';
 
 /**
- * قسم عيادتنا - Bento Grid فوري التحميل مع تأثيرات تحويم ناعمة
+ * قسم عيادتنا - Bento Grid فوري التحميل مع دعم كامل للغتين العربي والإنجليزي
  */
 export const ClinicSection = () => {
   const t = useTranslations('Clinic');
@@ -16,10 +16,10 @@ export const ClinicSection = () => {
   const items = CLINIC_FACILITIES.filter((f) => !f.isFeatured);
 
   const facilityIcons: Record<string, React.ReactNode> = {
-    '[غرفة الكشف]': <Stethoscope className="w-5 h-5 text-[#1D4ED8] mb-1.5" />,
-    '[الأجهزة]': <Laptop className="w-5 h-5 text-[#1D4ED8] mb-1.5" />,
-    '[المناظير]': <Eye className="w-5 h-5 text-[#1D4ED8] mb-1.5" />,
-    '[صالة الانتظار]': <Clock className="w-5 h-5 text-[#1D4ED8] mb-1.5" />,
+    'c-checkup': <Stethoscope className="w-5 h-5 text-[#1D4ED8] mb-1.5" />,
+    'c-devices': <Laptop className="w-5 h-5 text-[#1D4ED8] mb-1.5" />,
+    'c-endoscopy': <Eye className="w-5 h-5 text-[#1D4ED8] mb-1.5" />,
+    'c-waiting': <Clock className="w-5 h-5 text-[#1D4ED8] mb-1.5" />,
   };
 
   return (
@@ -51,7 +51,7 @@ export const ClinicSection = () => {
                 <Building2 className="w-7 h-7" />
               </div>
               <h3 className="text-xl sm:text-2xl font-bold text-[#0A164E]">
-                {featured.title}
+                {t(`facilities.${featured.id}`)}
               </h3>
               <p className="text-xs sm:text-sm text-slate-400 mt-2">
                 {t('receptionDesc')}
@@ -67,9 +67,9 @@ export const ClinicSection = () => {
                   'min-h-[140px] sm:min-h-[165px] bg-white border-2 border-dashed border-[#1D4ED8] rounded-3xl p-4 flex flex-col items-center justify-center text-center shadow-xs hover:shadow-sm hover:border-blue-700 hover:bg-blue-50/20 transition-all duration-200 cursor-pointer group'
                 )}
               >
-                {facilityIcons[facility.title]}
+                {facilityIcons[facility.id]}
                 <h4 className="text-sm sm:text-base font-bold text-[#0A164E] group-hover:text-[#1D4ED8] transition-colors">
-                  {facility.title}
+                  {t(`facilities.${facility.id}`)}
                 </h4>
               </div>
             ))}

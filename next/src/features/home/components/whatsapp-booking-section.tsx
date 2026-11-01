@@ -1,15 +1,23 @@
 'use client';
 
 import React from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { getWhatsAppUrl } from '../constants';
 import { WhatsAppIcon } from '@/shared/components/whatsapp-icon';
 
 /**
- * قسم الحجز عبر الواتساب - ظهور فوري للمحتوى دون أي بطء أو تأخير في التحميل
+ * قسم الحجز عبر الواتساب - ظهور فوري للمحتوى ودعم كامل للترجمة بين العربية والإنجليزية
  */
 export const WhatsAppBookingSection = () => {
   const t = useTranslations('WhatsAppBooking');
+  const locale = useLocale();
+  const isArabic = locale === 'ar';
+
+  const bookingMsg = isArabic
+    ? 'مرحباً د. إسلام، أود حجز موعد كشف في عيادة الأنف والأذن والحنجرة.'
+    : 'Hello Dr. Eslam, I would like to book an appointment at the ENT clinic.';
+
+  const whatsappUrl = getWhatsAppUrl(bookingMsg, locale);
 
   const steps = [
     { num: '01', text: t('step1') },
@@ -61,7 +69,7 @@ export const WhatsAppBookingSection = () => {
 
             {/* زر الحجز الكبير على واتساب مع أيقونة واتساب الرسمية */}
             <a
-              href={getWhatsAppUrl()}
+              href={whatsappUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center justify-center gap-3 bg-[#F5B800] hover:bg-amber-400 text-slate-950 font-black text-base sm:text-lg px-8 py-4 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-150 hover:scale-102 active:scale-95 cursor-pointer group"
@@ -85,7 +93,7 @@ export const WhatsAppBookingSection = () => {
                   {t('phoneLabel')}
                 </span>
                 <a
-                  href={getWhatsAppUrl()}
+                  href={whatsappUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-2xl sm:text-3xl font-black text-white hover:text-[#F5B800] transition-colors dir-ltr block text-start tracking-tight"

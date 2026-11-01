@@ -7,7 +7,7 @@ import { Stethoscope } from 'lucide-react';
 import { cn } from 'cn';
 
 /**
- * قسم نبذة والمؤهلات - ظهور فوري ومباشر دون تأخير
+ * قسم نبذة والمؤهلات - ظهور فوري ودعم كامل للغتين (عربي وإنجليزي)
  */
 export const AboutSection = () => {
   const t = useTranslations('About');
@@ -57,15 +57,15 @@ export const AboutSection = () => {
                   />
 
                   <span className="text-xs sm:text-sm font-bold text-[#1D4ED8] block mb-1">
-                    {milestone.year}
+                    {t(`milestones.${milestone.id}.year`)}
                   </span>
 
                   <h3 className="text-lg sm:text-xl font-bold text-[#0A164E] tracking-tight mb-0.5">
-                    {milestone.degree}
+                    {t(`milestones.${milestone.id}.degree`)}
                   </h3>
 
                   <p className="text-sm text-slate-500">
-                    {milestone.institution}
+                    {t(`milestones.${milestone.id}.institution`)}
                   </p>
                 </div>
               ))}

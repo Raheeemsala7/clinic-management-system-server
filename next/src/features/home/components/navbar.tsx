@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Menu, X } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { BrandLogo } from './brand-logo';
 import { getWhatsAppUrl } from '../constants';
 import { SwitchLanguageBtn } from '@/shared/components/switch-language-btn';
@@ -16,6 +16,7 @@ export const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const t = useTranslations('Nav');
+  const locale = useLocale();
 
   // استشعار التمرير لإضافة ظل خلفي وتأثير زجاجي بلوري
   useEffect(() => {
@@ -33,6 +34,8 @@ export const Navbar = () => {
     { label: t('clinic'), href: '#clinic' },
     { label: t('reviews'), href: '#reviews' },
   ];
+
+  const whatsappHref = getWhatsAppUrl(undefined, locale);
 
   return (
     <header
@@ -70,7 +73,7 @@ export const Navbar = () => {
 
             {/* زر احجز الآن المباشر عبر واتساب */}
             <a
-              href={getWhatsAppUrl()}
+              href={whatsappHref}
               target="_blank"
               rel="noopener noreferrer"
               className="bg-[#F5B800] hover:bg-amber-400 text-slate-950 font-bold text-xs sm:text-sm px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl transition-all duration-150 shadow-md hover:shadow-lg active:scale-95 inline-flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap"
@@ -105,13 +108,13 @@ export const Navbar = () => {
             ))}
             <div className="pt-2">
               <a
-                href={getWhatsAppUrl()}
+                href={whatsappHref}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center justify-center gap-2 w-full text-center bg-[#F5B800] hover:bg-amber-400 text-slate-950 font-bold px-4 py-2.5 rounded-xl transition-all text-sm"
               >
                 <WhatsAppIcon className="w-4 h-4" />
-                <span>{t('bookNow')} (واتساب)</span>
+                <span>{t('bookNow')}</span>
               </a>
             </div>
           </div>
