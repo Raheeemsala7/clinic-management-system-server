@@ -101,7 +101,12 @@ export const Footer = () => {
                 className="flex items-center gap-2 hover:text-[#F5B800] transition-colors"
               >
                 <WhatsAppIcon className="w-4 h-4 text-[#F5B800] shrink-0" />
-                <span className="dir-ltr text-right font-medium">+20 10 50792622</span>
+                <span>
+                  {t('whatsapp')}:{' '}
+                  <span dir="ltr" className="font-medium inline-block font-sans">
+                    +20 10 50792622
+                  </span>
+                </span>
               </a>
               <p className="hover:text-white transition-colors cursor-pointer">
                 {t('facebook')}

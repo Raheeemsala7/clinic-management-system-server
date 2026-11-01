@@ -96,9 +96,11 @@ export const WhatsAppBookingSection = () => {
                   href={whatsappUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-2xl sm:text-3xl font-black text-white hover:text-[#F5B800] transition-colors dir-ltr block text-start tracking-tight"
+                  className="text-2xl sm:text-3xl font-black text-white hover:text-[#F5B800] transition-colors block tracking-tight"
                 >
-                  {t('phoneValue')}
+                  <span dir="ltr" className="inline-block font-sans">
+                    {t('phoneValue')}
+                  </span>
                 </a>
               </div>
 
