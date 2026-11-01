@@ -170,5 +170,22 @@
       "larynx": "Larynx Endoscopy",
       "rhinoplasty": "Functional Rhinoplasty"
     }
+  },
+  "Auth": {
+    "login": {
+      "title": "Sign In",
+      "subtitle": "Enter your credentials to access the system",
+      "usernameLabel": "Username",
+      "usernamePlaceholder": "Enter username",
+      "passwordLabel": "Password",
+      "passwordPlaceholder": "••••••••",
+      "submitBtn": "Login",
+      "submitting": "Signing in...",
+      "brandTitle": "ENT Clinic",
+      "heroTitleLine1": "Clinic Management",
+      "heroTitleLine2": "System",
+      "heroDesc": "Dr. Eslam Abdallah Kareema — Manage appointments, patients, and payments in one place.",
+      "switchLang": "العربية"
+    }
   }
 }

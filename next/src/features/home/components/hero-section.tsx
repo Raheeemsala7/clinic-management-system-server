@@ -27,45 +27,22 @@ export const HeroSection = () => {
       id="hero"
       className="relative overflow-hidden bg-gradient-to-br from-[#0B1A4F] via-[#0A164E] to-[#07133D] text-white pt-6 pb-14 lg:pt-12 lg:pb-20"
     >
-      {/* إضاءات جمالية متوهجة وأشكال هندسية تنبض وتطفو بنعومة في الخلفية */}
-      <motion.div
-        animate={{ scale: [1, 1.15, 1], opacity: [0.15, 0.25, 0.15] }}
-        transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
-        className="absolute top-1/4 -right-20 w-80 h-80 bg-blue-600 rounded-full blur-3xl pointer-events-none"
+      {/* إضاءات جمالية متوهجة تنبض بنعومة في الخلفية */}
+      <div
+        className="absolute top-1/4 -right-20 w-80 h-80 bg-blue-600/25 rounded-full blur-3xl pointer-events-none"
         aria-hidden="true"
       />
-      <motion.div
-        animate={{ scale: [1, 1.2, 1], opacity: [0.1, 0.2, 0.1] }}
-        transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
-        className="absolute bottom-10 left-10 w-72 h-72 bg-amber-400 rounded-full blur-3xl pointer-events-none"
-        aria-hidden="true"
-      />
-
-      {/* عناصر هندسية ثلاثية الأبعاد تطفو في الخلفية مستوحاة من هوية الشعار */}
-      <motion.div
-        animate={{ y: [0, -18, 0], rotate: [0, 12, 0] }}
-        transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
-        className="absolute top-16 left-12 w-12 h-12 rounded-2xl bg-gradient-to-br from-[#1D4ED8]/20 to-transparent border border-white/10 hidden md:block pointer-events-none -z-0"
-        aria-hidden="true"
-      />
-      <motion.div
-        animate={{ y: [0, 20, 0], rotate: [0, -15, 0] }}
-        transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut', delay: 1.5 }}
-        className="absolute bottom-24 right-16 w-16 h-16 rounded-3xl bg-gradient-to-br from-[#F5B800]/15 to-transparent border border-[#F5B800]/20 hidden md:block pointer-events-none -z-0"
+      <div
+        className="absolute bottom-10 left-10 w-72 h-72 bg-amber-400/20 rounded-full blur-3xl pointer-events-none"
         aria-hidden="true"
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
-          {/* الجانب الأيمن (في RTL): النصوص والمعلومات وأزرار الإجراء */}
+          {/* الجانب الأيمن (في RTL): النصوص والمعلومات وأزرار الإجراء - ظهور فوري 100% بدون أي تأخير عند الـ Refresh */}
           <div className="lg:col-span-7 flex flex-col items-start text-start order-1">
             {/* العنوان الإنجليزي الصغير باللون الأصفر الذهبي مع مؤشر نبضي حيوي */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-              className="flex items-center gap-2 mb-2"
-            >
+            <div className="flex items-center gap-2 mb-2">
               <span className="relative flex h-2.5 w-2.5">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#F5B800] opacity-75" />
                 <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#F5B800]" />
@@ -73,37 +50,22 @@ export const HeroSection = () => {
               <span className="text-[#F5B800] text-xs sm:text-sm font-bold tracking-widest uppercase inline-block">
                 {t('kicker')}
               </span>
-            </motion.div>
+            </div>
 
             {/* الاسم الرئيسي للطبيب بخط عريض وفخم */}
-            <motion.h1
-              initial={{ opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.35, delay: 0.06 }}
-              className="text-4xl sm:text-5xl lg:text-6xl font-black leading-tight text-white mb-3 tracking-tight"
-            >
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black leading-tight text-white mb-3 tracking-tight">
               {t('doctorTitleFirst')}
               <br />
               {t('doctorTitleSecond')}
-            </motion.h1>
+            </h1>
 
             {/* نبذة عن التخصص */}
-            <motion.p
-              initial={{ opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.35, delay: 0.12 }}
-              className="text-white/85 text-sm sm:text-base lg:text-lg leading-relaxed max-w-xl mb-7"
-            >
+            <p className="text-white/85 text-sm sm:text-base lg:text-lg leading-relaxed max-w-xl mb-7">
               {t('speciality')}
-            </motion.p>
+            </p>
 
             {/* أزرار الحجز والخدمات */}
-            <motion.div
-              initial={{ opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.35, delay: 0.18 }}
-              className="flex flex-wrap items-center gap-3 sm:gap-4 mb-10"
-            >
+            <div className="flex flex-wrap items-center gap-3 sm:gap-4 mb-10">
               {/* زر احجز كشف ينقل مباشرة إلى واتساب مع تأثير نبض وهوفر ناعم */}
               <motion.a
                 whileHover={{ scale: 1.04, y: -2 }}
@@ -132,21 +94,14 @@ export const HeroSection = () => {
               >
                 {t('medicalServices')}
               </motion.a>
-            </motion.div>
+            </div>
 
             {/* شريط الإحصائيات والمميزات السريعة أسفل الهيرو */}
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.24 }}
-              className="w-full pt-6 border-t border-white/10 grid grid-cols-3 gap-2 sm:gap-6"
-            >
+            <div className="w-full pt-6 border-t border-white/10 grid grid-cols-3 gap-2 sm:gap-6">
               {stats.map((stat, idx) => (
-                <motion.div
+                <div
                   key={idx}
-                  whileHover={{ y: -2 }}
-                  transition={{ duration: 0.15 }}
-                  className="flex flex-col cursor-default"
+                  className="flex flex-col cursor-default hover:-translate-y-0.5 transition-transform duration-150"
                 >
                   <span className="text-[#F5B800] font-bold text-sm sm:text-base lg:text-lg">
                     {stat.title}
@@ -154,9 +109,9 @@ export const HeroSection = () => {
                   <span className="text-white/75 text-xs sm:text-sm mt-0.5">
                     {stat.desc}
                   </span>
-                </motion.div>
+                </div>
               ))}
-            </motion.div>
+            </div>
           </div>
 
           {/* الجانب الأيسر (في RTL): خلفية الأشكال وصورة الدكتور - ثابتة تماماً دون أي حركة */}

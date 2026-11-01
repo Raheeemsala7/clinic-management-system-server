@@ -170,5 +170,22 @@
       "larynx": "مناظير الحنجرة",
       "rhinoplasty": "التجميل الوظيفي"
     }
+  },
+  "Auth": {
+    "login": {
+      "title": "تسجيل الدخول",
+      "subtitle": "أدخل بياناتك للوصول إلى النظام",
+      "usernameLabel": "اسم المستخدم",
+      "usernamePlaceholder": "أدخل اسم المستخدم",
+      "passwordLabel": "كلمة المرور",
+      "passwordPlaceholder": "••••••••",
+      "submitBtn": "دخول",
+      "submitting": "جاري التحقق...",
+      "brandTitle": "ENT Clinic",
+      "heroTitleLine1": "نظام إدارة",
+      "heroTitleLine2": "العيادة",
+      "heroDesc": "د. إسلام عبدالله كريمة — إدارة المواعيد والمرضى والمدفوعات في مكان واحد.",
+      "switchLang": "ENGLISH"
+    }
   }
 }
