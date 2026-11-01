@@ -159,20 +159,10 @@ export const HeroSection = () => {
             </motion.div>
           </div>
 
-          {/* الجانب الأيسر (في RTL): خلفية الأشكال وصورة الدكتور مع حركة طفو ناعمة ومميزة */}
+          {/* الجانب الأيسر (في RTL): خلفية الأشكال وصورة الدكتور - ثابتة تماماً دون أي حركة */}
           <div className="lg:col-span-5 flex justify-center items-center order-2 relative">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.4 }}
-              className="relative w-full max-w-[430px] aspect-[560/710] mx-auto select-none"
-            >
-              {/* حركة طفو هادئة للدكتور والخلفية تعطي حياة للواجهة */}
-              <motion.div
-                animate={{ y: [0, -7, 0] }}
-                transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut' }}
-                className="relative w-full h-full"
-              >
+            <div className="relative w-full max-w-[430px] aspect-[560/710] mx-auto select-none">
+              <div className="relative w-full h-full">
                 {/* خلفية الأشكال الهندسية المنحنية */}
                 <Image
                   src="/background-landing.svg"
@@ -182,7 +172,7 @@ export const HeroSection = () => {
                   className="object-contain pointer-events-none select-none z-0"
                 />
 
-                {/* صورة الدكتور المفرغة المطابقة لقياسات وموضع الـ SVG بدقة */}
+                {/* صورة الدكتور المفرغة المطابقة لقياسات وموضع الـ SVG بدقة - ثابتة تماماً ولا تتحرك نهائياً */}
                 <div
                   className="absolute top-0 bottom-0 z-10 pointer-events-none"
                   style={{
@@ -200,8 +190,8 @@ export const HeroSection = () => {
                     className="object-contain object-bottom drop-shadow-2xl"
                   />
                 </div>
-              </motion.div>
-            </motion.div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

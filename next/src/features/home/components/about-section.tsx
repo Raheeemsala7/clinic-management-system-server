@@ -85,39 +85,24 @@ export const AboutSection = () => {
             </div>
           </div>
 
-          {/* إطار صورة الدكتور */}
+          {/* إطار صورة الدكتور - ثابت تماماً ومطابق للتصميم */}
           <div className="lg:col-span-5 order-2 flex justify-center">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true, margin: '-40px' }}
-              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-              whileHover={{ scale: 1.02 }}
-              className="relative w-full max-w-[360px]"
-            >
-              {/* المربع الأزرق البارز مع حركة طفو خفيفة جداً */}
-              <motion.div
-                animate={{ y: [0, -4, 0] }}
-                transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+            <div className="relative w-full max-w-[360px]">
+              {/* المربع الأزرق البارز الثابت خلف الإطار */}
+              <div
                 className="absolute -top-3.5 -right-3.5 w-24 h-24 bg-[#1D4ED8] rounded-3xl -z-10"
                 aria-hidden="true"
               />
-              {/* المربع الأصفر البارز مع حركة طفو معاكسة */}
-              <motion.div
-                animate={{ y: [0, 4, 0] }}
-                transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut' }}
+              {/* المربع الأصفر البارز الثابت خلف الإطار */}
+              <div
                 className="absolute -bottom-4 -left-4 w-28 h-28 bg-[#F5B800] rounded-3xl -z-10"
                 aria-hidden="true"
               />
 
-              <div className="w-full aspect-[4/5] min-h-[350px] bg-white/90 backdrop-blur-xs border-2 border-dashed border-[#1D4ED8] rounded-3xl flex flex-col items-center justify-center p-6 text-center shadow-lg hover:shadow-2xl transition-shadow duration-300">
-                <motion.div
-                  animate={{ scale: [1, 1.08, 1] }}
-                  transition={{ duration: 2.8, repeat: Infinity, ease: 'easeInOut' }}
-                  className="w-14 h-14 rounded-full bg-blue-50 text-[#1D4ED8] flex items-center justify-center mb-3 shadow-xs"
-                >
+              <div className="w-full aspect-[4/5] min-h-[350px] bg-white/90 backdrop-blur-xs border-2 border-dashed border-[#1D4ED8] rounded-3xl flex flex-col items-center justify-center p-6 text-center shadow-lg">
+                <div className="w-14 h-14 rounded-full bg-blue-50 text-[#1D4ED8] flex items-center justify-center mb-3 shadow-xs">
                   <Stethoscope className="w-7 h-7" />
-                </motion.div>
+                </div>
                 <p className="text-slate-600 font-bold text-sm sm:text-base leading-relaxed">
                   {t('photoPlaceholder')}
                 </p>
@@ -125,7 +110,7 @@ export const AboutSection = () => {
                   {t('photoBadge')}
                 </span>
               </div>
-            </motion.div>
+            </div>
           </div>
         </div>
       </div>

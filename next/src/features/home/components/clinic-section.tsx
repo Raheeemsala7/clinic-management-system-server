@@ -55,12 +55,12 @@ export const ClinicSection = () => {
               initial={{ opacity: 0, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-30px' }}
-              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-              whileHover={{ scale: 1.01, transition: { duration: 0.15 } }}
-              className="lg:col-span-7 min-h-[280px] sm:min-h-[350px] bg-white border-2 border-dashed border-[#1D4ED8] rounded-3xl p-6 sm:p-8 flex flex-col items-center justify-center text-center shadow-xs hover:shadow-xl hover:border-blue-700 hover:bg-blue-50/20 transition-all cursor-pointer group"
+              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+              whileHover={{ y: -5, scale: 1.01, transition: { duration: 0.2 } }}
+              className="lg:col-span-7 min-h-[280px] sm:min-h-[350px] bg-white border-2 border-dashed border-[#1D4ED8] rounded-3xl p-6 sm:p-8 flex flex-col items-center justify-center text-center shadow-xs hover:shadow-2xl hover:border-blue-700 hover:bg-blue-50/25 transition-colors cursor-pointer group"
             >
-              <div className="w-14 h-14 rounded-full bg-blue-50 group-hover:bg-blue-100 text-[#1D4ED8] flex items-center justify-center mb-3 transition-colors duration-200">
-                <Building2 className="w-7 h-7 transition-transform duration-200 group-hover:scale-110" />
+              <div className="w-16 h-16 rounded-full bg-blue-50 group-hover:bg-blue-100 text-[#1D4ED8] flex items-center justify-center mb-4 transition-all duration-300 group-hover:scale-110 shadow-xs">
+                <Building2 className="w-8 h-8 transition-transform duration-300 group-hover:rotate-6" />
               </div>
               <h3 className="text-xl sm:text-2xl font-bold text-[#0A164E]">
                 {t(`facilities.${featured.id}`)}
@@ -78,10 +78,10 @@ export const ClinicSection = () => {
                 initial={{ opacity: 0, y: 16 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: '-30px' }}
-                transition={{ duration: 0.3, delay: idx * 0.04, ease: [0.16, 1, 0.3, 1] }}
-                whileHover={{ y: -3, transition: { duration: 0.15 } }}
+                transition={{ duration: 0.3, delay: idx * 0.05, ease: [0.16, 1, 0.3, 1] }}
+                whileHover={{ y: -4, scale: 1.015, transition: { duration: 0.2 } }}
                 className={cn(
-                  'min-h-[140px] sm:min-h-[165px] bg-white border-2 border-dashed border-[#1D4ED8] rounded-3xl p-4 flex flex-col items-center justify-center text-center shadow-xs hover:shadow-lg hover:border-blue-700 hover:bg-blue-50/20 transition-all cursor-pointer group'
+                  'min-h-[140px] sm:min-h-[165px] bg-white border-2 border-dashed border-[#1D4ED8] rounded-3xl p-4 flex flex-col items-center justify-center text-center shadow-xs hover:shadow-xl hover:border-blue-700 hover:bg-blue-50/25 transition-colors cursor-pointer group'
                 )}
               >
                 {facilityIcons[facility.id]}
