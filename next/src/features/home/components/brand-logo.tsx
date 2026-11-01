@@ -2,21 +2,18 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { useLocale } from 'next-intl';
 import { cn } from 'cn';
 
 interface BrandLogoProps {
-  /**
-   * نمط اللوجو:
-   * 'light': للخلفيات الداكنة كالهيدر (مربعات زرقاء، بيضاء، كحلية، وصفراء مع نص أبيض)
-   * 'dark': للخلفيات الفاتحة (مربعات زرقاء، كحلية، وصفراء مع نص كحلي)
-   */
   variant?: 'light' | 'dark';
   showText?: boolean;
   className?: string;
 }
 
 /**
- * شعار العيادة المكون من 4 مربعات منحنية الزوايا مع اسم الطبيب
+ * شعار العيادة المكون من 4 مربعات منحنية الزوايا
+ * على شاشات الموبايل يتم إخفاء اسم الدكتور تلقائياً للحفاظ على المساحة وجمالية الهيدر
  */
 export const BrandLogo = ({
   variant = 'light',
@@ -24,19 +21,22 @@ export const BrandLogo = ({
   className,
 }: BrandLogoProps) => {
   const isLight = variant === 'light';
+  const locale = useLocale();
+  const isArabic = locale === 'ar';
+
+  const doctorName = isArabic ? 'د. إسلام عبدالله كريمة' : 'Dr. Eslam Kareema';
 
   return (
     <Link
       href="#hero"
       className={cn(
-        'inline-flex items-center gap-2.5 group select-none transition-transform hover:opacity-95',
+        'inline-flex items-center gap-2 group select-none transition-transform hover:opacity-95 shrink-0',
         className
       )}
-      aria-label="د. إسلام عبدالله كريمة - عيادة الأنف والأذن والحنجرة"
+      aria-label={doctorName}
     >
-      {/* أيقونة الشعار (4 مربعات منحنية) */}
+      {/* أيقونة الشعار (4 مربعات هندسية بألوان العيادة) */}
       <div className="grid grid-cols-2 gap-1 w-6 h-6 shrink-0" aria-hidden="true">
-        {/* أعلى يمين / أعلى يسار حسب الاتجاه */}
         <span className="w-2.5 h-2.5 rounded-xs bg-[#1D4ED8]" />
         <span
           className={cn(
@@ -53,18 +53,17 @@ export const BrandLogo = ({
         <span className="w-2.5 h-2.5 rounded-xs bg-[#F5B800]" />
       </div>
 
-      {/* اسم الطبيب واللقب */}
+      {/* اسم الطبيب: مخفي على الموبايل الصغير ومفعل على الشاشات المتوسطة والأكبر */}
       {showText && (
         <span
           className={cn(
-            'font-bold text-lg tracking-tight font-sans transition-colors',
+            'hidden sm:inline-block font-bold text-base md:text-lg tracking-tight font-sans transition-colors whitespace-nowrap',
             isLight ? 'text-white' : 'text-[#0A164E]'
           )}
         >
-          د. إسلام عبدالله كريمة
+          {doctorName}
         </span>
       )}
     </Link>
   );
 };
-

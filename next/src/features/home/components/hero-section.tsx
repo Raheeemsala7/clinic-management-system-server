@@ -3,84 +3,94 @@
 import React from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { HERO_STATS, getWhatsAppUrl } from '../constants';
+import { useTranslations } from 'next-intl';
+import { getWhatsAppUrl } from '../constants';
+import { WhatsAppIcon } from '@/shared/components/whatsapp-icon';
 
 /**
- * قسم الهيرو الرئيسي (الواجهة الترحيبية للعيادة)
- * يتضمن خلفية الأشكال المنحنية الرسمية `background-landing.svg` وصورة الطبيب المفرغة `profile-doctor.png`
+ * قسم الهيرو الرئيسي - أنيميشن فائق السرعة والسلاسة ومطابقة تامة للموك أب
  */
 export const HeroSection = () => {
+  const t = useTranslations('Hero');
+
+  const stats = [
+    { title: t('stat1Title'), desc: t('stat1Desc') },
+    { title: t('stat2Title'), desc: t('stat2Desc') },
+    { title: t('stat3Title'), desc: t('stat3Desc') },
+  ];
+
   return (
     <section
       id="hero"
-      className="relative overflow-hidden bg-gradient-to-br from-[#0B1A4F] via-[#0A164E] to-[#07133D] text-white pt-8 pb-16 lg:pt-14 lg:pb-24"
+      className="relative overflow-hidden bg-gradient-to-br from-[#0B1A4F] via-[#0A164E] to-[#07133D] text-white pt-6 pb-14 lg:pt-12 lg:pb-20"
     >
       {/* إضاءات جمالية خفيفة في الخلفية */}
       <div
-        className="absolute top-1/4 -right-20 w-96 h-96 bg-blue-600/15 rounded-full blur-3xl pointer-events-none"
+        className="absolute top-1/4 -right-20 w-80 h-80 bg-blue-600/15 rounded-full blur-3xl pointer-events-none"
         aria-hidden="true"
       />
       <div
-        className="absolute bottom-10 left-10 w-80 h-80 bg-amber-400/10 rounded-full blur-3xl pointer-events-none"
+        className="absolute bottom-10 left-10 w-72 h-72 bg-amber-400/10 rounded-full blur-3xl pointer-events-none"
         aria-hidden="true"
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
-          {/* الجانب الأيمن (في RTL): النصوص والمعلومات والدعوة لاتخاذ إجراء */}
+          {/* الجانب الأيمن (في RTL): النصوص والمعلومات وأزرار الإجراء */}
           <motion.div
-            initial={{ opacity: 0, x: 25 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, ease: 'easeOut' }}
-            className="lg:col-span-7 flex flex-col items-start text-right order-1"
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+            className="lg:col-span-7 flex flex-col items-start text-start order-1"
           >
             {/* العنوان الإنجليزي الصغير باللون الأصفر الذهبي */}
-            <span className="text-[#F5B800] text-xs sm:text-sm font-bold tracking-widest uppercase mb-3 inline-block">
-              ENT CLINIC · EASLAM ABDALLAH KAREEMA
+            <span className="text-[#F5B800] text-xs sm:text-sm font-bold tracking-widest uppercase mb-2 inline-block">
+              {t('kicker')}
             </span>
 
             {/* الاسم الرئيسي للطبيب بخط عريض وفخم */}
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black leading-tight text-white mb-4 tracking-tight">
-              د. إسلام
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black leading-tight text-white mb-3 tracking-tight">
+              {t('doctorTitleFirst')}
               <br />
-              عبدالله كريمة
+              {t('doctorTitleSecond')}
             </h1>
 
             {/* نبذة عن التخصص */}
-            <p className="text-white/85 text-base sm:text-lg leading-relaxed max-w-xl mb-8">
-              أخصائي الأنف والأذن والحنجرة وجراحاتها بأحدث طرق التشخيص والعلاج والمناظير الجراحية الدقيقة.
+            <p className="text-white/85 text-sm sm:text-base lg:text-lg leading-relaxed max-w-xl mb-7">
+              {t('speciality')}
             </p>
 
             {/* أزرار الحجز والخدمات */}
-            <div className="flex flex-wrap items-center gap-4 mb-12">
-              {/* زر احجز كشف الأساسي ينقل مباشرة إلى واتساب */}
+            <div className="flex flex-wrap items-center gap-3 sm:gap-4 mb-10">
+              {/* زر احجز كشف ينقل مباشرة إلى واتساب مع أيقونة واتساب الرسمية */}
               <a
-                href={getWhatsAppUrl('مرحباً د. إسلام، أود حجز موعد كشف في عيادة الأنف والأذن والحنجرة.')}
+                href={getWhatsAppUrl()}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="bg-[#F5B800] hover:bg-amber-400 text-slate-950 font-bold px-8 py-3.5 rounded-xl transition-all shadow-lg hover:shadow-xl active:scale-95 text-base inline-flex items-center justify-center cursor-pointer"
+                className="bg-[#F5B800] hover:bg-amber-400 text-slate-950 font-bold px-7 py-3 rounded-xl transition-all duration-150 shadow-lg hover:shadow-xl active:scale-95 text-sm sm:text-base inline-flex items-center justify-center gap-2 cursor-pointer"
               >
-                احجز كشف
+                <WhatsAppIcon className="w-5 h-5 text-slate-950" />
+                <span>{t('bookCheckup')}</span>
               </a>
 
-              {/* زر الخدمات الطبية للتمرير إلى قسم الخدمات */}
+              {/* زر الخدمات الطبية للتمرير السلس */}
               <a
                 href="#services"
-                className="border border-white/90 hover:border-white text-white hover:bg-white/10 font-medium px-8 py-3.5 rounded-xl transition-all text-base inline-flex items-center justify-center"
+                className="border border-white/85 hover:border-white text-white hover:bg-white/10 font-medium px-7 py-3 rounded-xl transition-all duration-150 text-sm sm:text-base inline-flex items-center justify-center"
               >
-                الخدمات الطبية
+                {t('medicalServices')}
               </a>
             </div>
 
             {/* شريط الإحصائيات والمميزات السريعة أسفل الهيرو */}
-            <div className="w-full pt-8 border-t border-white/10 grid grid-cols-3 gap-3 sm:gap-6">
-              {HERO_STATS.map((stat, idx) => (
+            <div className="w-full pt-6 border-t border-white/10 grid grid-cols-3 gap-2 sm:gap-6">
+              {stats.map((stat, idx) => (
                 <div key={idx} className="flex flex-col">
-                  <span className="text-[#F5B800] font-bold text-base sm:text-lg">
+                  <span className="text-[#F5B800] font-bold text-sm sm:text-base lg:text-lg">
                     {stat.title}
                   </span>
                   <span className="text-white/75 text-xs sm:text-sm mt-0.5">
-                    {stat.subtitle}
+                    {stat.desc}
                   </span>
                 </div>
               ))}
@@ -89,14 +99,13 @@ export const HeroSection = () => {
 
           {/* الجانب الأيسر (في RTL): خلفية الأشكال وصورة الدكتور */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
+            initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.7, delay: 0.1, ease: 'easeOut' }}
+            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
             className="lg:col-span-5 flex justify-center items-center order-2 relative"
           >
-            {/* الحاوية النسبية بأبعاد (560 x 710) المتوافقة تماماً مع ملف الـ SVG وصورة الدكتور */}
-            <div className="relative w-full max-w-[460px] aspect-[560/710] mx-auto select-none">
-              {/* الخلفية الهندسية الرسمية للأشكال المنحنية */}
+            {/* الحاوية النسبية بأبعاد (560 x 710) المتوافقة تماماً مع الـ SVG وصورة الدكتور */}
+            <div className="relative w-full max-w-[430px] aspect-[560/710] mx-auto select-none">
               <Image
                 src="/background-landing.svg"
                 alt=""
@@ -105,7 +114,6 @@ export const HeroSection = () => {
                 className="object-contain pointer-events-none select-none z-0"
               />
 
-              {/* صورة الدكتور المفرغة المطابقة لقياسات وموضع الـ SVG بدقة */}
               <div
                 className="absolute top-0 bottom-0 z-10 pointer-events-none"
                 style={{
@@ -119,7 +127,7 @@ export const HeroSection = () => {
                   alt="د. إسلام عبدالله كريمة - أخصائي الأنف والأذن والحنجرة"
                   fill
                   priority
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 460px"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 430px"
                   className="object-contain object-bottom drop-shadow-2xl"
                 />
               </div>

@@ -7,5 +7,6 @@ export * from './components/services-section';
 export * from './components/about-section';
 export * from './components/clinic-section';
 export * from './components/reviews-section';
+export * from './components/whatsapp-booking-section';
 export * from './components/footer';
 export * from './components/home-page-client';

@@ -1,5 +1,75 @@
 {
-  "HomePage": {
-    "title": "Welcome to Clinic Management System"
+  "Nav": {
+    "home": "Home",
+    "about": "About & Credentials",
+    "services": "Services",
+    "clinic": "Our Clinic",
+    "reviews": "Patient Reviews",
+    "bookNow": "Book Now",
+    "doctorName": "Dr. Eslam Abdallah Kareema"
+  },
+  "Hero": {
+    "kicker": "ENT CLINIC · EASLAM ABDALLAH KAREEMA",
+    "doctorTitleFirst": "Dr. Eslam",
+    "doctorTitleSecond": "Abdallah Kareema",
+    "speciality": "Specialist in Ear, Nose and Throat (ENT) and Head & Neck Surgeries with the latest diagnostic and microscopic endoscopy methods.",
+    "bookCheckup": "Book Checkup",
+    "medicalServices": "Medical Services",
+    "stat1Title": "Endoscopy",
+    "stat1Desc": "Ear · Nose · Throat",
+    "stat2Title": "Micro-Surgeries",
+    "stat2Desc": "Microscopic & Endoscopic",
+    "stat3Title": "Functional Aesthetics",
+    "stat3Desc": "Nose & Ear"
+  },
+  "Services": {
+    "kicker": "OUR SERVICES",
+    "title": "Medical Services",
+    "subtitle": "Comprehensive ENT care utilizing advanced endoscopic and precision surgical techniques.",
+    "bookConsultation": "Book Consultation"
+  },
+  "About": {
+    "kicker": "ABOUT THE DOCTOR",
+    "title": "About & Credentials",
+    "subtitle": "[Write a brief bio about the doctor and clinical philosophy here]",
+    "photoPlaceholder": "[Doctor's clinical work photo]",
+    "photoBadge": "Microscopic Endoscopic Surgeries"
+  },
+  "Clinic": {
+    "kicker": "OUR CLINIC",
+    "title": "Our Clinic",
+    "receptionDesc": "Designed with the highest standards of patient comfort and medical sterilization."
+  },
+  "Reviews": {
+    "kicker": "PATIENT REVIEWS",
+    "title": "Patient Reviews",
+    "verifiedPatient": "Verified Patient",
+    "photo": "Photo"
+  },
+  "WhatsAppBooking": {
+    "kicker": "BOOK VIA WHATSAPP",
+    "title": "Book Your Appointment via WhatsApp",
+    "description": "Bookings are handled exclusively via WhatsApp. Send us a message and our clinic team will promptly arrange the most suitable appointment for you.",
+    "step1": "Send Message",
+    "step2": "Pick Date & Time",
+    "step3": "Confirm Booking",
+    "bookBtn": "Book Now on WhatsApp",
+    "phoneLabel": "WhatsApp Number",
+    "phoneValue": "+20 10 50792622",
+    "addressLabel": "Address",
+    "addressValue": "[Clinic Address]",
+    "hoursLabel": "Working Hours",
+    "hoursValue": "[Working Days & Hours]"
+  },
+  "Footer": {
+    "aboutDoctor": "Specialist in ENT diseases and surgeries using the latest diagnosis and treatment technologies.",
+    "quickLinks": "Quick Links",
+    "services": "Services",
+    "contactUs": "Contact Us",
+    "whatsapp": "WhatsApp",
+    "facebook": "Facebook: [Page Link]",
+    "address": "[Clinic Address]",
+    "rights": "© Dr. Eslam Abdallah Kareema — ENT Clinic. All rights reserved.",
+    "developer": "Design & Development [Your Name]"
   }
 }

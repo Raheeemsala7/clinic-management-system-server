@@ -2,98 +2,118 @@
 
 import React, { useState, useEffect } from 'react';
 import { Menu, X } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { BrandLogo } from './brand-logo';
-import { NAV_LINKS, getWhatsAppUrl } from '../constants';
+import { getWhatsAppUrl } from '../constants';
+import { SwitchLanguageBtn } from '@/shared/components/switch-language-btn';
+import { WhatsAppIcon } from '@/shared/components/whatsapp-icon';
 import { cn } from 'cn';
 
 /**
- * شريط التنقل العلوي (Navbar) مع زر الحجز عبر الواتساب وقائمة الجوال المتجاوبة
+ * شريط التنقل العلوي (Navbar) مع زر تبديل اللغة وزر الحجز المباشر عبر واتساب
  */
 export const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const t = useTranslations('Nav');
 
   // استشعار التمرير لإضافة ظل خلفي وتأثير زجاجي بلوري
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
+      setIsScrolled(window.scrollY > 15);
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  const navItems = [
+    { label: t('home'), href: '#hero' },
+    { label: t('about'), href: '#about' },
+    { label: t('services'), href: '#services' },
+    { label: t('clinic'), href: '#clinic' },
+    { label: t('reviews'), href: '#reviews' },
+  ];
+
   return (
     <header
       className={cn(
-        'sticky top-0 z-40 w-full transition-all duration-300',
+        'sticky top-0 z-40 w-full transition-all duration-200',
         isScrolled
-          ? 'bg-[#0A164E]/90 backdrop-blur-md shadow-lg border-b border-white/10 py-3'
-          : 'bg-[#0A164E] py-4'
+          ? 'bg-[#0A164E]/92 backdrop-blur-md shadow-lg border-b border-white/10 py-2.5 sm:py-3'
+          : 'bg-[#0A164E] py-3 sm:py-4'
       )}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between">
-          {/* الجانب الأيمن (في الـ RTL): الشعار واسم الطبيب */}
-          <div className="flex items-center">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between gap-2">
+          {/* الجانب الأيمن (في الـ RTL): الشعار - يخفي اسم الطبيب على شاشات الموبايل للحفاظ على المساحة */}
+          <div className="flex items-center shrink-0">
             <BrandLogo variant="light" />
           </div>
 
-          {/* المنتصف: روابط التنقل السلس للشاشات المتوسطة والكبيرة */}
-          <nav className="hidden lg:flex items-center gap-6 xl:gap-8" aria-label="روابط الموقع الرئيسية">
-            {NAV_LINKS.map((link) => (
+          {/* المنتصف: روابط التنقل السلس للشاشات الكبيرة */}
+          <nav className="hidden lg:flex items-center gap-6 xl:gap-8" aria-label="Main Navigation">
+            {navItems.map((item) => (
               <a
-                key={link.href}
-                href={link.href}
-                className="text-sm font-medium text-white/80 hover:text-white transition-colors py-1 relative hover:after:w-full after:w-0 after:h-0.5 after:bg-[#F5B800] after:absolute after:bottom-0 after:right-0 after:transition-all after:duration-300"
+                key={item.href}
+                href={item.href}
+                className="text-sm font-medium text-white/80 hover:text-white transition-colors py-1 relative hover:after:w-full after:w-0 after:h-0.5 after:bg-[#F5B800] after:absolute after:bottom-0 after:right-0 after:transition-all after:duration-200"
               >
-                {link.label}
+                {item.label}
               </a>
             ))}
           </nav>
 
-          {/* الجانب الأيسر (في الـ RTL): زر احجز الآن المباشر إلى واتساب + زر قائمة الجوال */}
-          <div className="flex items-center gap-3">
+          {/* الجانب الأيسر (في الـ RTL): زر تبديل اللغة + زر احجز الآن المباشر إلى واتساب + زر قائمة الجوال */}
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            {/* زر تبديل اللغة */}
+            <SwitchLanguageBtn variant="light" />
+
+            {/* زر احجز الآن المباشر عبر واتساب */}
             <a
-              href={getWhatsAppUrl('مرحباً د. إسلام، أود حجز موعد كشف في عيادة الأنف والأذن والحنجرة.')}
+              href={getWhatsAppUrl()}
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-[#F5B800] hover:bg-amber-400 text-slate-950 font-bold text-sm px-5 py-2.5 rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95 inline-flex items-center justify-center cursor-pointer"
+              className="bg-[#F5B800] hover:bg-amber-400 text-slate-950 font-bold text-xs sm:text-sm px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl transition-all duration-150 shadow-md hover:shadow-lg active:scale-95 inline-flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap"
             >
-              احجز الآن
+              <WhatsAppIcon className="w-4 h-4 text-slate-950" />
+              <span>{t('bookNow')}</span>
             </a>
 
-            {/* زر القائمة للشاشات الصغيرة */}
+            {/* زر قائمة الجوال للشاشات الصغيرة */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-colors"
-              aria-label="فتح القائمة"
+              className="lg:hidden p-1.5 sm:p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-colors"
+              aria-label="القائمة"
             >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              {mobileMenuOpen ? <X className="w-5 h-5 sm:w-6 sm:h-6" /> : <Menu className="w-5 h-5 sm:w-6 sm:h-6" />}
             </button>
           </div>
         </div>
 
         {/* قائمة الجوال المنبثقة */}
         {mobileMenuOpen && (
-          <div className="lg:hidden mt-4 pt-4 border-t border-white/10 pb-3 space-y-2 animate-in fade-in slide-in-from-top-2 duration-200">
-            {NAV_LINKS.map((link) => (
+          <div className="lg:hidden mt-3 pt-3 border-t border-white/10 pb-3 space-y-1 animate-in fade-in slide-in-from-top-2 duration-150">
+            {navItems.map((item) => (
               <a
-                key={link.href}
-                href={link.href}
+                key={item.href}
+                href={item.href}
                 onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-lg text-base font-medium text-white/90 hover:bg-white/10 transition-colors"
+                className="block px-3 py-2 rounded-lg text-sm font-medium text-white/90 hover:bg-white/10 transition-colors"
               >
-                {link.label}
+                {item.label}
               </a>
             ))}
-            <a
-              href={getWhatsAppUrl('مرحباً د. إسلام، أود حجز موعد كشف في عيادة الأنف والأذن والحنجرة.')}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block w-full text-center mt-3 bg-[#F5B800] hover:bg-amber-400 text-slate-950 font-bold px-4 py-2.5 rounded-xl transition-all text-sm"
-            >
-              احجز موعدك الآن عبر واتساب
-            </a>
+            <div className="pt-2">
+              <a
+                href={getWhatsAppUrl()}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 w-full text-center bg-[#F5B800] hover:bg-amber-400 text-slate-950 font-bold px-4 py-2.5 rounded-xl transition-all text-sm"
+              >
+                <WhatsAppIcon className="w-4 h-4" />
+                <span>{t('bookNow')} (واتساب)</span>
+              </a>
+            </div>
           </div>
         )}
       </div>

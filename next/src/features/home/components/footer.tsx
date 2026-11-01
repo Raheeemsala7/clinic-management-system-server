@@ -1,108 +1,121 @@
 'use client';
 
 import React from 'react';
+import { useTranslations } from 'next-intl';
 import { BrandLogo } from './brand-logo';
-import { NAV_LINKS, getWhatsAppUrl, CLINIC_WHATSAPP_NUMBER } from '../constants';
-import { Phone, MapPin, Clock, ShieldCheck, MessageCircle } from 'lucide-react';
+import { getWhatsAppUrl } from '../constants';
+import { WhatsAppIcon } from '@/shared/components/whatsapp-icon';
 
 /**
- * تذييل الصفحة (Footer) بتناسق الألوان ومعلومات الاتصال ورابط واتساب المباشر
+ * تذييل الصفحة (Footer) مطابق تماماً للموك أب في الصورة الجديدة مع دعم اللغتين
  */
 export const Footer = () => {
+  const t = useTranslations('Footer');
+
   return (
-    <footer className="bg-[#0A164E] text-white pt-16 pb-12 border-t border-white/10">
+    <footer className="bg-[#060F2E] text-white pt-16 pb-12 border-t border-white/10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
-          {/* العمود الأول: الشعار ونبذة الطبيب */}
+          {/* العمود الأول (يمين في RTL): الشعار ونبذة الطبيب */}
           <div className="space-y-4">
             <BrandLogo variant="light" />
-            <p className="text-sm text-white/75 leading-relaxed">
-              عيادة متخصصة في تشخيص وعلاج أمراض وجراحات الأنف والأذن والحنجرة بأحدث المناظير الميكروسكوبية الدقيقة.
+            <p className="text-sm text-white/70 leading-relaxed max-w-xs">
+              {t('aboutDoctor')}
             </p>
-            <div className="flex items-center gap-2 text-xs text-[#F5B800] pt-2">
-              <ShieldCheck className="w-4 h-4" />
-              <span>أعلى معايير التعقيم والجودة الطبية</span>
-            </div>
           </div>
 
           {/* العمود الثاني: روابط سريعة */}
           <div>
-            <h4 className="text-base font-bold text-white mb-4 border-b border-white/10 pb-2">
-              روابط سريعة
+            <h4 className="text-base font-bold text-white mb-4">
+              {t('quickLinks')}
             </h4>
-            <ul className="space-y-2.5 text-sm text-white/75">
-              {NAV_LINKS.map((link) => (
-                <li key={link.href}>
-                  <a
-                    href={link.href}
-                    className="hover:text-[#F5B800] transition-colors"
-                  >
-                    {link.label}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* العمود الثالث: مواعيد العمل */}
-          <div>
-            <h4 className="text-base font-bold text-white mb-4 border-b border-white/10 pb-2">
-              مواعيد العمل
-            </h4>
-            <ul className="space-y-2.5 text-sm text-white/75">
-              <li className="flex items-start gap-2">
-                <Clock className="w-4 h-4 text-[#F5B800] shrink-0 mt-0.5" />
-                <div>
-                  <span className="block font-medium text-white">السبت — الخميس:</span>
-                  <span className="text-xs text-white/70">5:00 م — 10:00 م</span>
-                </div>
+            <ul className="space-y-2.5 text-sm text-white/70">
+              <li>
+                <a href="#hero" className="hover:text-[#F5B800] transition-colors">
+                  الرئيسية
+                </a>
               </li>
-              <li className="flex items-start gap-2">
-                <Clock className="w-4 h-4 text-[#F5B800] shrink-0 mt-0.5" />
-                <div>
-                  <span className="block font-medium text-white">الجمعة:</span>
-                  <span className="text-xs text-white/70">مغلق (حالات الطوارئ فقط)</span>
-                </div>
+              <li>
+                <a href="#about" className="hover:text-[#F5B800] transition-colors">
+                  نبذة والمؤهلات
+                </a>
+              </li>
+              <li>
+                <a href="#clinic" className="hover:text-[#F5B800] transition-colors">
+                  عيادتنا
+                </a>
+              </li>
+              <li>
+                <a href="#reviews" className="hover:text-[#F5B800] transition-colors">
+                  آراء المرضى
+                </a>
               </li>
             </ul>
           </div>
 
-          {/* العمود الرابع: بيانات التواصل والحجز */}
+          {/* العمود الثالث: الخدمات */}
           <div>
-            <h4 className="text-base font-bold text-white mb-4 border-b border-white/10 pb-2">
-              التواصل والحجز
+            <h4 className="text-base font-bold text-white mb-4">
+              {t('services')}
             </h4>
-            <div className="space-y-3 text-sm text-white/75 mb-4">
+            <ul className="space-y-2.5 text-sm text-white/70">
+              <li>
+                <a href="#services" className="hover:text-[#F5B800] transition-colors">
+                  مناظير الأنف والجيوب
+                </a>
+              </li>
+              <li>
+                <a href="#services" className="hover:text-[#F5B800] transition-colors">
+                  جراحات الأذن
+                </a>
+              </li>
+              <li>
+                <a href="#services" className="hover:text-[#F5B800] transition-colors">
+                  اللوزتين واللحمية
+                </a>
+              </li>
+              <li>
+                <a href="#services" className="hover:text-[#F5B800] transition-colors">
+                  مناظير الحنجرة
+                </a>
+              </li>
+              <li>
+                <a href="#services" className="hover:text-[#F5B800] transition-colors">
+                  التجميل الوظيفي
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          {/* العمود الرابع: تواصل معنا */}
+          <div>
+            <h4 className="text-base font-bold text-white mb-4">
+              {t('contactUs')}
+            </h4>
+            <div className="space-y-3 text-sm text-white/70">
               <a
                 href={getWhatsAppUrl()}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 hover:text-[#F5B800] transition-colors"
               >
-                <Phone className="w-4 h-4 text-[#F5B800]" />
-                <span className="dir-ltr text-right font-medium">+20 10 50792622</span>
+                <WhatsAppIcon className="w-4 h-4 text-[#F5B800] shrink-0" />
+                <span>{t('whatsapp')}: +20 10 50792622</span>
               </a>
-              <p className="flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-[#F5B800]" />
-                <span>العيادة مجهزة بأحدث المناظير</span>
+              <p className="hover:text-white transition-colors cursor-pointer">
+                {t('facebook')}
+              </p>
+              <p>
+                {t('address')}
               </p>
             </div>
-            <a
-              href={getWhatsAppUrl('مرحباً د. إسلام، أود حجز موعد كشف في عيادة الأنف والأذن والحنجرة.')}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full bg-[#F5B800] hover:bg-amber-400 text-slate-950 font-bold py-2.5 rounded-xl transition-all shadow-md text-sm inline-flex items-center justify-center gap-2 cursor-pointer"
-            >
-              <MessageCircle className="w-4 h-4" />
-              احجز موعدك الآن عبر واتساب
-            </a>
           </div>
         </div>
 
-        {/* سطر حقوق النشر */}
+        {/* سطر حقوق النشر السفلي */}
         <div className="pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between text-xs text-white/60 gap-4">
-          <p>© {new Date().getFullYear()} عيادة د. إسلام عبدالله كريمة. جميع الحقوق محفوظة.</p>
-          <p className="text-[#F5B800]/90">تصميم وتطوير نظام إدارة العيادات الذكي</p>
+          <p>{t('rights')}</p>
+          <p className="text-[#F5B800]/90">{t('developer')}</p>
         </div>
       </div>
     </footer>

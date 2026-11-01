@@ -1,5 +1,75 @@
 {
-  "HomePage": {
-    "title": "مرحباً بك في نظام إدارة العيادة"
+  "Nav": {
+    "home": "الرئيسية",
+    "about": "نبذة والمؤهلات",
+    "services": "الخدمات",
+    "clinic": "عيادتنا",
+    "reviews": "آراء المرضى",
+    "bookNow": "احجز الآن",
+    "doctorName": "د. إسلام عبدالله كريمة"
+  },
+  "Hero": {
+    "kicker": "ENT CLINIC · EASLAM ABDALLAH KAREEMA",
+    "doctorTitleFirst": "د. إسلام",
+    "doctorTitleSecond": "عبدالله كريمة",
+    "speciality": "أخصائي الأنف والأذن والحنجرة وجراحاتها بأحدث طرق التشخيص والعلاج والمناظير الجراحية الدقيقة.",
+    "bookCheckup": "احجز كشف",
+    "medicalServices": "الخدمات الطبية",
+    "stat1Title": "مناظير",
+    "stat1Desc": "أنف · أذن · حنجرة",
+    "stat2Title": "جراحات دقيقة",
+    "stat2Desc": "ميكروسكوبية وبالمناظير",
+    "stat3Title": "تجميل وظيفي",
+    "stat3Desc": "للأنف والأذن"
+  },
+  "Services": {
+    "kicker": "OUR SERVICES",
+    "title": "الخدمات الطبية",
+    "subtitle": "رعاية متكاملة للأنف والأذن والحنجرة بتقنيات المناظير والجراحات الدقيقة.",
+    "bookConsultation": "احجز استشارة"
+  },
+  "About": {
+    "kicker": "ABOUT THE DOCTOR",
+    "title": "نبذة والمؤهلات",
+    "subtitle": "[اكتب هنا نبذة قصيرة عن الدكتور وفلسفته في العلاج]",
+    "photoPlaceholder": "[صورة ثانية للدكتور أثناء العمل]",
+    "photoBadge": "جراحات المناظير الميكروسكوبية"
+  },
+  "Clinic": {
+    "kicker": "OUR CLINIC",
+    "title": "عيادتنا",
+    "receptionDesc": "مساحة مجهزة بأعلى معايير الراحة والتعقيم لاستقبال المرضى"
+  },
+  "Reviews": {
+    "kicker": "PATIENT REVIEWS",
+    "title": "آراء المرضى",
+    "verifiedPatient": "مريض موثق",
+    "photo": "صورة"
+  },
+  "WhatsAppBooking": {
+    "kicker": "BOOK VIA WHATSAPP",
+    "title": "احجز موعدك عبر واتساب",
+    "description": "الحجز بيتم عن طريق واتساب فقط، ابعت لنا رسالة وفريق العيادة هيرد عليك ويحدد لك الموعد المناسب.",
+    "step1": "ابعت رسالة",
+    "step2": "حدد الموعد",
+    "step3": "تأكيد الحجز",
+    "bookBtn": "احجز الآن على واتساب",
+    "phoneLabel": "رقم الواتساب",
+    "phoneValue": "+20 10 50792622",
+    "addressLabel": "العنوان",
+    "addressValue": "[عنوان العيادة]",
+    "hoursLabel": "مواعيد العمل",
+    "hoursValue": "[أيام وساعات العمل]"
+  },
+  "Footer": {
+    "aboutDoctor": "أخصائي الأنف والأذن والحنجرة وجراحاتها بأحدث طرق التشخيص والعلاج.",
+    "quickLinks": "روابط سريعة",
+    "services": "الخدمات",
+    "contactUs": "تواصل معنا",
+    "whatsapp": "واتساب",
+    "facebook": "فيسبوك: [رابط الصفحة]",
+    "address": "[عنوان العيادة]",
+    "rights": "© د. إسلام عبدالله كريمة — ENT Clinic. جميع الحقوق محفوظة.",
+    "developer": "تصميم وتطوير [اسمك]"
   }
 }
