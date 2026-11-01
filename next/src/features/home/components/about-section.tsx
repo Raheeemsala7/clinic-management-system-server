@@ -1,13 +1,14 @@
 'use client';
 
 import React from 'react';
+import { motion } from 'framer-motion';
 import { useTranslations, useLocale } from 'next-intl';
 import { TIMELINE_MILESTONES } from '../constants';
 import { Stethoscope } from 'lucide-react';
 import { cn } from 'cn';
 
 /**
- * قسم نبذة والمؤهلات - ظهور فوري ودعم كامل للغتين (عربي وإنجليزي)
+ * قسم نبذة والمؤهلات - خط زمني ينساب بنعومة وإطار صور تفاعلي
  */
 export const AboutSection = () => {
   const t = useTranslations('About');
@@ -18,7 +19,13 @@ export const AboutSection = () => {
     <section id="about" className="py-16 sm:py-20 bg-white overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* رأس القسم */}
-        <div className="text-start mb-12 sm:mb-16">
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-40px' }}
+          transition={{ duration: 0.3 }}
+          className="text-start mb-12 sm:mb-16"
+        >
           <span className="text-[#1D4ED8] text-xs font-bold tracking-widest uppercase block mb-2">
             {t('kicker')}
           </span>
@@ -28,7 +35,7 @@ export const AboutSection = () => {
           <p className="text-slate-500 text-sm sm:text-base mt-2 max-w-2xl">
             {t('subtitle')}
           </p>
-        </div>
+        </motion.div>
 
         {/* تخطيط من عمودين */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
@@ -42,12 +49,16 @@ export const AboutSection = () => {
                   : 'pl-6 border-l-2 border-[#1D4ED8]'
               )}
             >
-              {TIMELINE_MILESTONES.map((milestone) => (
-                <div
+              {TIMELINE_MILESTONES.map((milestone, idx) => (
+                <motion.div
                   key={milestone.id}
+                  initial={{ opacity: 0, x: isArabic ? 16 : -16 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true, margin: '-30px' }}
+                  transition={{ duration: 0.3, delay: idx * 0.06, ease: [0.16, 1, 0.3, 1] }}
                   className="relative group text-start transition-transform duration-150 hover:-translate-y-0.5"
                 >
-                  {/* النقطة الصفراء على الخط الزمني */}
+                  {/* النقطة الصفراء على الخط الزمني مع تأثير نبض لطيف */}
                   <span
                     className={cn(
                       'absolute top-1.5 w-3.5 h-3.5 bg-[#F5B800] rounded-xs ring-4 ring-white group-hover:scale-125 transition-transform duration-150',
@@ -67,24 +78,37 @@ export const AboutSection = () => {
                   <p className="text-sm text-slate-500">
                     {t(`milestones.${milestone.id}.institution`)}
                   </p>
-                </div>
+                </motion.div>
               ))}
             </div>
           </div>
 
           {/* إطار صورة الدكتور */}
           <div className="lg:col-span-5 order-2 flex justify-center">
-            <div className="relative w-full max-w-[360px] transition-transform duration-200 hover:scale-[1.01]">
-              <div
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true, margin: '-40px' }}
+              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+              whileHover={{ scale: 1.02 }}
+              className="relative w-full max-w-[360px]"
+            >
+              {/* المربع الأزرق البارز مع حركة طفو خفيفة جداً */}
+              <motion.div
+                animate={{ y: [0, -4, 0] }}
+                transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
                 className="absolute -top-3.5 -right-3.5 w-24 h-24 bg-[#1D4ED8] rounded-3xl -z-10"
                 aria-hidden="true"
               />
-              <div
+              {/* المربع الأصفر البارز مع حركة طفو معاكسة */}
+              <motion.div
+                animate={{ y: [0, 4, 0] }}
+                transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut' }}
                 className="absolute -bottom-4 -left-4 w-28 h-28 bg-[#F5B800] rounded-3xl -z-10"
                 aria-hidden="true"
               />
 
-              <div className="w-full aspect-[4/5] min-h-[350px] bg-white/90 backdrop-blur-xs border-2 border-dashed border-[#1D4ED8] rounded-3xl flex flex-col items-center justify-center p-6 text-center shadow-lg">
+              <div className="w-full aspect-[4/5] min-h-[350px] bg-white/90 backdrop-blur-xs border-2 border-dashed border-[#1D4ED8] rounded-3xl flex flex-col items-center justify-center p-6 text-center shadow-lg hover:shadow-2xl transition-shadow duration-300">
                 <div className="w-14 h-14 rounded-full bg-blue-50 text-[#1D4ED8] flex items-center justify-center mb-3">
                   <Stethoscope className="w-7 h-7" />
                 </div>
@@ -95,7 +119,7 @@ export const AboutSection = () => {
                   {t('photoBadge')}
                 </span>
               </div>
-            </div>
+            </motion.div>
           </div>
         </div>
       </div>

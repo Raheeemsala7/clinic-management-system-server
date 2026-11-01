@@ -103,9 +103,7 @@ export const WhatsAppBookingSection = () => {
                   </span>
                 </a>
               </div>
-
               <div className="border-b border-white/10 my-5" />
-
               {/* العنوان */}
               <div className="mb-6">
                 <span className="text-xs font-bold text-[#F5B800] block mb-1">
