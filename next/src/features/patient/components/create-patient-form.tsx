@@ -34,11 +34,12 @@ export function CreatePatientForm({setIsQuickAddOpen}:{setIsQuickAddOpen: (val:b
 
     const onQuickAddSubmit = async (values: QuickPatientFormValues) => {
 
-        console.log(values);
+        console.log(values.fullName);
         
 
         try {
             // await createPatientMutation({fullName: values.fullName, phone: values.phone, age: values.age, gender: values.gender})
+            await createPatientMutation({fullName: values.fullName, phone: values.phone, age: values.age, gender: values.gender,chronicConditions:["d"], address:""})
 
             // if (res.success && res.patient) {
             //     // handleSelectPatient(res.patient);

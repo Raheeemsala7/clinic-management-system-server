@@ -7,8 +7,8 @@ import { toast } from "sonner";
 
 export function useCreatePatientMutation() {
   return useMutation({
-    mutationFn: async (payload: PatientPayload) => {
-      const result = await createNewPatientAction(payload);
+    mutationFn: async ({ fullName, address, age, chronicConditions, gender, phone }: PatientPayload) => {
+      const result = await createNewPatientAction({ address, age, chronicConditions, fullName, gender, phone });
 
       if (!result.status) {
         throw new Error(result.message);
