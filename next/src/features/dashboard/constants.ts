@@ -19,7 +19,7 @@ import { DashboardNavItem, UserRole } from './types';
 export const ADMIN_NAV_ITEMS: DashboardNavItem[] = [
   { id: 'dashboard', title: 'لوحة التحكم', href: '/dashboard', icon: LayoutDashboard, isActive: true },
   { id: 'appointments', title: 'المواعيد', href: '/dashboard/appointments', icon: Calendar },
-  { id: 'new-booking', title: 'حجز جديد', href: '/dashboard/bookings/new', icon: CalendarPlus },
+  { id: 'newBooking', title: 'حجز جديد', href: '/dashboard/bookings/new', icon: CalendarPlus },
   { id: 'patients', title: 'المرضى', href: '/dashboard/patients', icon: Users },
   { id: 'payments', title: 'المدفوعات', href: '/dashboard/payments', icon: CreditCard },
   { id: 'expenses', title: 'المصروفات', href: '/dashboard/expenses', icon: Receipt },
@@ -31,16 +31,16 @@ export const ADMIN_NAV_ITEMS: DashboardNavItem[] = [
 ];
 
 export const DOCTOR_NAV_ITEMS: DashboardNavItem[] = [
-  { id: 'today-checkup', title: 'شاشة كشف اليوم', href: '/dashboard', icon: Stethoscope, isActive: true },
+  { id: 'todayCheckup', title: 'شاشة كشف اليوم', href: '/dashboard', icon: Stethoscope, isActive: true },
   { id: 'calendar', title: 'التقويم والمواعيد', href: '/dashboard/calendar', icon: Calendar },
-  { id: 'weekly-hours', title: 'أوقات العمل الأسبوعية', href: '/dashboard/schedule', icon: Clock },
+  { id: 'weeklyHours', title: 'أوقات العمل الأسبوعية', href: '/dashboard/schedule', icon: Clock },
   { id: 'patients', title: 'المرضى', href: '/dashboard/patients', icon: Users },
 ];
 
 export const RECEPTIONIST_NAV_ITEMS: DashboardNavItem[] = [
   { id: 'queue', title: 'قائمة الانتظار', href: '/dashboard', icon: ListOrdered, isActive: true },
   { id: 'calendar', title: 'التقويم والمواعيد', href: '/dashboard/calendar', icon: Calendar },
-  { id: 'new-booking', title: 'حجز جديد', href: '/dashboard/bookings/new', icon: CalendarPlus },
+  { id: 'newBooking', title: 'حجز جديد', href: '/dashboard/bookings/new', icon: CalendarPlus },
   { id: 'patients', title: 'المرضى', href: '/dashboard/patients', icon: Users },
   { id: 'payments', title: 'المدفوعات', href: '/dashboard/payments', icon: CreditCard },
   { id: 'expenses', title: 'المصروفات', href: '/dashboard/expenses', icon: Receipt },
@@ -50,35 +50,44 @@ export const RECEPTIONIST_NAV_ITEMS: DashboardNavItem[] = [
 export const ROLE_CONFIG: Record<
   UserRole,
   {
+    roleKey: 'roles.admin' | 'roles.doctor' | 'roles.receptionist';
     roleLabel: string;
+    greetingKey: 'greetings.admin' | 'greetings.doctor' | 'greetings.receptionist';
     greeting: string;
     showDoctorStatus: boolean;
     navItems: DashboardNavItem[];
   }
 > = {
   ADMIN: {
+    roleKey: 'roles.admin',
     roleLabel: 'لوحة: مدير',
+    greetingKey: 'greetings.admin',
     greeting: 'مرحباً بك، المدير',
     showDoctorStatus: false,
     navItems: ADMIN_NAV_ITEMS,
   },
   DOCTOR: {
+    roleKey: 'roles.doctor',
     roleLabel: 'لوحة: طبيب',
+    greetingKey: 'greetings.doctor',
     greeting: 'مرحباً د. إسلام',
     showDoctorStatus: true,
     navItems: DOCTOR_NAV_ITEMS,
   },
   RECEPTIONIST: {
+    roleKey: 'roles.receptionist',
     roleLabel: 'لوحة: استقبال',
+    greetingKey: 'greetings.receptionist',
     greeting: 'مرحباً بك، الاستقبال',
     showDoctorStatus: true,
     navItems: RECEPTIONIST_NAV_ITEMS,
   },
   RECEPTION: {
+    roleKey: 'roles.receptionist',
     roleLabel: 'لوحة: استقبال',
+    greetingKey: 'greetings.receptionist',
     greeting: 'مرحباً بك، الاستقبال',
     showDoctorStatus: true,
     navItems: RECEPTIONIST_NAV_ITEMS,
   },
 };
-

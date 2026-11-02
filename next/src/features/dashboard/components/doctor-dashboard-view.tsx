@@ -1,12 +1,16 @@
 'use client';
 
 import React, { useState } from 'react';
-import { cn } from 'cn';
+import { useTranslations } from 'next-intl';
+import { cn } from '@/lib/utils';
 
 /**
- * المحتوى الخاص بشاشة كشف اليوم للطبيب (Doctor Dashboard) - مطابق تماماً للصورة 2
+ * المحتوى الخاص بشاشة كشف اليوم للطبيب (Doctor Dashboard) - مترجم بالكامل عبر next-intl
  */
 export const DoctorDashboardView = () => {
+  const t = useTranslations('Dashboard.doctor');
+  const tDoctorStatus = useTranslations('Dashboard.doctorStatus');
+
   const [activeTab, setActiveTab] = useState<'waiting' | 'done' | 'all'>('waiting');
   const [isAvailable, setIsAvailable] = useState<boolean>(true);
 
@@ -15,10 +19,10 @@ export const DoctorDashboardView = () => {
       {/* رأس الصفحة */}
       <div className="text-start">
         <h2 className="text-3xl font-black text-[#0A164E] tracking-tight">
-          شاشة كشف اليوم
+          {t('title')}
         </h2>
         <p className="text-sm text-slate-400 mt-1">
-          متابعة طابور الانتظار الحي وإدارة تدفق المرضى وفحوصات العيادة
+          {t('subtitle')}
         </p>
       </div>
 
@@ -27,7 +31,7 @@ export const DoctorDashboardView = () => {
         {/* بطاقة حالة الطبيب */}
         <div className="bg-white rounded-2xl p-5 shadow-xs border border-slate-100 flex flex-col justify-between">
           <span className="text-xs font-semibold text-slate-400 mb-3 text-start">
-            حالة الطبيب
+            {tDoctorStatus('title')}
           </span>
           <div className="flex items-center gap-2">
             <button
@@ -41,7 +45,7 @@ export const DoctorDashboardView = () => {
               )}
             >
               <span className="w-2 h-2 rounded-full bg-white" />
-              <span>طبيب: متاح</span>
+              <span>{tDoctorStatus('available')}</span>
             </button>
 
             <button
@@ -54,41 +58,41 @@ export const DoctorDashboardView = () => {
                   : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
               )}
             >
-              أخذ استراحة
+              {tDoctorStatus('takeBreak')}
             </button>
           </div>
         </div>
 
         {/* بطاقة في الانتظار (إطار أصفر) */}
-        <div className="bg-[#FFFDF0] rounded-2xl p-5 shadow-xs border-2 border-[#F5B800] flex flex-col justify-between text-center">
+        <div className="bg-[#FFFDF0] rounded-2xl p-5 shadow-xs border-2 border-brand-yellow flex flex-col justify-between text-center">
           <span className="text-xs font-semibold text-slate-500">
-            في الانتظار
+            {t('waitingStatus')}
           </span>
           <div className="flex items-baseline justify-center gap-2 my-1">
             <span className="text-3xl font-black text-[#0A164E]">0</span>
-            <span className="text-xs font-bold text-slate-500">حالة متبقية</span>
+            <span className="text-xs font-bold text-slate-500">{t('remainingCases')}</span>
           </div>
         </div>
 
         {/* بطاقة تم الكشف (إطار أزرق فاتح) */}
         <div className="bg-[#F0F5FF] rounded-2xl p-5 shadow-xs border border-blue-200 flex flex-col justify-between text-center">
           <span className="text-xs font-semibold text-slate-500">
-            تم الكشف
+            {t('completedCheckup')}
           </span>
           <div className="flex items-baseline justify-center gap-2 my-1">
             <span className="text-3xl font-black text-[#0A164E]">0</span>
-            <span className="text-xs font-bold text-slate-500">كشف منجز</span>
+            <span className="text-xs font-bold text-slate-500">{t('doneCheckup')}</span>
           </div>
         </div>
 
         {/* بطاقة إجمالي الحالات اليوم */}
         <div className="bg-white rounded-2xl p-5 shadow-xs border border-slate-100 flex flex-col justify-between text-center">
           <span className="text-xs font-semibold text-slate-400">
-            إجمالي الحالات اليوم
+            {t('totalCases')}
           </span>
           <div className="flex items-baseline justify-center gap-2 my-1">
             <span className="text-3xl font-black text-[#0A164E]">0</span>
-            <span className="text-xs font-bold text-slate-500">موعد مسجل</span>
+            <span className="text-xs font-bold text-slate-500">{t('registeredAppointments')}</span>
           </div>
         </div>
       </div>
@@ -100,10 +104,10 @@ export const DoctorDashboardView = () => {
           <div>
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
               <h3 className="font-black text-base text-[#0A164E]">
-                قائمة الانتظار
+                {t('queueTitle')}
               </h3>
               <span className="px-2.5 py-0.5 rounded-full bg-blue-50 text-[#1D4ED8] text-xs font-bold">
-                إجمالي 0
+                {t('totalBadge', { count: 0 })}
               </span>
             </div>
 
@@ -119,7 +123,7 @@ export const DoctorDashboardView = () => {
                     : 'text-slate-500 hover:text-slate-900'
                 )}
               >
-                في الانتظار (0)
+                {t('tabs.waiting')} (0)
               </button>
               <button
                 type="button"
@@ -131,7 +135,7 @@ export const DoctorDashboardView = () => {
                     : 'text-slate-500 hover:text-slate-900'
                 )}
               >
-                تم الكشف (0)
+                {t('tabs.done')} (0)
               </button>
               <button
                 type="button"
@@ -143,14 +147,14 @@ export const DoctorDashboardView = () => {
                     : 'text-slate-500 hover:text-slate-900'
                 )}
               >
-                الكل (0)
+                {t('tabs.all')} (0)
               </button>
             </div>
           </div>
 
           {/* نص الحالة الفارغة */}
           <div className="py-16 text-center text-slate-400 text-sm font-semibold">
-            لا يوجد مرضى في الانتظار حالياً ✓
+            {t('emptyQueue')}
           </div>
         </div>
 
@@ -162,19 +166,18 @@ export const DoctorDashboardView = () => {
               <span className="w-3 h-3 rounded-xs bg-[#1D4ED8]" />
               <span className="w-3 h-3 rounded-xs bg-white" />
               <span className="w-3 h-3 rounded-xs bg-[#081544]" />
-              <span className="w-3 h-3 rounded-xs bg-[#F5B800]" />
+              <span className="w-3 h-3 rounded-xs bg-brand-yellow" />
             </div>
           </div>
 
           <h3 className="text-2xl font-black text-[#0A164E] mb-2 tracking-tight">
-            لا يوجد مريض حالياً في غرفة الكشف
+            {t('emptyRoomTitle')}
           </h3>
           <p className="text-sm text-slate-400">
-            قائمة الانتظار فارغة حالياً
+            {t('emptyRoomSubtitle')}
           </p>
         </div>
       </div>
     </div>
   );
 };
-

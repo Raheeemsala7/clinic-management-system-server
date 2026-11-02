@@ -201,5 +201,99 @@
       "login-success": "Logged in successfully! Welcome back",
       "loginSuccess": "Logged in successfully! Welcome back"
     }
+  },
+  "Dashboard": {
+    "systemTitle": "Clinic Management System",
+    "version": "v1.0",
+    "notifications": "Notifications",
+    "signOut": "Sign out",
+    "roles": {
+      "admin": "Panel: Admin",
+      "doctor": "Panel: Doctor",
+      "receptionist": "Panel: Reception"
+    },
+    "greetings": {
+      "admin": "Welcome, Admin",
+      "doctor": "Welcome, Dr. Eslam",
+      "receptionist": "Welcome, Reception"
+    },
+    "doctorStatus": {
+      "title": "Doctor Status",
+      "available": "Doctor: Available",
+      "takeBreak": "Take a Break"
+    },
+    "nav": {
+      "dashboard": "Dashboard",
+      "appointments": "Appointments",
+      "newBooking": "New Booking",
+      "patients": "Patients",
+      "payments": "Payments",
+      "expenses": "Expenses",
+      "closing": "Daily Closing",
+      "reports": "Reports",
+      "users": "Users",
+      "audit": "Audit Log",
+      "settings": "Settings",
+      "todayCheckup": "Today's Clinic",
+      "calendar": "Calendar & Schedule",
+      "weeklyHours": "Weekly Hours",
+      "queue": "Waiting Queue"
+    },
+    "admin": {
+      "title": "Dashboard",
+      "subtitle": "Clinic performance and operations overview",
+      "dateRange": "From 01-11-2026 to 02-11-2026",
+      "stats": {
+        "revenue": "Revenue",
+        "expenses": "Expenses",
+        "netProfit": "Net Profit",
+        "visits": "Visits",
+        "averageVisit": "Avg Visit",
+        "currency": "EGP"
+      },
+      "weeklyRevenue": "Weekly Revenue (Illustrative Chart)"
+    },
+    "doctor": {
+      "title": "Today's Clinic Screen",
+      "subtitle": "Live queue monitoring, patient flow, and clinical examinations",
+      "waitingStatus": "Waiting",
+      "remainingCases": "remaining",
+      "completedCheckup": "Examined",
+      "doneCheckup": "completed",
+      "totalCases": "Total Cases Today",
+      "registeredAppointments": "appointments",
+      "queueTitle": "Waiting Queue",
+      "totalBadge": "Total {count}",
+      "tabs": {
+        "waiting": "Waiting",
+        "done": "Examined",
+        "all": "All"
+      },
+      "emptyQueue": "No patients currently in waiting ✓",
+      "emptyRoomTitle": "No patient currently in the exam room",
+      "emptyRoomSubtitle": "The queue is currently empty"
+    },
+    "receptionist": {
+      "title": "Waiting Queue",
+      "subtitle": "Today's queue, patient flow coordination, and check-ins",
+      "bookPatient": "+ Book / Register Patient",
+      "table": {
+        "number": "No.",
+        "patient": "Patient",
+        "appointmentType": "Type",
+        "status": "Status",
+        "waitingDuration": "Wait Time",
+        "actions": "Actions",
+        "checkup": "Checkup",
+        "consultation": "Consultation",
+        "waiting": "Waiting",
+        "inCheckup": "In Exam",
+        "minutes": "{count} mins",
+        "admit": "Admit",
+        "postpone": "Postpone",
+        "cancel": "Cancel",
+        "patientPlaceholder": "[Patient Name]"
+      }
+    }
   }
 }

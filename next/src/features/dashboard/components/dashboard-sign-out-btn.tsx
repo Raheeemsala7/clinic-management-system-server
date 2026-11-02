@@ -3,7 +3,7 @@
 import React, { useTransition } from 'react';
 import { LogOut, Loader2 } from 'lucide-react';
 import { signOut } from 'next-auth/react';
-import { useLocale } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 
 interface DashboardSignOutBtnProps {
@@ -11,12 +11,11 @@ interface DashboardSignOutBtnProps {
 }
 
 /**
- * زر تسجيل الخروج الأنيق لشريط رأس لوحة التحكم
+ * زر تسجيل الخروج الأنيق لشريط رأس لوحة التحكم مترجم عبر next-intl
  */
 export function DashboardSignOutBtn({ className }: DashboardSignOutBtnProps) {
   const [isPending, startTransition] = useTransition();
-  const locale = useLocale();
-  const isArabic = locale === 'ar';
+  const t = useTranslations('Dashboard');
 
   const handleSignOut = () => {
     startTransition(async () => {
@@ -26,7 +25,7 @@ export function DashboardSignOutBtn({ className }: DashboardSignOutBtnProps) {
     });
   };
 
-  const title = isArabic ? 'تسجيل الخروج' : 'Sign out';
+  const title = t('signOut');
 
   return (
     <button
@@ -48,4 +47,3 @@ export function DashboardSignOutBtn({ className }: DashboardSignOutBtnProps) {
     </button>
   );
 }
-

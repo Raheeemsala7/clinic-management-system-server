@@ -43,7 +43,7 @@ export default async function DashboardLayout({
       case 'DOCTOR':
         return doctor || <DoctorDashboardView />;
       case 'RECEPTIONIST':
-        return receptionist || <ReceptionistDashboardView />;
+        return receptionist;
       case 'ADMIN':
       default:
         return admin || <AdminDashboardView />;
@@ -52,7 +52,7 @@ export default async function DashboardLayout({
 
   return (
     <DashboardLayoutClient role={role}>
-      {children || renderRoleContent()}
+      {renderRoleContent()}
     </DashboardLayoutClient>
   );
 }

@@ -2,34 +2,38 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { cn } from 'cn';
+import { useTranslations } from 'next-intl';
+import { cn } from '@/lib/utils';
 
 /**
- * المحتوى الخاص بلوحة تحكم المدير (Admin Dashboard) - مطابق تماماً للصورة 1
+ * المحتوى الخاص بلوحة تحكم المدير (Admin Dashboard) - مترجم بالكامل عبر next-intl
  */
 export const AdminDashboardView = () => {
+  const t = useTranslations('Dashboard.admin');
+  const tNav = useTranslations('Dashboard.nav');
+
   const stats = [
-    { title: 'الإيرادات', value: '0.00 ج.م', border: 'border-t-4 border-[#1D4ED8]' },
-    { title: 'المصروفات', value: '0.00 ج.م', border: 'border-t-4 border-[#F5B800]' },
-    { title: 'صافي الربح', value: '0.00 ج.م', border: 'border-t-4 border-[#0A164E]' },
-    { title: 'الزيارات', value: '0', border: 'border-t-4 border-[#0A164E]' },
-    { title: 'متوسط الزيارة', value: '0.00 ج.م', border: 'border-t-4 border-[#1D4ED8]' },
+    { title: t('stats.revenue'), value: `0.00 ${t('stats.currency')}`, border: 'border-t-4 border-[#1D4ED8]' },
+    { title: t('stats.expenses'), value: `0.00 ${t('stats.currency')}`, border: 'border-t-4 border-[#F5B800]' },
+    { title: t('stats.netProfit'), value: `0.00 ${t('stats.currency')}`, border: 'border-t-4 border-[#0A164E]' },
+    { title: t('stats.visits'), value: '0', border: 'border-t-4 border-[#0A164E]' },
+    { title: t('stats.averageVisit'), value: `0.00 ${t('stats.currency')}`, border: 'border-t-4 border-[#1D4ED8]' },
   ];
 
   const quickActions = [
-    { title: 'المدفوعات', href: '/dashboard/payments', iconBg: 'bg-[#081544]' },
-    { title: 'المصروفات', href: '/dashboard/expenses', iconBg: 'bg-[#1D4ED8]' },
-    { title: 'الإغلاق اليومي', href: '/dashboard/closing', iconBg: 'bg-[#F5B800]' },
-    { title: 'التقارير', href: '/dashboard/reports', iconBg: 'bg-[#081544]' },
-    { title: 'المستخدمون', href: '/dashboard/users', iconBg: 'bg-[#1D4ED8]' },
-    { title: 'الإعدادات', href: '/dashboard/settings', iconBg: 'bg-[#F5B800]' },
-    { title: 'سجل العمليات', href: '/dashboard/audit', iconBg: 'bg-[#081544]' },
-    { title: 'المرضى', href: '/dashboard/patients', iconBg: 'bg-[#1D4ED8]' },
+    { title: tNav('payments'), href: '/dashboard/payments', iconBg: 'bg-[#081544]' },
+    { title: tNav('expenses'), href: '/dashboard/expenses', iconBg: 'bg-[#1D4ED8]' },
+    { title: tNav('closing'), href: '/dashboard/closing', iconBg: 'bg-[#F5B800]' },
+    { title: tNav('reports'), href: '/dashboard/reports', iconBg: 'bg-[#081544]' },
+    { title: tNav('users'), href: '/dashboard/users', iconBg: 'bg-[#1D4ED8]' },
+    { title: tNav('settings'), href: '/dashboard/settings', iconBg: 'bg-[#F5B800]' },
+    { title: tNav('audit'), href: '/dashboard/audit', iconBg: 'bg-[#081544]' },
+    { title: tNav('patients'), href: '/dashboard/patients', iconBg: 'bg-[#1D4ED8]' },
   ];
 
   const chartBars = [
     { height: '40%', color: 'bg-[#0040D8]' },
-    { height: '90%', color: 'bg-[#F5B800]' },
+    { height: '90%', color: 'bg-brand-yellow' },
     { height: '50%', color: 'bg-[#0040D8]' },
     { height: '75%', color: 'bg-[#0040D8]' },
     { height: '30%', color: 'bg-[#0040D8]' },
@@ -41,17 +45,17 @@ export const AdminDashboardView = () => {
     <div className="space-y-6">
       {/* رأس الصفحة + فلتر التاريخ */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
+        <div className="text-start">
           <h2 className="text-3xl font-black text-[#0A164E] tracking-tight">
-            لوحة التحكم
+            {t('title')}
           </h2>
           <p className="text-sm text-slate-400 mt-1">
-            نظرة عامة على أداء العيادة
+            {t('subtitle')}
           </p>
         </div>
 
         <div className="inline-flex items-center self-start sm:self-auto px-4 py-2 bg-white rounded-xl border border-slate-200 text-xs font-bold text-slate-700 shadow-2xs">
-          من 01-11-2026 إلى 02-11-2026
+          {t('dateRange')}
         </div>
       </div>
 
@@ -99,7 +103,7 @@ export const AdminDashboardView = () => {
       {/* كارت الرسم البياني التوضيحي للإيرادات */}
       <div className="bg-white rounded-2xl p-6 sm:p-7 shadow-xs border border-slate-100">
         <h3 className="text-sm font-bold text-[#0A164E] mb-6 text-start">
-          الإيرادات خلال الأسبوع (شكل توضيحي)
+          {t('weeklyRevenue')}
         </h3>
 
         {/* أعمدة الرسم البياني */}
@@ -120,4 +124,3 @@ export const AdminDashboardView = () => {
     </div>
   );
 };
-

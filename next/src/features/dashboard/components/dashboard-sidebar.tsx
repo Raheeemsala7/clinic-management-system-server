@@ -3,7 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 import {
   Sidebar,
@@ -28,7 +28,7 @@ interface DashboardSidebarProps extends React.ComponentProps<typeof Sidebar> {
 
 /**
  * شريط التنقل الجانبي للوحة التحكم مبني على shadcn Sidebar الرسمي
- * مخصص بألوان وهوية العيادة، يتضمن أيقونات الروابط، ويميز التبويب النشط بلون brand-yellow
+ * يدعم الترجمة التفاعلية عبر next-intl، ويتكيف مع هوية العيادة ولون التبويب النشط
  */
 export function DashboardSidebar({
   role,
@@ -38,6 +38,7 @@ export function DashboardSidebar({
 }: DashboardSidebarProps) {
   const pathname = usePathname();
   const locale = useLocale();
+  const t = useTranslations('Dashboard');
   const dir = locale === 'ar' ? 'rtl' : 'ltr';
   const side = dir === 'rtl' ? 'right' : 'left';
 
@@ -70,7 +71,7 @@ export function DashboardSidebar({
             >
               <div className="flex items-center justify-between w-full group-data-[collapsible=icon]:justify-center">
                 <span className="font-black text-base sm:text-lg text-white tracking-tight group-data-[collapsible=icon]:hidden">
-                  نظام إدارة العيادة
+                  {t('systemTitle')}
                 </span>
                 {/* شعار العيادة المربّع المميّز بالألوان الأربعة */}
                 <div
@@ -88,7 +89,7 @@ export function DashboardSidebar({
         </SidebarMenu>
       </SidebarHeader>
 
-      {/* 2. محتوى الشريط: قائمة الروابط مع الأيقونات وتمييز brand-yellow */}
+      {/* 2. محتوى الشريط: قائمة الروابط المترجمة مع الأيقونات وتمييز brand-yellow */}
       <SidebarContent className="px-3 py-4 group-data-[collapsible=icon]:px-1 bg-[#091336]">
         <SidebarGroup>
           <SidebarGroupContent>
@@ -100,12 +101,13 @@ export function DashboardSidebar({
                     : pathname?.startsWith(item.href);
 
                 const Icon = item.icon;
+                const itemTitle = t(`nav.${item.id}`);
 
                 return (
                   <SidebarMenuItem key={item.id}>
                     <SidebarMenuButton
                       isActive={isActive}
-                      tooltip={item.title}
+                      tooltip={itemTitle}
                       render={
                         <Link
                           href={item.href}
@@ -132,9 +134,9 @@ export function DashboardSidebar({
                           />
                         )}
 
-                        {/* نص الرابط */}
+                        {/* نص الرابط المترجم */}
                         <span className="truncate flex-1 group-data-[collapsible=icon]:hidden">
-                          {item.title}
+                          {itemTitle}
                         </span>
 
                         {/* أيقونة المربع المطابقة للتصميم الأصلي */}
@@ -157,11 +159,11 @@ export function DashboardSidebar({
         </SidebarGroup>
       </SidebarContent>
 
-      {/* 3. أسفل الشريط الجانبي: رقم الإصدار ونوع اللوحة */}
+      {/* 3. أسفل الشريط الجانبي: رقم الإصدار ونوع اللوحة المترجمة */}
       <SidebarFooter className="border-t border-white/10 p-0 bg-[#070F2B]">
         <div className="py-4 px-5 flex items-center justify-between text-xs text-slate-400 font-semibold group-data-[collapsible=icon]:justify-center">
-          <span className="group-data-[collapsible=icon]:hidden">v1.0</span>
-          <span>{config.roleLabel}</span>
+          <span className="group-data-[collapsible=icon]:hidden">{t('version')}</span>
+          <span>{t(config.roleKey)}</span>
         </div>
       </SidebarFooter>
 

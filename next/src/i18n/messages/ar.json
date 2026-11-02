@@ -201,5 +201,99 @@
       "login-success": "تم تسجيل الدخول بنجاح! مرحباً بك",
       "loginSuccess": "تم تسجيل الدخول بنجاح! مرحباً بك"
     }
+  },
+  "Dashboard": {
+    "systemTitle": "نظام إدارة العيادة",
+    "version": "v1.0",
+    "notifications": "التنبيهات",
+    "signOut": "تسجيل الخروج",
+    "roles": {
+      "admin": "لوحة: مدير",
+      "doctor": "لوحة: طبيب",
+      "receptionist": "لوحة: استقبال"
+    },
+    "greetings": {
+      "admin": "مرحباً بك، المدير",
+      "doctor": "مرحباً د. إسلام",
+      "receptionist": "مرحباً بك، الاستقبال"
+    },
+    "doctorStatus": {
+      "title": "حالة الطبيب",
+      "available": "طبيب: متاح",
+      "takeBreak": "أخذ استراحة"
+    },
+    "nav": {
+      "dashboard": "لوحة التحكم",
+      "appointments": "المواعيد",
+      "newBooking": "حجز جديد",
+      "patients": "المرضى",
+      "payments": "المدفوعات",
+      "expenses": "المصروفات",
+      "closing": "الإغلاق اليومي",
+      "reports": "التقارير",
+      "users": "المستخدمون",
+      "audit": "سجل العمليات",
+      "settings": "الإعدادات",
+      "todayCheckup": "شاشة كشف اليوم",
+      "calendar": "التقويم والمواعيد",
+      "weeklyHours": "أوقات العمل الأسبوعية",
+      "queue": "قائمة الانتظار"
+    },
+    "admin": {
+      "title": "لوحة التحكم",
+      "subtitle": "نظرة عامة على أداء العيادة",
+      "dateRange": "من 01-11-2026 إلى 02-11-2026",
+      "stats": {
+        "revenue": "الإيرادات",
+        "expenses": "المصروفات",
+        "netProfit": "صافي الربح",
+        "visits": "الزيارات",
+        "averageVisit": "متوسط الزيارة",
+        "currency": "ج.م"
+      },
+      "weeklyRevenue": "الإيرادات خلال الأسبوع (شكل توضيحي)"
+    },
+    "doctor": {
+      "title": "شاشة كشف اليوم",
+      "subtitle": "متابعة طابور الانتظار الحي وإدارة تدفق المرضى وفحوصات العيادة",
+      "waitingStatus": "في الانتظار",
+      "remainingCases": "حالة متبقية",
+      "completedCheckup": "تم الكشف",
+      "doneCheckup": "كشف منجز",
+      "totalCases": "إجمالي الحالات اليوم",
+      "registeredAppointments": "موعد مسجل",
+      "queueTitle": "قائمة الانتظار",
+      "totalBadge": "إجمالي {count}",
+      "tabs": {
+        "waiting": "في الانتظار",
+        "done": "تم الكشف",
+        "all": "الكل"
+      },
+      "emptyQueue": "لا يوجد مرضى في الانتظار حالياً ✓",
+      "emptyRoomTitle": "لا يوجد مريض حالياً في غرفة الكشف",
+      "emptyRoomSubtitle": "قائمة الانتظار فارغة حالياً"
+    },
+    "receptionist": {
+      "title": "قائمة الانتظار",
+      "subtitle": "قائمة انتظار اليوم وإدارة تدفق المرضى وتنسيق الكشف",
+      "bookPatient": "حجز موعد / تسجيل مريض",
+      "table": {
+        "number": "الرقم",
+        "patient": "المريض",
+        "appointmentType": "نوع الموعد",
+        "status": "الحالة",
+        "waitingDuration": "مدة الانتظار",
+        "actions": "إجراءات",
+        "checkup": "كشف",
+        "consultation": "استشارة",
+        "waiting": "في الانتظار",
+        "inCheckup": "داخل الكشف",
+        "minutes": "{count} دقيقة",
+        "admit": "إدخال",
+        "postpone": "تأجيل",
+        "cancel": "إلغاء",
+        "patientPlaceholder": "[اسم المريض]"
+      }
+    }
   }
 }

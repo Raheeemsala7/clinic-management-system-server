@@ -3,36 +3,42 @@
 import React from 'react';
 import Link from 'next/link';
 import { Plus } from 'lucide-react';
-import { WaitingPatient } from '../types';
+import { useTranslations } from 'next-intl';
 
 /**
- * المحتوى الخاص بشاشة الاستقبال (Receptionist Dashboard) - مطابق تماماً للصورة 3
+ * المحتوى الخاص بشاشة الاستقبال (Receptionist Dashboard) - مترجم بالكامل عبر next-intl
  */
 export const ReceptionistDashboardView = () => {
-  const patients: WaitingPatient[] = [
+  const t = useTranslations('Dashboard.receptionist');
+  const tDoctorStatus = useTranslations('Dashboard.doctorStatus');
+
+  const patients = [
     {
       id: 'p-1',
       number: '#1',
       name: 'محمد علاء',
-      type: 'كشف',
-      status: 'في الانتظار',
-      waitingTime: '0 دقيقة',
+      type: t('table.checkup'),
+      status: t('table.waiting'),
+      isWaiting: true,
+      waitingTime: t('table.minutes', { count: 0 }),
     },
     {
       id: 'p-2',
       number: '#2',
-      name: '[اسم المريض]',
-      type: 'استشارة',
-      status: 'في الانتظار',
-      waitingTime: '12 دقيقة',
+      name: t('table.patientPlaceholder'),
+      type: t('table.consultation'),
+      status: t('table.waiting'),
+      isWaiting: true,
+      waitingTime: t('table.minutes', { count: 12 }),
     },
     {
       id: 'p-3',
       number: '#3',
-      name: '[اسم المريض]',
-      type: 'كشف',
-      status: 'داخل الكشف',
-      waitingTime: '25 دقيقة',
+      name: t('table.patientPlaceholder'),
+      type: t('table.checkup'),
+      status: t('table.inCheckup'),
+      isWaiting: false,
+      waitingTime: t('table.minutes', { count: 25 }),
     },
   ];
 
@@ -42,15 +48,15 @@ export const ReceptionistDashboardView = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="text-start">
           <h2 className="text-3xl font-black text-[#0A164E] tracking-tight">
-            قائمة الانتظار
+            {t('title')}
           </h2>
           <p className="text-sm text-slate-400 mt-1">
-            قائمة انتظار اليوم وإدارة تدفق المرضى وتنسيق الكشف
+            {t('subtitle')}
           </p>
 
           <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#16A34A] text-white text-xs font-bold shadow-xs">
             <span className="w-2 h-2 rounded-full bg-white" />
-            <span>طبيب: متاح</span>
+            <span>{tDoctorStatus('available')}</span>
           </div>
         </div>
 
@@ -60,7 +66,7 @@ export const ReceptionistDashboardView = () => {
           className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-[#0040D8] hover:bg-blue-700 active:scale-95 text-white font-bold rounded-xl shadow-md transition-all text-sm self-start sm:self-auto cursor-pointer"
         >
           <Plus className="w-4 h-4 stroke-[3]" />
-          <span>حجز موعد / تسجيل مريض</span>
+          <span>{t('bookPatient')}</span>
         </Link>
       </div>
 
@@ -70,12 +76,12 @@ export const ReceptionistDashboardView = () => {
           <table className="w-full text-start border-collapse text-sm">
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50/50 text-slate-400 font-bold text-xs">
-                <th className="py-4 px-6 text-start">الرقم</th>
-                <th className="py-4 px-6 text-start">المريض</th>
-                <th className="py-4 px-6 text-center">نوع الموعد</th>
-                <th className="py-4 px-6 text-center">الحالة</th>
-                <th className="py-4 px-6 text-center">مدة الانتظار</th>
-                <th className="py-4 px-6 text-end">إجراءات</th>
+                <th className="py-4 px-6 text-start">{t('table.number')}</th>
+                <th className="py-4 px-6 text-start">{t('table.patient')}</th>
+                <th className="py-4 px-6 text-center">{t('table.appointmentType')}</th>
+                <th className="py-4 px-6 text-center">{t('table.status')}</th>
+                <th className="py-4 px-6 text-center">{t('table.waitingDuration')}</th>
+                <th className="py-4 px-6 text-end">{t('table.actions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 font-medium">
@@ -103,8 +109,8 @@ export const ReceptionistDashboardView = () => {
 
                   {/* الحالة */}
                   <td className="py-4 px-6 text-center">
-                    {patient.status === 'في الانتظار' ? (
-                      <span className="inline-block px-3 py-1 rounded-lg text-xs font-bold bg-[#EAB308] text-slate-950">
+                    {patient.isWaiting ? (
+                      <span className="inline-block px-3 py-1 rounded-lg text-xs font-bold bg-brand-yellow text-slate-950">
                         {patient.status}
                       </span>
                     ) : (
@@ -126,21 +132,21 @@ export const ReceptionistDashboardView = () => {
                         type="button"
                         className="px-3.5 py-1.5 rounded-lg bg-[#0040D8] hover:bg-blue-700 active:scale-95 text-white font-bold text-xs transition-all cursor-pointer shadow-2xs"
                       >
-                        إدخال
+                        {t('table.admit')}
                       </button>
 
                       <button
                         type="button"
                         className="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-600 font-bold text-xs transition-colors cursor-pointer"
                       >
-                        تأجيل
+                        {t('table.postpone')}
                       </button>
 
                       <button
                         type="button"
                         className="px-2 py-1.5 text-red-500 hover:text-red-700 font-bold text-xs transition-colors cursor-pointer"
                       >
-                        إلغاء
+                        {t('table.cancel')}
                       </button>
                     </div>
                   </td>
@@ -153,4 +159,3 @@ export const ReceptionistDashboardView = () => {
     </div>
   );
 };
-

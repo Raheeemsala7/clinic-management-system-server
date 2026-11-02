@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useTranslations } from 'next-intl';
 import { SidebarTrigger } from '@/shared/components/ui/sidebar';
 import { AuthLanguageBtn } from '@/features/auth/components/auth-language-btn';
 import { DashboardSignOutBtn } from './dashboard-sign-out-btn';
@@ -12,10 +13,11 @@ interface DashboardHeaderProps {
 }
 
 /**
- * شريط الرأس الموحد للوحة التحكم - مبني على زر SidebarTrigger الرسمي من shadcn
+ * شريط الرأس الموحد للوحة التحكم - مترجم بالكامل عبر next-intl
  * يتضمن الترحيب بالدور الحالي، شارة حالة الطبيب، زر تغيير اللغة، زر التنبيهات، وزر تسجيل الخروج
  */
 export function DashboardHeader({ role }: DashboardHeaderProps) {
+  const t = useTranslations('Dashboard');
   const config = ROLE_CONFIG[role] || ROLE_CONFIG.ADMIN;
 
   return (
@@ -24,30 +26,30 @@ export function DashboardHeader({ role }: DashboardHeaderProps) {
       <div className="flex items-center gap-3">
         <SidebarTrigger className="text-[#0A164E] hover:bg-slate-100 rounded-xl" />
 
-        <h1 className="text-sm sm:text-base font-black text-[#0A164E] tracking-tight">
-          {config.greeting}
-        </h1>
+        <h4 className="hidden md:block text-sm sm:text-base font-black text-[#0A164E] tracking-tight">
+          {t(config.greetingKey)}
+        </h4>
       </div>
 
       {/* الجانب الأيسر (في RTL): حالة الطبيب + زر اللغة + زر التنبيه + زر تسجيل الخروج */}
       <div className="flex items-center gap-2.5 sm:gap-3">
         {/* شارة حالة الطبيب (تظهر للطبيب والاستقبال كما في الصورة) */}
         {config.showDoctorStatus && (
-          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#16A34A] text-white text-xs font-bold shadow-xs">
+          <div className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#16A34A] text-white text-xs font-bold shadow-xs">
             <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
-            <span>طبيب: متاح</span>
+            <span>{t('doctorStatus.available')}</span>
           </div>
         )}
 
-        {/* زر تبديل اللغة ⇄ ENGLISH */}
+        {/* زر تبديل اللغة ⇄ ENGLISH / العربية */}
         <AuthLanguageBtn className="hidden sm:inline-flex" />
 
         {/* زر التنبيه الدائري الكحلي مع علامة التعجب الصفراء */}
         <button
           type="button"
-          className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#0A164E] text-[#F5B800] flex items-center justify-center font-black text-sm shadow-xs hover:scale-105 active:scale-95 transition-transform cursor-pointer"
-          aria-label="التنبيهات"
-          title="التنبيهات"
+          className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#0A164E] text-brand-yellow flex items-center justify-center font-black text-sm shadow-xs hover:scale-105 active:scale-95 transition-transform cursor-pointer"
+          aria-label={t('notifications')}
+          title={t('notifications')}
         >
           !
         </button>
