@@ -62,7 +62,7 @@ export const ReceptionistDashboardView = () => {
 
         {/* زر حجز موعد / تسجيل مريض */}
         <Link
-          href="/dashboard/bookings/new"
+          href="/dashboard/appointments/new"
           className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-[#0040D8] hover:bg-blue-700 active:scale-95 text-white font-bold rounded-xl shadow-md transition-all text-sm self-start sm:self-auto cursor-pointer"
         >
           <Plus className="w-4 h-4 stroke-[3]" />

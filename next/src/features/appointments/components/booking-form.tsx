@@ -26,6 +26,8 @@ export function BookingForm() {
       patientId: '',
       patientName: '',
       patientPhone: '',
+      patientGender: '',
+      patientAge: undefined,
       hasChronicDisease: false,
       chronicDiseases: [],
       chronicNotes: '',

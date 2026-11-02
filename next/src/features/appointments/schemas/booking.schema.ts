@@ -16,6 +16,8 @@ export const bookingSchema = (t?: any) =>
       patientId: z.string().min(1, t?.('patientRequired') || 'يرجى اختيار مريض أو تسجيل مريض جديد'),
       patientName: z.string().min(3, t?.('patientNameMin') || 'اسم المريض مطلوب'),
       patientPhone: z.string(),
+      patientGender: z.string().optional(),
+      patientAge: z.union([z.number(), z.string()]).optional(),
       hasChronicDisease: z.boolean(),
       chronicDiseases: z.array(z.string()),
       chronicNotes: z.string(),

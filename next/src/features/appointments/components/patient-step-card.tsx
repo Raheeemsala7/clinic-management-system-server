@@ -27,6 +27,8 @@ export function PatientStepCard() {
   const selectedPatientId = useWatch({ control, name: 'patientId' });
   const selectedPatientName = useWatch({ control, name: 'patientName' });
   const selectedPatientPhone = useWatch({ control, name: 'patientPhone' });
+  const selectedPatientGender = useWatch({ control, name: 'patientGender' });
+  const selectedPatientAge = useWatch({ control, name: 'patientAge' });
   const hasChronicDisease = useWatch({ control, name: 'hasChronicDisease' });
   const selectedDiseases = useWatch({ control, name: 'chronicDiseases' }) || [];
 
@@ -37,6 +39,10 @@ export function PatientStepCard() {
   const [isCreatingPatient, setIsCreatingPatient] = useState(false);
   const [quickName, setQuickName] = useState('');
   const [quickPhone, setQuickPhone] = useState('');
+  const [quickGender, setQuickGender] = useState<'MALE' | 'FEMALE'>('MALE');
+  const [quickAge, setQuickAge] = useState<string>('');
+  const [quickChronicConditions, setQuickChronicConditions] = useState<string[]>([]);
+  const [quickError, setQuickError] = useState<string | null>(null);
 
   // 1. تطبيق Debounce (300ms) على البحث الحقيقي عبر الـ API
   useEffect(() => {
@@ -76,39 +82,65 @@ export function PatientStepCard() {
     setValue('patientId', patient.id, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
     setValue('patientName', patient.name, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
     setValue('patientPhone', patient.phone, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
+    if (patient.gender) {
+      setValue('patientGender', patient.gender, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
+    }
+    if (patient.age !== undefined && patient.age !== null) {
+      setValue('patientAge', patient.age, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
+    }
     setSearchQuery('');
     setSearchResults([]);
   };
 
   // 3. تسجيل مريض جديد عبر السيرفر واختياره مباشرة
   const handleQuickAdd = async () => {
-    if (!quickName.trim()) return;
+    setQuickError(null);
+    const trimmedName = quickName.trim();
+    const trimmedPhone = quickPhone.trim();
+    const parsedAge = quickAge.trim() ? Number(quickAge.trim()) : undefined;
+
+    // التحقق من الاسم رباعي (4 مقاطع على الأقل)
+    const nameParts = trimmedName.split(/\s+/).filter(Boolean);
+    if (!trimmedName || nameParts.length < 4) {
+      setQuickError('يجب إدخال اسم المريض رباعياً على الأقل (أربعة مقاطع)');
+      return;
+    }
+
+    // التحقق من رقم الهاتف
+    if (!trimmedPhone) {
+      setQuickError('يرجى إدخال رقم الهاتف');
+      return;
+    }
+
+    // التحقق من صحة السن إن وُجد
+    if (parsedAge !== undefined && (isNaN(parsedAge) || parsedAge < 0 || parsedAge > 130)) {
+      setQuickError('يرجى إدخال سن صحيح بين 0 و 130 سنة');
+      return;
+    }
+
     setIsCreatingPatient(true);
     try {
       const res = await createQuickPatientAction({
-        fullName: quickName.trim(),
-        phone: quickPhone.trim() || '01000000000',
+        fullName: trimmedName,
+        phone: trimmedPhone,
+        gender: quickGender,
+        age: parsedAge,
       });
 
       if (res.success && res.patient) {
         handleSelectPatient(res.patient);
         toast.success('تم تسجيل المريض واختياره بنجاح!');
+        setIsQuickAddOpen(false);
+        setQuickName('');
+        setQuickPhone('');
+        setQuickGender('MALE');
+        setQuickAge('');
+        setQuickError(null);
       } else {
-        // Fallback تجريبي
-        const fallbackId = `p-${Date.now()}`;
-        handleSelectPatient({
-          id: fallbackId,
-          name: quickName.trim(),
-          phone: quickPhone.trim() || '01000000000',
-        });
-        toast.success('تم حفظ بيانات المريض واختياره!');
+        setQuickError(res.error || 'تعذر تسجيل المريض، يرجى المحاولة مرة أخرى.');
       }
-
-      setIsQuickAddOpen(false);
-      setQuickName('');
-      setQuickPhone('');
     } catch {
-      toast.error('تعذر تسجيل المريض، يرجى المحاولة مرة أخرى.');
+      setQuickError('تعذر تسجيل المريض، يرجى المحاولة مرة أخرى.');
     } finally {
       setIsCreatingPatient(false);
     }
@@ -119,6 +151,8 @@ export function PatientStepCard() {
     setValue('patientId', '', { shouldValidate: true, shouldDirty: true, shouldTouch: true });
     setValue('patientName', '', { shouldValidate: true, shouldDirty: true, shouldTouch: true });
     setValue('patientPhone', '', { shouldValidate: true, shouldDirty: true, shouldTouch: true });
+    setValue('patientGender', '', { shouldValidate: true, shouldDirty: true, shouldTouch: true });
+    setValue('patientAge', undefined, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
   };
 
   // 5. تبديل اختيار مرض مزمن
@@ -135,6 +169,8 @@ export function PatientStepCard() {
       <input type="hidden" {...register('patientId')} />
       <input type="hidden" {...register('patientName')} />
       <input type="hidden" {...register('patientPhone')} />
+      <input type="hidden" {...register('patientGender')} />
+      <input type="hidden" {...register('patientAge')} />
 
       {/* رأس القسم: الرقم 1 والعنوان */}
       <div className="flex items-start gap-3.5">
@@ -199,6 +235,9 @@ export function PatientStepCard() {
                             <p className="font-bold text-xs text-[#0A164E]">{patient.name}</p>
                             <p className="text-[11px] text-slate-400">
                               {patient.phone} {patient.age ? `· السن: ${patient.age} سنة` : ''}{' '}
+                              {patient.gender
+                                ? `· ${patient.gender === 'FEMALE' ? 'أنثى' : 'ذكر'}`
+                                : ''}{' '}
                               {patient.lastVisit ? `· آخر زيارة: ${patient.lastVisit}` : ''}
                             </p>
                           </div>
@@ -214,7 +253,10 @@ export function PatientStepCard() {
             {/* زر تسجيل مريض جديد */}
             <button
               type="button"
-              onClick={() => setIsQuickAddOpen((prev) => !prev)}
+              onClick={() => {
+                setIsQuickAddOpen((prev) => !prev);
+                setQuickError(null);
+              }}
               className="h-11 px-4 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-700 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shrink-0"
             >
               <UserPlus className="w-4 h-4 text-[#1D4ED8]" />
@@ -222,35 +264,163 @@ export function PatientStepCard() {
             </button>
           </div>
 
-          {/* نموذج الإضافة السريعة لمريض جديد */}
+          {/* نموذج الإضافة السريعة لمريض جديد شامل: الاسم، النوع، السن، ورقم الهاتف */}
           {isQuickAddOpen && (
-            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3 animate-in fade-in-50">
-              <h4 className="font-bold text-xs text-[#0A164E]">تسجيل مريض جديد فوري</h4>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <input
-                  type="text"
-                  value={quickName}
-                  onChange={(e) => setQuickName(e.target.value)}
-                  placeholder="اسم المريض رباعياً *"
-                  className="h-10 px-3.5 rounded-xl border border-slate-200 bg-white text-xs focus:outline-none focus:border-[#1D4ED8]"
-                />
-                <input
-                  type="tel"
-                  value={quickPhone}
-                  onChange={(e) => setQuickPhone(e.target.value)}
-                  placeholder="رقم الهاتف *"
-                  className="h-10 px-3.5 rounded-xl border border-slate-200 bg-white text-xs focus:outline-none focus:border-[#1D4ED8]"
-                />
+            <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-4 animate-in fade-in-50">
+              <div className="flex items-center justify-between">
+                <h4 className="font-bold text-xs sm:text-sm text-[#0A164E] flex items-center gap-2">
+                  <UserPlus className="w-4 h-4 text-[#1D4ED8]" />
+                  <span>تسجيل مريض جديد فوري</span>
+                </h4>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsQuickAddOpen(false);
+                    setQuickError(null);
+                  }}
+                  className="text-xs text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+                >
+                  إلغاء
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={handleQuickAdd}
-                disabled={!quickName.trim() || isCreatingPatient}
-                className="py-2 px-5 rounded-xl bg-[#0040D8] hover:bg-blue-700 text-white font-bold text-xs transition-all cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
-              >
-                {isCreatingPatient && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                <span>حفظ واختيار المريض</span>
-              </button>
+
+              {/* تنبيه الخطأ إن وُجد */}
+              {quickError && (
+                <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+                  <span>{quickError}</span>
+                </div>
+              )}
+
+              <div className="space-y-3">
+                {/* 1. اسم المريض رباعياً */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    اسم المريض رباعياً <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={quickName}
+                    onChange={(e) => {
+                      setQuickName(e.target.value);
+                      if (quickError) setQuickError(null);
+                    }}
+                    placeholder="مثال: أحمد محمد علي حسن"
+                    className="w-full h-10 px-3.5 rounded-xl border border-slate-200 bg-white text-xs placeholder:text-slate-400 focus:outline-none focus:border-[#1D4ED8] focus:ring-2 focus:ring-blue-600/10 transition-all"
+                  />
+                  <p className="text-[10px] text-slate-400 mt-1">يجب إدخال أربعة مقاطع للاسم على الأقل</p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {/* 2. رقم الهاتف */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      رقم الهاتف <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="tel"
+                      value={quickPhone}
+                      onChange={(e) => {
+                        setQuickPhone(e.target.value);
+                        if (quickError) setQuickError(null);
+                      }}
+                      placeholder="01012345678"
+                      dir="ltr"
+                      className="w-full h-10 px-3.5 rounded-xl border border-slate-200 bg-white text-xs placeholder:text-slate-400 focus:outline-none focus:border-[#1D4ED8] focus:ring-2 focus:ring-blue-600/10 transition-all text-start"
+                    />
+                  </div>
+
+                  {/* 3. السن */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      السن (بالسنوات) <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="120"
+                      value={quickAge}
+                      onChange={(e) => {
+                        setQuickAge(e.target.value);
+                        if (quickError) setQuickError(null);
+                      }}
+                      placeholder="مثال: 32"
+                      className="w-full h-10 px-3.5 rounded-xl border border-slate-200 bg-white text-xs placeholder:text-slate-400 focus:outline-none focus:border-[#1D4ED8] focus:ring-2 focus:ring-blue-600/10 transition-all"
+                    />
+                  </div>
+                </div>
+
+                {/* 4. النوع (ذكر / أنثى) */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                    النوع <span className="text-rose-500">*</span>
+                  </label>
+                  <div className="grid grid-cols-2 gap-2.5">
+                    <button
+                      type="button"
+                      onClick={() => setQuickGender('MALE')}
+                      className={cn(
+                        'h-10 rounded-xl font-bold text-xs flex items-center justify-center gap-2 border transition-all cursor-pointer',
+                        quickGender === 'MALE'
+                          ? 'bg-[#0A164E] text-white border-[#0A164E] shadow-xs'
+                          : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                      )}
+                    >
+                      <span className="w-2 h-2 rounded-full bg-blue-400" />
+                      <span>ذكر</span>
+                      {quickGender === 'MALE' && <Check className="w-3.5 h-3.5" />}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setQuickGender('FEMALE')}
+                      className={cn(
+                        'h-10 rounded-xl font-bold text-xs flex items-center justify-center gap-2 border transition-all cursor-pointer',
+                        quickGender === 'FEMALE'
+                          ? 'bg-[#0A164E] text-white border-[#0A164E] shadow-xs'
+                          : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                      )}
+                    >
+                      <span className="w-2 h-2 rounded-full bg-pink-400" />
+                      <span>أنثى</span>
+                      {quickGender === 'FEMALE' && <Check className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* أزرار الإجراء */}
+              <div className="flex items-center gap-2.5 pt-1">
+                <button
+                  type="button"
+                  onClick={handleQuickAdd}
+                  disabled={!quickName.trim() || !quickPhone.trim() || isCreatingPatient}
+                  className="flex-1 py-2.5 px-4 rounded-xl bg-[#0040D8] hover:bg-blue-700 active:scale-98 text-white font-bold text-xs transition-all cursor-pointer disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2 shadow-xs"
+                >
+                  {isCreatingPatient ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>جاري حفظ المريض...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Check className="w-3.5 h-3.5" />
+                      <span>حفظ واختيار المريض</span>
+                    </>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsQuickAddOpen(false);
+                    setQuickError(null);
+                  }}
+                  className="py-2.5 px-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 font-bold text-xs transition-all cursor-pointer"
+                >
+                  إلغاء
+                </button>
+              </div>
             </div>
           )}
 
@@ -272,7 +442,13 @@ export function PatientStepCard() {
               <p className="font-black text-sm text-[#0A164E]">{selectedPatientName}</p>
               <p className="text-xs text-slate-500 mt-0.5">
                 {selectedPatientPhone ? `${selectedPatientPhone} · ` : ''}
-                السن: 34 · سجل مريض معتمد
+                {selectedPatientAge ? `السن: ${selectedPatientAge} سنة · ` : ''}
+                {selectedPatientGender
+                  ? selectedPatientGender === 'FEMALE' || selectedPatientGender === 'female'
+                    ? 'أنثى · '
+                    : 'ذكر · '
+                  : ''}
+                سجل مريض معتمد
               </p>
             </div>
           </div>

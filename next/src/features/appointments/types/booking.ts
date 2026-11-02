@@ -5,12 +5,21 @@ export type BookingFormType = z.infer<ReturnType<typeof bookingSchema>>;
 
 export interface PatientBasic {
   id: string;
-  name: string;
+  fullName: string;
+  name?: string;
+  searchName?: string;
   phone: string;
+  gender: 'MALE' | 'FEMALE';
   age?: number;
-  gender?: 'male' | 'female';
-  lastVisit?: string;
+  dateOfBirth?: string | null;
+  address?: string | null;
+  chronicConditions?: string[];
+  generalNotes?: string | null;
+  createdById?: string;
+  createdAt?: string;
+  updatedAt?: string;
   totalVisits?: number;
+  lastVisit?: string;
 }
 
 export type AppointmentTypeId =
@@ -35,4 +44,3 @@ export interface StagedAttachment {
   size: number;
   type: string;
 }
-
