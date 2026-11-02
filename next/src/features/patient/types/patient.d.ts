@@ -1,3 +1,4 @@
+import { quickPatientSchema } from "../schema/patient.schema";
 
 
 export interface PatientPayload {
@@ -8,3 +9,5 @@ export interface PatientPayload {
     chronicConditions: string[]
     address: string
 }
+
+type QuickPatientFormValues = z.infer<typeof quickPatientSchema>;

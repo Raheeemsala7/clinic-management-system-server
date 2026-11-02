@@ -5,8 +5,7 @@ import { PatientPayload } from "../types/patient";
 import { RESPONSES } from "@/shared/constant/api.responses";
 import { HEADERS } from "@/shared/constant/api.constant";
 
-
-export async function createNewPatientAction({ fullName, address, age, chronicConditions, gender, phone }: PatientPayload) {
+export async function createNewPatientAction({ fullName, address, age, chronicConditions, gender, phone }: PatientPayload): Promise<ApiResponse<PatientPayload>> {
     const token = await getNextAuthToken()
 
     if (!token?.accessToken) {
@@ -21,12 +20,15 @@ export async function createNewPatientAction({ fullName, address, age, chronicCo
         body: JSON.stringify({ fullName, address, age, chronicConditions, gender, phone })
     })
 
-    const data: ApiResponse<{}> = await res.json()
+    const data: ApiResponse<PatientPayload> = await res.json()
 
     if (!data.status) {
-        throw new Error("")
+        return {
+            status: false,
+            code: data.code || res.status,
+            message: data.message || "فشل تسجيل المريض",
+        }
     }
 
     return data
-
 }
