@@ -192,7 +192,10 @@
       "footerCopyright": "Clinic Management System © Dr. Eslam Kareema — All rights reserved",
       "heroAria": "Clinic System Information",
       "formAria": "Sign In",
-      "validationRequired": "Please enter both username and password"
+      "validationRequired": "Please enter both username and password",
+      "usernameRequired": "Username is required",
+      "usernameMin": "Username must be at least 3 characters",
+      "passwordRequired": "Password is required"
     }
   }
 }

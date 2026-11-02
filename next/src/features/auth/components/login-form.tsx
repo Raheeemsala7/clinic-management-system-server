@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import { useTranslations } from 'next-intl';
 import { cn } from 'cn';
 import { Controller, useForm } from 'react-hook-form';
@@ -8,8 +7,8 @@ import { LoginFormType } from '../types/auth';
 import { loginSchema } from '../schemas/login.schema';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { FieldError, FieldLabel, Field } from '@/shared/components/ui/field';
-import { Mail } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
+import { Loader2 } from 'lucide-react';
 
 interface LoginFormProps {
   onSubmitSuccess?: () => void;
@@ -21,25 +20,21 @@ interface LoginFormProps {
 export function LoginForm({ onSubmitSuccess }: LoginFormProps) {
   const t = useTranslations('Auth.login');
 
-
   const form = useForm<LoginFormType>({
     resolver: zodResolver(loginSchema(t)),
     defaultValues: {
       username: '',
-      password: ""
-
+      password: '',
     },
   });
 
-  console.log(form.formState.errors);
-  
+  const onSubmit = async (data: LoginFormType) => {
+    console.log('✅ Form submitted successfully with data:', data);
+    onSubmitSuccess?.();
+  };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    console.log("Click Button Form");
-    
-
+  const onError = (errors: typeof form.formState.errors) => {
+    console.log('❌ Form validation failed with errors:', errors);
   };
 
   return (
@@ -54,36 +49,31 @@ export function LoginForm({ onSubmitSuccess }: LoginFormProps) {
         </p>
       </div>
 
-
-
       {/* حقول الإدخال */}
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-5" noValidate>
+      <form onSubmit={form.handleSubmit(onSubmit, onError)} className="space-y-5" noValidate>
         {/* اسم المستخدم */}
-
-
-
         <Controller
           name="username"
           control={form.control}
           render={({ field, fieldState }) => (
             <Field>
-              <FieldLabel>{t("workEmail")}</FieldLabel>
+              <FieldLabel className="block text-xs font-bold text-[#0A164E] mb-2 text-start">
+                {t('usernameLabel')}
+              </FieldLabel>
 
-              <div className="flex items-center gap-2 rounded-xl border border-input px-3">
-                <Mail className="h-4 w-4 text-muted-foreground" />
-                <input
-                  id="username"
-                  type="text"
-                  autoComplete="username"
-                  placeholder={t('usernamePlaceholder')}
-                  className={cn(
-                    'w-full h-12 px-4 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm placeholder:text-slate-300 transition-all duration-150',
-                    'focus:outline-none focus:border-[#1D4ED8] focus:ring-4 focus:ring-blue-600/10',
-                    'disabled:opacity-60 disabled:cursor-not-allowed'
-                  )}
-                  {...field}
-                />
-              </div>
+              <input
+                id="username"
+                type="text"
+                autoComplete="username"
+                placeholder={t('usernamePlaceholder')}
+                className={cn(
+                  'w-full h-12 px-4 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm placeholder:text-slate-300 transition-all duration-150',
+                  'focus:outline-none focus:border-[#1D4ED8] focus:ring-4 focus:ring-blue-600/10',
+                  'disabled:opacity-60 disabled:cursor-not-allowed',
+                  fieldState.invalid && 'border-destructive focus:border-destructive focus:ring-destructive/10'
+                )}
+                {...field}
+              />
 
               {fieldState.invalid && (
                 <FieldError errors={[fieldState.error]} />
@@ -93,49 +83,28 @@ export function LoginForm({ onSubmitSuccess }: LoginFormProps) {
         />
 
         {/* كلمة المرور */}
-        {/* <div className="text-start">
-          <label
-            htmlFor="password"
-            className="block text-xs font-bold text-[#0A164E] mb-2"
-          >
-            {t('passwordLabel')}
-          </label>
-          <input
-            id="password"
-            name="password"
-            type="password"
-            autoComplete="current-password"
-            placeholder={t('passwordPlaceholder')}
-            className={cn(
-              'w-full h-12 px-4 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm placeholder:text-slate-300 transition-all duration-150',
-              'focus:outline-none focus:border-[#1D4ED8] focus:ring-4 focus:ring-blue-600/10',
-              'disabled:opacity-60 disabled:cursor-not-allowed'
-            )}
-          />
-        </div> */}
-
         <Controller
           name="password"
           control={form.control}
           render={({ field, fieldState }) => (
             <Field>
-              <FieldLabel>{t('passwordLabel')}</FieldLabel>
+              <FieldLabel className="block text-xs font-bold text-[#0A164E] mb-2 text-start">
+                {t('passwordLabel')}
+              </FieldLabel>
 
-              <div className="flex items-center gap-2 rounded-xl border border-input px-3">
-                <Mail className="h-4 w-4 text-muted-foreground" />
-                <input
-                  id="password"
-                  type="text"
-                  autoComplete="password"
-                  placeholder={t('passwordPlaceholder')}
-                  className={cn(
-                    'w-full h-12 px-4 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm placeholder:text-slate-300 transition-all duration-150',
-                    'focus:outline-none focus:border-[#1D4ED8] focus:ring-4 focus:ring-blue-600/10',
-                    'disabled:opacity-60 disabled:cursor-not-allowed'
-                  )}
-                  {...field}
-                />
-              </div>
+              <input
+                id="password"
+                type="password"
+                autoComplete="current-password"
+                placeholder={t('passwordPlaceholder')}
+                className={cn(
+                  'w-full h-12 px-4 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm placeholder:text-slate-300 transition-all duration-150',
+                  'focus:outline-none focus:border-[#1D4ED8] focus:ring-4 focus:ring-blue-600/10',
+                  'disabled:opacity-60 disabled:cursor-not-allowed',
+                  fieldState.invalid && 'border-destructive focus:border-destructive focus:ring-destructive/10'
+                )}
+                {...field}
+              />
 
               {fieldState.invalid && (
                 <FieldError errors={[fieldState.error]} />
@@ -147,17 +116,22 @@ export function LoginForm({ onSubmitSuccess }: LoginFormProps) {
         {/* زر الدخول الأزرق الفخم */}
         <Button
           type="submit"
-          onClick={() => console.log("Click Button !!!")
-          }
+          disabled={form.formState.isSubmitting}
           className={cn(
-            'w-full h-12 bg-[#0040D8] cursor-pointer hover:bg-blue-700 active:scale-[0.98] text-white font-bold text-sm sm:text-base rounded-xl shadow-md hover:shadow-lg transition-all duration-150 flex items-center justify-center cursor-pointer select-none mt-7',
-            'opacity-70 pointer-events-none'
+            'w-full h-12 bg-[#0040D8] hover:bg-blue-700 active:scale-[0.98] text-white font-bold text-sm sm:text-base rounded-xl shadow-md hover:shadow-lg transition-all duration-150 flex items-center justify-center cursor-pointer select-none mt-7',
+            form.formState.isSubmitting && 'opacity-70 pointer-events-none'
           )}
         >
-          <span>{t('submitBtn')}</span>
+          {form.formState.isSubmitting ? (
+            <span className="inline-flex items-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span>{t('submitting')}</span>
+            </span>
+          ) : (
+            <span>{t('submitBtn')}</span>
+          )}
         </Button>
       </form>
     </div>
   );
-};
-
+}
