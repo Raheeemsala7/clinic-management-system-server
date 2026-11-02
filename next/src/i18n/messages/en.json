@@ -206,6 +206,30 @@
     "systemTitle": "Clinic Management System",
     "version": "v1.0",
     "notifications": "Notifications",
+    "notificationMenu": {
+      "title": "Notifications",
+      "markAllRead": "Mark all as read",
+      "newCount": "{count} new",
+      "viewAll": "View all notifications",
+      "empty": "No new notifications at this time ✓",
+      "items": {
+        "booking": {
+          "title": "New Appointment Booked",
+          "desc": "Mohamed Alaa — ENT Checkup",
+          "time": "5m ago"
+        },
+        "payment": {
+          "title": "Payment Confirmed",
+          "desc": "Received 300 EGP for new checkup",
+          "time": "20m ago"
+        },
+        "waiting": {
+          "title": "Queue Alert",
+          "desc": "Patient waiting time exceeded 15 mins",
+          "time": "35m ago"
+        }
+      }
+    },
     "signOut": "Sign out",
     "roles": {
       "admin": "Panel: Admin",
