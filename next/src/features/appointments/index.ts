@@ -4,4 +4,7 @@ export * from './schemas/booking.schema';
 export * from './components/booking-form';
 export * from './components/booking-summary-panel';
 export * from './components/patient-step-card';
-
+export * from './components/appointment-type-step-card';
+export * from './components/doctor-timing-step-card';
+export * from './components/financial-step-card';
+export * from './components/attachments-notes-step-card';

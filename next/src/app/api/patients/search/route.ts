@@ -1,4 +1,3 @@
-
 import { searchPatientsAction } from "@/features/patient/apis/patient.api";
 import { getToken } from "next-auth/jwt";
 import { NextRequest, NextResponse } from "next/server";
@@ -14,7 +13,7 @@ export async function GET(req: NextRequest) {
 
   if (!token?.accessToken) {
     return NextResponse.json(
-      { message: "Unauthorized" },
+      { message: "Unauthorized", code: 401, status: false },
       { status: 401 },
     );
   }
@@ -25,10 +24,15 @@ export async function GET(req: NextRequest) {
       token.accessToken,
     );
 
+    // إذا انتهت صلاحية التوكين في السيرفر نرجع HTTP Status 401
+    if (result && typeof result === "object" && "code" in result && result.code === 401) {
+      return NextResponse.json(result, { status: 401 });
+    }
+
     return NextResponse.json(result);
   } catch {
     return NextResponse.json(
-      { message: "Failed to search patients" },
+      { message: "Failed to search patients", status: false },
       { status: 500 },
     );
   }
