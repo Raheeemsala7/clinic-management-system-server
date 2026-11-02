@@ -5,7 +5,7 @@ export type BookingFormType = z.infer<ReturnType<typeof bookingSchema>>;
 
 export interface PatientBasic {
   id: string;
-  fullName: string;
+  fullName?: string;
   name?: string;
   searchName?: string;
   phone: string;

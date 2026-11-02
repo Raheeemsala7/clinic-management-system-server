@@ -7,19 +7,32 @@ import { HEADERS } from '@/shared/constant/api.constant';
 import { getNextAuthToken } from '@/shared/lib/utils/auth.util';
 import { RESPONSES } from '@/shared/constant/api.responses';
 
+interface ApiPatientItem {
+  _id?: string;
+  id?: string;
+  fullName?: string;
+  name?: string;
+  phone?: string;
+  age?: number;
+  gender?: 'MALE' | 'FEMALE';
+  chronicConditions?: string[];
+  lastVisit?: string;
+  updatedAt?: string;
+  totalVisits?: number;
+}
+
 /**
  * البحث الفعلي عن المرضى عبر خادم Express ومونجو دي بي
  */
-export async function searchPatientsAction(query: string) {
+export async function searchPatientsAction(query: string, token?: string) {
   if (!query || query.trim().length === 0) {
     return [];
   }
 
   try {
-    const token = await getNextAuthToken();
 
-    if (!token?.accessToken) {
-      return RESPONSES.unauthorized;
+    if (!token) {
+      return [];
     }
 
     const res = await fetch(
@@ -27,45 +40,42 @@ export async function searchPatientsAction(query: string) {
       {
         headers: {
           ...HEADERS.JsonBody,
-          ...HEADERS.authorize(token?.accessToken),
+          ...HEADERS.authorize(token),
         },
         cache: 'no-store',
       }
     );
 
     if (!res.ok) {
-      console.warn('Patient search HTTP status:', res.status);
-      return [];
+      const errData = await res.json().catch(() => null);
+      return {
+        status: false,
+        code: res.status,
+        message: errData?.message || 'حدث خطأ في الخادم',
+      };
     }
 
-    const data: ApiResponse<PatientBasic[]> = await res.json();
+    const data: ApiResponse<ApiPatientItem[]> = await res.json();
 
+    // 2. لو الـ status بـ false قادمة من الـ API
     if (!data.status) {
-      return [];
+      return {
+        status: false,
+        code: data.code || 400,
+        message: data.message || 'فشلت عملية البحث',
+      };
     }
 
-    const rawList = Array.isArray(data.payload)
-      ? data.payload
-      : Array.isArray((data as any).data)
-      ? (data as any).data
-      : [];
+    if (data.code === 401 || data.message === "Invalid or expired access token") {
+      return {
+        status: false,
+        code: data.code,
+        message: data.message || 'فشلت عملية البحث',
+      };
+    }
 
-    return rawList.map((item: any) => ({
-      id: String(item._id || item.id),
-      fullName: item.fullName || item.name || '',
-      name: item.fullName || item.name || '',
-      phone: item.phone || '',
-      age: item.age,
-      gender: item.gender,
-      chronicConditions: Array.isArray(item.chronicConditions) ? item.chronicConditions : [],
-      lastVisit: item.lastVisit
-        ? new Date(item.lastVisit).toLocaleDateString('ar-EG')
-        : item.updatedAt
-        ? new Date(item.updatedAt).toLocaleDateString('ar-EG')
-        : undefined,
-      totalVisits: item.totalVisits ?? 0,
-    }));
-  } catch (err) {
+    return data
+  } catch (err: unknown) {
     console.error('Error in searchPatientsAction:', err);
     return [];
   }
@@ -83,10 +93,10 @@ export async function createQuickPatientAction(data: {
 }): Promise<{ success: boolean; patient?: PatientBasic; error?: string }> {
   try {
     const session = await getServerSession(authOptions);
-    const token = (session as any)?.accessToken;
+    const token = (session as { accessToken?: string } | null)?.accessToken;
 
     const apiUrl = process.env.API_URL || 'http://localhost:4000/api/v1';
-    const payloadBody: Record<string, any> = {
+    const payloadBody: Record<string, unknown> = {
       fullName: data.fullName.trim(),
       phone: data.phone.trim(),
       gender: data.gender || 'MALE',
@@ -105,7 +115,13 @@ export async function createQuickPatientAction(data: {
       body: JSON.stringify(payloadBody),
     });
 
-    const json = await res.json();
+    const json = (await res.json()) as {
+      status?: boolean;
+      errors?: Array<{ message?: string }>;
+      message?: string;
+      payload?: ApiPatientItem;
+    };
+
     if (!res.ok || !json.status) {
       const errMsg =
         json.errors?.[0]?.message ||
@@ -117,11 +133,11 @@ export async function createQuickPatientAction(data: {
       };
     }
 
-    const p = json.payload;
+    const p = json.payload || {};
     return {
       success: true,
       patient: {
-        id: String(p._id || p.id),
+        id: String(p._id || p.id || ''),
         fullName: p.fullName || data.fullName,
         name: p.fullName || data.fullName,
         phone: p.phone || data.phone,
@@ -133,11 +149,11 @@ export async function createQuickPatientAction(data: {
         totalVisits: 0,
       },
     };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Error in createQuickPatientAction:', err);
     return {
       success: false,
-      error: err.message || 'حدث خطأ في الاتصال بالخادم',
+      error: err instanceof Error ? err.message : 'حدث خطأ في الاتصال بالخادم',
     };
   }
 }

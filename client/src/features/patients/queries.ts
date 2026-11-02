@@ -9,6 +9,7 @@ export interface PatientBasic {
   age?: number | null;
   dateOfBirth: string | null;
   address: string | null;
+  chronicConditions?: string[];
   createdAt: string;
   updatedAt: string;
 }

@@ -4,12 +4,11 @@ import { parsePagination, buildPaginatedResult } from '../utils/pagination';
 import { NotFoundError, ForbiddenError, BadRequestError, ValidationError } from '../utils/errors';
 import { logAudit } from '../utils/audit';
 
-const MEDICAL_FIELDS = ['allergies', 'chronicConditions', 'generalNotes'] as const;
+const MEDICAL_FIELDS = ['allergies', 'generalNotes'] as const;
 
 function filterForReception(patient: any) {
   const json = patient.toJSON ? patient.toJSON() : { ...patient };
   delete json.allergies;
-  delete json.chronicConditions;
   delete json.generalNotes;
   delete json.searchName;
   return json;
@@ -54,6 +53,13 @@ export class PatientsService {
       parsedAge = a >= 0 ? a : undefined;
     }
 
+    let parsedChronic: string[] = [];
+    if (Array.isArray(chronicConditions)) {
+      parsedChronic = chronicConditions.map((c: any) => String(c).trim()).filter(Boolean);
+    } else if (typeof chronicConditions === 'string' && chronicConditions.trim()) {
+      parsedChronic = [chronicConditions.trim()];
+    }
+
     const patient = await Patient.create({
       fullName,
       searchName: normalizeArabic(fullName),
@@ -63,7 +69,7 @@ export class PatientsService {
       dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : (parsedAge !== undefined ? new Date(new Date().getFullYear() - parsedAge, 0, 1) : null),
       address: address || null,
       allergies: allergies || [],
-      chronicConditions: chronicConditions || [],
+      chronicConditions: parsedChronic,
       generalNotes: generalNotes || null,
       createdById: actor.id,
     });
@@ -153,9 +159,15 @@ export class PatientsService {
       patient.dateOfBirth = dto.dateOfBirth ? new Date(dto.dateOfBirth) : null;
     }
     if (dto.address !== undefined) patient.address = dto.address;
+    if (dto.chronicConditions !== undefined) {
+      if (Array.isArray(dto.chronicConditions)) {
+        patient.chronicConditions = dto.chronicConditions.map((c: any) => String(c).trim()).filter(Boolean);
+      } else if (typeof dto.chronicConditions === 'string' && dto.chronicConditions.trim()) {
+        patient.chronicConditions = [dto.chronicConditions.trim()];
+      }
+    }
     if (actor.role !== 'RECEPTION') {
       if (dto.allergies !== undefined) patient.allergies = dto.allergies;
-      if (dto.chronicConditions !== undefined) patient.chronicConditions = dto.chronicConditions;
       if (dto.generalNotes !== undefined) patient.generalNotes = dto.generalNotes;
     }
 

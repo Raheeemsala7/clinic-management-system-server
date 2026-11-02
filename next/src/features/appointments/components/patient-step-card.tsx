@@ -47,22 +47,23 @@ export function PatientStepCard() {
   // 1. تطبيق Debounce (300ms) على البحث الحقيقي عبر الـ API
   useEffect(() => {
     const trimmed = searchQuery.trim();
-    if (!trimmed) {
-      setSearchResults([]);
-      setIsSearching(false);
-      return;
-    }
 
-    setIsSearching(true);
     const timeoutId = setTimeout(async () => {
+      if (!trimmed) {
+        setSearchResults([]);
+        setIsSearching(false);
+        return;
+      }
+
+      setIsSearching(true);
       try {
         const results = await searchPatientsAction(trimmed);
-        if (results && results.length > 0) {
+        if (Array.isArray(results) && results.length > 0) {
           setSearchResults(results);
         } else {
           // Fallback في بيئة التطوير إذا كان السيرفر المحلي فارغاً
           const localFiltered = SAMPLE_PATIENTS.filter(
-            (p) => p.name.includes(trimmed) || p.phone.includes(trimmed)
+            (p) => (p.fullName || p.name || '').includes(trimmed) || p.phone.includes(trimmed)
           );
           setSearchResults(localFiltered);
         }
@@ -80,13 +81,17 @@ export function PatientStepCard() {
   // 2. اختيار مريض من نتائج البحث وتحديث النموذج وملخص الحجز فوراً
   const handleSelectPatient = (patient: PatientBasic) => {
     setValue('patientId', patient.id, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
-    setValue('patientName', patient.name, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
+    setValue('patientName', patient.fullName || patient.name || '', { shouldValidate: true, shouldDirty: true, shouldTouch: true });
     setValue('patientPhone', patient.phone, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
     if (patient.gender) {
       setValue('patientGender', patient.gender, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
     }
     if (patient.age !== undefined && patient.age !== null) {
       setValue('patientAge', patient.age, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
+    }
+    if (patient.chronicConditions && patient.chronicConditions.length > 0) {
+      setValue('hasChronicDisease', true, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
+      setValue('chronicDiseases', patient.chronicConditions, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
     }
     setSearchQuery('');
     setSearchResults([]);
@@ -118,6 +123,10 @@ export function PatientStepCard() {
       return;
     }
 
+    const chronicList = quickChronicConditions.length > 0
+      ? quickChronicConditions
+      : (hasChronicDisease && selectedDiseases.length > 0 ? selectedDiseases : []);
+
     setIsCreatingPatient(true);
     try {
       const res = await createQuickPatientAction({
@@ -125,6 +134,7 @@ export function PatientStepCard() {
         phone: trimmedPhone,
         gender: quickGender,
         age: parsedAge,
+        chronicConditions: chronicList,
       });
 
       if (res.success && res.patient) {
@@ -135,6 +145,7 @@ export function PatientStepCard() {
         setQuickPhone('');
         setQuickGender('MALE');
         setQuickAge('');
+        setQuickChronicConditions([]);
         setQuickError(null);
       } else {
         setQuickError(res.error || 'تعذر تسجيل المريض، يرجى المحاولة مرة أخرى.');
@@ -218,7 +229,7 @@ export function PatientStepCard() {
                     </div>
                   ) : searchResults.length === 0 ? (
                     <div className="p-4 text-center text-xs text-slate-400">
-                      لم يتم العثور على مريض بهذا الاسم. يمكنك الضغط على "+ مريض جديد".
+                      لم يتم العثور على مريض بهذا الاسم. يمكنك الضغط على &quot;+ مريض جديد&quot;.
                     </div>
                   ) : (
                     searchResults.map((patient) => (
@@ -229,10 +240,10 @@ export function PatientStepCard() {
                       >
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-full bg-[#0A164E] text-white flex items-center justify-center font-bold text-xs">
-                            {patient.name.charAt(0)}
+                            {(patient.name || patient.fullName || 'م').charAt(0)}
                           </div>
                           <div>
-                            <p className="font-bold text-xs text-[#0A164E]">{patient.name}</p>
+                            <p className="font-bold text-xs text-[#0A164E]">{patient.name || patient.fullName}</p>
                             <p className="text-[11px] text-slate-400">
                               {patient.phone} {patient.age ? `· السن: ${patient.age} سنة` : ''}{' '}
                               {patient.gender
@@ -385,6 +396,40 @@ export function PatientStepCard() {
                       <span>أنثى</span>
                       {quickGender === 'FEMALE' && <Check className="w-3.5 h-3.5" />}
                     </button>
+                  </div>
+                </div>
+
+                {/* 5. الأمراض المزمنة (اختياري) */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                    الأمراض المزمنة (اختياري)
+                  </label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {CHRONIC_DISEASES.map((disease) => {
+                      const isSelected = quickChronicConditions.includes(disease.id);
+                      return (
+                        <button
+                          key={disease.id}
+                          type="button"
+                          onClick={() => {
+                            setQuickChronicConditions((prev) =>
+                              prev.includes(disease.id)
+                                ? prev.filter((id) => id !== disease.id)
+                                : [...prev, disease.id]
+                            );
+                          }}
+                          className={cn(
+                            'px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer',
+                            isSelected
+                              ? 'bg-[#0A164E] text-white shadow-xs'
+                              : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+                          )}
+                        >
+                          {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
+                          <span>{disease.label}</span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               </div>

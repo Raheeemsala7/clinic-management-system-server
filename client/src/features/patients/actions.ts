@@ -83,7 +83,19 @@ export async function createPatientAction(
       .max(130, isAr ? 'العمر غير صالح' : 'Invalid age'),
     dateOfBirth: z.string().optional(),
     address: z.string().optional(),
+    chronicConditions: z.array(z.string()).optional(),
   });
+
+  let parsedChronicConditions: string[] | undefined = undefined;
+  const rawChronic = formData.get('chronicConditions');
+  if (typeof rawChronic === 'string' && rawChronic.trim()) {
+    try {
+      const parsed = JSON.parse(rawChronic);
+      if (Array.isArray(parsed)) parsedChronicConditions = parsed;
+    } catch {
+      parsedChronicConditions = rawChronic.split(',').map((s) => s.trim()).filter(Boolean);
+    }
+  }
 
   const parsed = createPatientSchema.safeParse({
     fullName: formData.get('fullName'),
@@ -92,6 +104,7 @@ export async function createPatientAction(
     age: formData.get('age'),
     dateOfBirth: formData.get('dateOfBirth') || undefined,
     address: formData.get('address') || undefined,
+    chronicConditions: parsedChronicConditions,
   });
 
   if (!parsed.success) {
@@ -150,6 +163,7 @@ export async function createQuickPatientAction(data: {
   age: number;
   dateOfBirth?: string;
   address?: string;
+  chronicConditions?: string[];
 }) {
   await requireRole(['ADMIN', 'DOCTOR', 'RECEPTION']);
   const { t, locale, isAr } = await getServerI18n();
@@ -168,6 +182,7 @@ export async function createQuickPatientAction(data: {
     const patient = await api.post<import('./queries').PatientBasic>('/patients', {
       ...data,
       fullName: nameCheck.normalized,
+      chronicConditions: Array.isArray(data.chronicConditions) ? data.chronicConditions : [],
     });
     revalidatePath('/reception/patients');
     revalidatePath('/admin/patients');
