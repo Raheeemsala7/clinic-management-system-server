@@ -1,11 +1,11 @@
 "use server"
 
 import { getNextAuthToken } from "@/shared/lib/utils/auth.util";
-import { PatientPayload } from "../types/patient";
+import { Patient, PatientPayload } from "../types/patient";
 import { RESPONSES } from "@/shared/constant/api.responses";
 import { HEADERS } from "@/shared/constant/api.constant";
 
-export async function createNewPatientAction({ fullName, age, chronicConditions, gender, phone  }: PatientPayload): Promise<ApiResponse<PatientPayload>> {
+export async function createNewPatientAction({ fullName, age, chronicConditions, gender, phone  }: PatientPayload): Promise<ApiResponse<Patient>> {
     const token = await getNextAuthToken()
 
     if (!token?.accessToken) {
@@ -20,7 +20,7 @@ export async function createNewPatientAction({ fullName, age, chronicConditions,
         body: JSON.stringify({ fullName, age, chronicConditions, gender, phone })
     })
 
-    const data: ApiResponse<PatientPayload> = await res.json()
+    const data: ApiResponse<Patient> = await res.json()
 
     if (!data.status) {
         return {
@@ -30,5 +30,7 @@ export async function createNewPatientAction({ fullName, age, chronicConditions,
         }
     }
 
+    console.log("Action" , data);
+    
     return data
 }

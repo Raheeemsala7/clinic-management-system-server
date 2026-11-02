@@ -1,5 +1,5 @@
 "use client"
-import { Controller, Form, useForm } from "react-hook-form";
+import { Controller, Form, useForm, useFormContext } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { quickPatientSchema } from "../schema/patient.schema";
 import { useTranslations } from "next-intl";
@@ -9,9 +9,14 @@ import { toast } from "sonner";
 import { useCreatePatientMutation } from "../hooks/patient.hooks";
 import { QuickPatientFormValues } from "../types/patient";
 import { CHRONIC_DISEASES } from "@/features/appointments/constants/booking.constant";
+import { BookingFormType } from "@/features/appointments";
 
 export function CreatePatientForm({ setIsQuickAddOpen }: { setIsQuickAddOpen: (val: boolean) => void }) {
     const t = useTranslations()
+    const {
+        setValue: setValueBoking,
+    } = useFormContext<BookingFormType>();
+
     const {
         control: quickControl,
         handleSubmit: handleQuickSubmit,
@@ -49,29 +54,29 @@ export function CreatePatientForm({ setIsQuickAddOpen }: { setIsQuickAddOpen: (v
 
     const onQuickAddSubmit = async (values: QuickPatientFormValues) => {
 
-        console.log(values);
 
 
         try {
             // await createPatientMutation({fullName: values.fullName, phone: values.phone, age: values.age, gender: values.gender, chronicConditions: values.hasChronicDisease ? values.chronicDiseases : [], generalNotes: values.generalNotes})
-            await createPatientMutation({
+            const data = await createPatientMutation({
                 fullName: values.fullName,
                 phone: values.phone,
                 age: values.age,
                 gender: values.gender,
                 chronicConditions: values.hasChronicDisease ? values.chronicDiseases : [],
             });
+            setValueBoking("patientId", data.id)
+            setValueBoking("patientName", data.fullName)
+            setValueBoking("patientAge", data.age)
+            setValueBoking("patientGender", data.gender)
+            setValueBoking("patientPhone", data.phone)
+            setValueBoking("hasChronicDisease", hasChronicDisease )
+            setValueBoking("chronicDiseases", selectedDiseases )
+
             resetQuick();
             setIsQuickAddOpen(false);
 
-            // if (res.success && res.patient) {
-            //     // handleSelectPatient(res.patient);
-            //     toast.success('تم تسجيل المريض واختياره بنجاح!');
-            //     resetQuick();
-            //     // setIsQuickAddOpen(false);
-            // } else {
-            //     toast.error(res.error || 'تعذر تسجيل المريض، يرجى المحاولة مرة أخرى.');
-            // }
+
         } catch {
             toast.error('تعذر تسجيل المريض، يرجى المحاولة مرة أخرى.');
         }

@@ -47,7 +47,7 @@ export function BookingForm() {
   });
 
   const onSubmit = async (data: BookingFormType) => {
-    setIsSubmitting(true);
+    setIsSubmitting(trueconsole.log);
     try {
       console.log('✅ تم إرسال بيانات الحجز بنجاح:', data);
       await new Promise((resolve) => setTimeout(resolve, 800));

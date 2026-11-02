@@ -9,4 +9,13 @@ export interface PatientPayload {
     chronicConditions: string[];
 }
 
+export interface Patient {
+  id: string;
+  fullName: string;
+  phone: string;
+  gender: 'MALE' | 'FEMALE';
+  age: number;
+  chronicConditions?: string[];
+}
+
 export type QuickPatientFormValues = z.infer<ReturnType<typeof quickPatientSchema>>;
