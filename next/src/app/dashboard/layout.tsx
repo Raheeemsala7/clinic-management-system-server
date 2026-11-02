@@ -1,7 +1,6 @@
 import React from 'react';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/auth';
-import { cookies } from 'next/headers';
 import {
   DashboardLayoutClient,
   AdminDashboardView,
@@ -19,6 +18,7 @@ interface DashboardLayoutProps {
 
 /**
  * تخطيط لوحة التحكم الموحد - ثابت مع اختلاف المحتوى حسب دور المستخدم (Role-Based Dashboard)
+ * معتمد على معمارية shadcn/ui الرسمية المتوافقة مع نمط AI-Productivity-Platform
  */
 export default async function DashboardLayout({
   children,
@@ -28,11 +28,8 @@ export default async function DashboardLayout({
 }: DashboardLayoutProps) {
   // جلب الجلسة الحالية وتحديد دور المستخدم
   const session = await getServerSession(authOptions);
-  console.log(session);
-  
 
-
-  const rawRole = ( session?.user.role || 'ADMIN').toUpperCase();
+  const rawRole = (session?.user?.role || 'ADMIN').toUpperCase();
   const role: UserRole =
     rawRole === 'DOCTOR'
       ? 'DOCTOR'

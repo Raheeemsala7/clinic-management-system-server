@@ -1,102 +1,147 @@
 'use client';
 
-import React from 'react';
+import * as React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { cn } from 'cn';
+import { cn } from '@/lib/utils';
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarRail,
+  useSidebar,
+} from '@/shared/components/ui/sidebar';
 import { UserRole } from '../types';
 import { ROLE_CONFIG } from '../constants';
 
-interface DashboardSidebarProps {
+interface DashboardSidebarProps extends React.ComponentProps<typeof Sidebar> {
   role: UserRole;
-  className?: string;
   onItemClick?: () => void;
 }
 
 /**
- * شريط التنقل الجانبي للوحة التحكم - مطابق للتصميم في جميع الأدوار
+ * شريط التنقل الجانبي للوحة التحكم مبني على shadcn Sidebar الرسمي
+ * مخصص بألوان وهوية العيادة ويتكيف تلقائياً مع دور المستخدم (ADMIN / DOCTOR / RECEPTIONIST)
  */
-export const DashboardSidebar = ({
+export function DashboardSidebar({
   role,
   className,
   onItemClick,
-}: DashboardSidebarProps) => {
+  ...props
+}: DashboardSidebarProps) {
   const pathname = usePathname();
   const config = ROLE_CONFIG[role] || ROLE_CONFIG.ADMIN;
+  const { isMobile, setOpenMobile } = useSidebar();
+
+  const handleItemClick = () => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+    onItemClick?.();
+  };
 
   return (
-    <aside
-      className={cn(
-        'w-64 sm:w-72 bg-[#091336] text-white flex flex-col justify-between shrink-0 h-screen sticky top-0 select-none shadow-xl border-l border-white/5',
-        className
-      )}
+    <Sidebar
+      collapsible="icon"
+      className={cn('border-none bg-[#091336] text-white select-none shadow-xl', className)}
+      {...props}
     >
-      {/* الجزء العلوي: الشعار وقائمة الروابط */}
-      <div className="flex flex-col flex-1 overflow-y-auto py-6 px-4">
-        {/* رأس الشريط: شعار عيادة الأنف والأذن والحنجرة */}
-        <div className="flex items-center justify-between pb-6 mb-4 border-b border-white/10 px-2">
-          <Link
-            href="/dashboard"
-            className="flex items-center gap-2.5 group"
-            onClick={onItemClick}
-          >
-            <span className="font-black text-lg text-white tracking-tight">
-              نظام إدارة العيادة
-            </span>
-            <div className="grid grid-cols-2 gap-1 w-6 h-6 shrink-0" aria-hidden="true">
-              <span className="w-2.5 h-2.5 rounded-xs bg-[#1D4ED8]" />
-              <span className="w-2.5 h-2.5 rounded-xs bg-white" />
-              <span className="w-2.5 h-2.5 rounded-xs bg-[#081544]" />
-              <span className="w-2.5 h-2.5 rounded-xs bg-[#F5B800]" />
-            </div>
-          </Link>
-        </div>
-
-        {/* قائمة الروابط بحسب الدور */}
-        <nav className="space-y-1.5 flex-1" aria-label="Dashboard Navigation">
-          {config.navItems.map((item) => {
-            // نعتبر أول رابط نشط في الصفحة الرئيسية للوحة
-            const isActive =
-              item.href === '/dashboard'
-                ? pathname === '/dashboard' || pathname === '/dashboard/'
-                : pathname?.startsWith(item.href);
-
-            return (
-              <Link
-                key={item.id}
-                href={item.href}
-                onClick={onItemClick}
-                className={cn(
-                  'flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-bold transition-all duration-150',
-                  isActive
-                    ? 'bg-[#F5B800] text-slate-950 shadow-md font-black'
-                    : 'text-slate-300 hover:text-white hover:bg-white/5 font-medium'
-                )}
-              >
-                <span>{item.title}</span>
-
-                {/* أيقونة المربع الصغير المطابقة للتصميم في الصورة */}
-                <span
-                  className={cn(
-                    'w-4 h-4 rounded-xs border-2 flex items-center justify-center shrink-0 transition-colors',
-                    isActive
-                      ? 'border-slate-950 bg-slate-950'
-                      : 'border-slate-400 group-hover:border-slate-200'
-                  )}
+      {/* 1. رأس الشريط الجانبي: الشعار واسم العيادة */}
+      <SidebarHeader className="border-b border-white/10 px-4 py-5 group-data-[collapsible=icon]:p-2 bg-[#091336]">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              size="lg"
+              render={<Link href="/dashboard" onClick={handleItemClick} />}
+              className="hover:bg-white/5 active:bg-white/10 text-white hover:text-white px-2 group-data-[collapsible=icon]:justify-center"
+            >
+              <div className="flex items-center justify-between w-full group-data-[collapsible=icon]:justify-center">
+                <span className="font-black text-base sm:text-lg text-white tracking-tight group-data-[collapsible=icon]:hidden">
+                  نظام إدارة العيادة
+                </span>
+                {/* شعار العيادة المربّع المميّز */}
+                <div
+                  className="grid grid-cols-2 gap-1 w-6 h-6 shrink-0"
                   aria-hidden="true"
-                />
-              </Link>
-            );
-          })}
-        </nav>
-      </div>
+                >
+                  <span className="w-2.5 h-2.5 rounded-xs bg-[#1D4ED8]" />
+                  <span className="w-2.5 h-2.5 rounded-xs bg-white" />
+                  <span className="w-2.5 h-2.5 rounded-xs bg-[#081544]" />
+                  <span className="w-2.5 h-2.5 rounded-xs bg-[#F5B800]" />
+                </div>
+              </div>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarHeader>
 
-      {/* أسفل الشريط: رقم الإصدار ونوع اللوحة */}
-      <div className="py-4 px-6 border-t border-white/10 flex items-center justify-between text-xs text-slate-400 font-semibold bg-[#070F2B]">
-        <span>v1.0</span>
-        <span>{config.roleLabel}</span>
-      </div>
-    </aside>
+      {/* 2. محتوى الشريط: قائمة الروابط بحسب الدور */}
+      <SidebarContent className="px-3 py-4 group-data-[collapsible=icon]:px-1 bg-[#091336]">
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu className="gap-1.5">
+              {config.navItems.map((item) => {
+                const isActive =
+                  item.href === '/dashboard'
+                    ? pathname === '/dashboard' || pathname === '/dashboard/'
+                    : pathname?.startsWith(item.href);
+
+                return (
+                  <SidebarMenuItem key={item.id}>
+                    <SidebarMenuButton
+                      isActive={isActive}
+                      tooltip={item.title}
+                      render={
+                        <Link
+                          href={item.href}
+                          onClick={handleItemClick}
+                        />
+                      }
+                      className={cn(
+                        'h-11 px-3.5 rounded-xl font-bold transition-all text-sm group-data-[collapsible=icon]:justify-center',
+                        isActive
+                          ? 'bg-[#F5B800] text-slate-950 hover:bg-[#F5B800] hover:text-slate-950 font-black shadow-md'
+                          : 'text-slate-300 hover:text-white hover:bg-white/10 font-medium'
+                      )}
+                    >
+                      <div className="flex items-center justify-between w-full">
+                        <span className="truncate">{item.title}</span>
+
+                        {/* أيقونة المربع الصغير المطابقة تماماً لتصميم الـ Figma والصور */}
+                        <span
+                          className={cn(
+                            'w-4 h-4 rounded-xs border-2 flex items-center justify-center shrink-0 transition-colors group-data-[collapsible=icon]:hidden',
+                            isActive
+                              ? 'border-slate-950 bg-slate-950'
+                              : 'border-slate-400 group-hover:border-slate-200'
+                          )}
+                          aria-hidden="true"
+                        />
+                      </div>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+
+      {/* 3. أسفل الشريط الجانبي: رقم الإصدار ونوع اللوحة */}
+      <SidebarFooter className="border-t border-white/10 p-0 bg-[#070F2B]">
+        <div className="py-4 px-5 flex items-center justify-between text-xs text-slate-400 font-semibold group-data-[collapsible=icon]:justify-center">
+          <span className="group-data-[collapsible=icon]:hidden">v1.0</span>
+          <span>{config.roleLabel}</span>
+        </div>
+      </SidebarFooter>
+
+      <SidebarRail />
+    </Sidebar>
   );
-};
-
+}

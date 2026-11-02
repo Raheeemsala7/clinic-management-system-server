@@ -1,37 +1,27 @@
 'use client';
 
 import React from 'react';
-import { Menu } from 'lucide-react';
+import { SidebarTrigger } from '@/shared/components/ui/sidebar';
 import { AuthLanguageBtn } from '@/features/auth/components/auth-language-btn';
 import { UserRole } from '../types';
 import { ROLE_CONFIG } from '../constants';
 
 interface DashboardHeaderProps {
   role: UserRole;
-  onOpenMobileSidebar?: () => void;
 }
 
 /**
- * شريط الرأس الموحد للوحة التحكم - يتضمن الترحيب، حالة الطبيب، زر اللغة، وزر التنبيهات
+ * شريط الرأس الموحد للوحة التحكم - مبني على زر SidebarTrigger الرسمي من shadcn
+ * يتضمن الترحيب بالدور الحالي، شارة حالة الطبيب، زر تغيير اللغة، وزر التنبيهات
  */
-export const DashboardHeader = ({
-  role,
-  onOpenMobileSidebar,
-}: DashboardHeaderProps) => {
+export function DashboardHeader({ role }: DashboardHeaderProps) {
   const config = ROLE_CONFIG[role] || ROLE_CONFIG.ADMIN;
 
   return (
-    <header className="w-full bg-white/70 backdrop-blur-md border-b border-slate-100 py-3.5 px-4 sm:px-8 flex items-center justify-between sticky top-0 z-30 select-none">
-      {/* الجانب الأيمن (في RTL): زر الموبايل + جملة الترحيب */}
+    <header className="w-full bg-white/80 backdrop-blur-md border-b border-slate-200/70 py-3.5 px-4 sm:px-6 lg:px-8 flex items-center justify-between sticky top-0 z-30 select-none shadow-xs">
+      {/* الجانب الأيمن (في RTL): زر فتح/طي الـ Sidebar + الترحيب بالدور */}
       <div className="flex items-center gap-3">
-        <button
-          type="button"
-          onClick={onOpenMobileSidebar}
-          className="lg:hidden p-2 rounded-xl text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
-          aria-label="القائمة الجانبية"
-        >
-          <Menu className="w-5 h-5" />
-        </button>
+        <SidebarTrigger className="text-[#0A164E] hover:bg-slate-100 rounded-xl" />
 
         <h1 className="text-sm sm:text-base font-black text-[#0A164E] tracking-tight">
           {config.greeting}
@@ -63,4 +53,4 @@ export const DashboardHeader = ({
       </div>
     </header>
   );
-};
+}
