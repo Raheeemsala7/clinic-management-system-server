@@ -3,7 +3,8 @@
 import React from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { BookingFormType } from '../types/booking';
-import { APPOINTMENT_TYPES, CHRONIC_DISEASES } from '../constants/booking.constant';
+import { APPOINTMENT_TYPES, CHRONIC_DISEASES, SAMPLE_DOCTORS } from '../constants/booking.constant';
+import { useDoctorsQuery } from '../hooks/appointments.hook';
 import { AlertTriangle, Check, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -21,6 +22,7 @@ export function BookingSummaryPanel({ isSubmitting = false, onCancel }: BookingS
 
   // استخدام useWatch لضمان الاشتراك اللحظي وإعادة التصيير الفوري عند تغيير أي حقل
   const patientName = useWatch({ control, name: 'patientName' });
+  const doctorId = useWatch({ control, name: 'doctorId' });
   const appointmentType = useWatch({ control, name: 'appointmentType' });
   const appointmentDate = useWatch({ control, name: 'appointmentDate' });
   const appointmentTime = useWatch({ control, name: 'appointmentTime' });
@@ -31,6 +33,11 @@ export function BookingSummaryPanel({ isSubmitting = false, onCancel }: BookingS
   const paidAmount = useWatch({ control, name: 'paidAmount' }) || 0;
   const isExempt = useWatch({ control, name: 'isExempt' });
   const exemptionReason = useWatch({ control, name: 'exemptionReason' });
+
+  // جلب بيانات الأطباء من الكاش
+  const { data: doctorsData } = useDoctorsQuery();
+  const doctorsList = doctorsData && doctorsData.length > 0 ? doctorsData : SAMPLE_DOCTORS;
+  const currentDoctor = doctorsList.find((d) => d.id === doctorId) || doctorsList[0];
 
   // إيجاد مسمى نوع الموعد
   const currentType = APPOINTMENT_TYPES.find((t) => t.id === appointmentType) || APPOINTMENT_TYPES[0];
@@ -81,7 +88,9 @@ export function BookingSummaryPanel({ isSubmitting = false, onCancel }: BookingS
             {/* الطبيب */}
             <div className="flex items-center justify-between">
               <span className="text-slate-400 font-semibold">الطبيب</span>
-              <span className="font-bold text-[#0A164E]">د. إسلام</span>
+              <span className="font-bold text-[#0A164E]">
+                {currentDoctor?.name || 'د. إسلام'}
+              </span>
             </div>
 
             {/* التاريخ */}

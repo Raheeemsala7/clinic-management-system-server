@@ -44,3 +44,33 @@ export interface StagedAttachment {
   size: number;
   type: string;
 }
+
+export interface DoctorOption {
+  id: string;
+  name: string;
+  username?: string;
+  specialty?: string;
+}
+
+export interface AvailableSlotItem {
+  startTime: string;
+  endTime: string;
+  shiftIndex: number;
+  isBooked: boolean;
+  isPast: boolean;
+  isAvailable: boolean;
+  label?: string;
+}
+
+export interface AvailableSlotsResponse {
+  date: string;
+  dayOfWeek: number;
+  dayName: string;
+  isWorkingDay: boolean;
+  isPast: boolean;
+  message?: string;
+  slotDurationMinutes?: number;
+  slots: AvailableSlotItem[];
+  availableCount: number;
+  bookedCount: number;
+}

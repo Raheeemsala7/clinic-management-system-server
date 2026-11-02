@@ -8,6 +8,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { bookingSchema } from '../schemas/booking.schema';
 import { BookingFormType } from '../types/booking';
 import { PatientStepCard } from './patient-step-card';
+import { AppointmentTypeStepCard } from './appointment-type-step-card';
+import { DoctorTimingStepCard } from './doctor-timing-step-card';
+import { FinancialStepCard } from './financial-step-card';
+import { AttachmentsNotesStepCard } from './attachments-notes-step-card';
 import { BookingSummaryPanel } from './booking-summary-panel';
 import { ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
@@ -47,7 +51,7 @@ export function BookingForm() {
   });
 
   const onSubmit = async (data: BookingFormType) => {
-    setIsSubmitting(trueconsole.log);
+    setIsSubmitting(true);
     try {
       console.log('✅ تم إرسال بيانات الحجز بنجاح:', data);
       await new Promise((resolve) => setTimeout(resolve, 800));
@@ -96,7 +100,21 @@ export function BookingForm() {
             {/* 1. القسم الأول: المريض والتاريخ المرضي */}
             <PatientStepCard />
 
-            {/* سيتم إضافة الأقسام المتبقية (2 و 3 و 4 و 5) خطوة بخطوة بالترتيب */}
+            {/* 2. القسم الثاني: نوع الموعد */}
+            <AppointmentTypeStepCard />
+
+            {/* 3. القسم الثالث: الطبيب والتوقيت */}
+            <DoctorTimingStepCard />
+
+            {/* 4 و 5. الأقسام المالية والمرفقات */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+              <div className="lg:col-span-7">
+                <FinancialStepCard />
+              </div>
+              <div className="lg:col-span-5">
+                <AttachmentsNotesStepCard />
+              </div>
+            </div>
           </div>
 
           {/* عمود الملخص الجانبي الثابت */}
