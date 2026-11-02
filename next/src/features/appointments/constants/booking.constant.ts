@@ -31,14 +31,14 @@ export const SAMPLE_DOCTORS = [
 ];
 
 export const SAMPLE_SLOTS = [
-  { time: '04:00', label: '04:00 م', isAvailable: true },
-  { time: '04:30', label: '04:30 م', isAvailable: true },
-  { time: '05:00', label: '05:00 م', isAvailable: true },
-  { time: '05:30', label: '05:30 م', isAvailable: false }, // محجوز
-  { time: '06:00', label: '06:00 م', isAvailable: true },
-  { time: '06:30', label: '06:30 م', isAvailable: true },
-  { time: '07:00', label: '07:00 م', isAvailable: false }, // محجوز
-  { time: '07:30', label: '07:30 م', isAvailable: true },
+  { time: '04:00', label: '04:00 م', isAvailable: true, isBooked: false },
+  { time: '04:30', label: '04:30 م', isAvailable: true, isBooked: false },
+  { time: '05:00', label: '05:00 م', isAvailable: true, isBooked: false },
+  { time: '05:30', label: '05:30 م', isAvailable: false, isBooked: true }, // محجوز
+  { time: '06:00', label: '06:00 م', isAvailable: true, isBooked: false },
+  { time: '06:30', label: '06:30 م', isAvailable: true, isBooked: false },
+  { time: '07:00', label: '07:00 م', isAvailable: false, isBooked: true }, // محجوز
+  { time: '07:30', label: '07:30 م', isAvailable: true, isBooked: false },
 ];
 
 export const SAMPLE_PATIENTS: PatientBasic[] = [

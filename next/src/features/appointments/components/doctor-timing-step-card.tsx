@@ -86,9 +86,13 @@ export function DoctorTimingStepCard() {
     });
   };
 
-  // قائمة المواعيد المعروضة
+  // قائمة المواعيد المعروضة: المتاحة والمحجوزة فقط (مع استبعاد الفترات المنتهية غير المحجوزة)
   const hasApiSlots = Boolean(slotsData && Array.isArray(slotsData.slots));
   const rawSlots = hasApiSlots ? slotsData!.slots : SAMPLE_SLOTS;
+
+  const displayableSlots = rawSlots.filter((slot: any) => {
+    return Boolean(slot.isAvailable || slot.isBooked);
+  });
 
   return (
     <div className="bg-white rounded-3xl p-5 sm:p-7 shadow-xs border border-slate-100 space-y-6 animate-in fade-in-50">
@@ -289,8 +293,13 @@ export function DoctorTimingStepCard() {
               {slotsData.message || 'التاريخ المحدد في الماضي · لا يمكن حجز مواعيد سابقة'}
             </span>
           </div>
+        ) : displayableSlots.length === 0 ? (
+          /* حالة عدم وجود مواعيد متاحة أو محجوزة */
+          <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-slate-500 text-xs font-bold text-center">
+            لا توجد مواعيد متاحة أو محجوزة متبقية لهذا اليوم.
+          </div>
         ) : (
-          /* شبكة أزرار الفترات الزمنية المتاحة */
+          /* شبكة أزرار الفترات الزمنية: المتاحة والمحجوزة فقط */
           <div className="flex flex-wrap items-center gap-2">
             {/* زر «الآن» الأصفر المميز */}
             <button
@@ -302,17 +311,19 @@ export function DoctorTimingStepCard() {
             </button>
 
             {/* أزرار الساعات */}
-            {rawSlots.map((slot: any, idx: number) => {
+            {displayableSlots.map((slot: any, idx: number) => {
               const label = slot.label || slot.startTime || `slot-${idx}`;
               const isAvailable = Boolean(slot.isAvailable);
               const isSelected = selectedTime === label;
 
-              if (!isAvailable) {
+              // موعد محجوز (مشطوب وغير قابل للاختيار)
+              if (slot.isBooked || !isAvailable) {
                 return (
                   <button
                     key={slot.time || slot.startTime || idx}
                     type="button"
                     disabled
+                    title="موعد محجوز"
                     className="px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-50 text-slate-300 border border-slate-200 line-through cursor-not-allowed select-none"
                   >
                     {label}
@@ -320,6 +331,7 @@ export function DoctorTimingStepCard() {
                 );
               }
 
+              // موعد متاح (قابل للاختيار)
               return (
                 <button
                   key={slot.time || slot.startTime || idx}
