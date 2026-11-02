@@ -195,7 +195,11 @@
       "validationRequired": "Please enter both username and password",
       "usernameRequired": "Username is required",
       "usernameMin": "Username must be at least 3 characters",
-      "passwordRequired": "Password is required"
+      "passwordRequired": "Password is required",
+      "unknownError": "An unexpected error occurred, please try again",
+      "invalidCredentials": "Invalid credentials, please check your username and password",
+      "login-success": "Logged in successfully! Welcome back",
+      "loginSuccess": "Logged in successfully! Welcome back"
     }
   }
 }

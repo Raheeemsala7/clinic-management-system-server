@@ -6,13 +6,13 @@ import NextAuthProvider from './components/next-auth-provider';
 // import { ThemeProvider } from "./_components/theme-provider";
 // import NextAuthProvider from "./_components/next-auth-provider";
 
-export const Providers = ({ children }: { children: React.ReactNode }) => {
+export const Providers = ({ children , locale }: { children: React.ReactNode , locale :string }) => {
     return (
         <NextIntlClientProvider>
             {/* <ReactQueryProvider> */}
             {/* <ThemeProvider> */}
             <NextAuthProvider>
-                <Toaster richColors />
+                <Toaster richColors  position={locale === "ar" ? "top-left" : "top-right"}/>
                 {children}
             </NextAuthProvider>
             {/* </ThemeProvider> */}

@@ -8,10 +8,10 @@ import { loginSchema } from '../schemas/login.schema';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { FieldError, FieldLabel, Field } from '@/shared/components/ui/field';
 import { Button } from '@/shared/components/ui/button';
+import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { signIn } from 'next-auth/react';
 import { toast } from 'sonner';
-
 
 
 /**
@@ -19,6 +19,7 @@ import { toast } from 'sonner';
  */
 export function LoginForm() {
   const t = useTranslations('Auth.login');
+  const router = useRouter();
 
   const form = useForm<LoginFormType>({
     resolver: zodResolver(loginSchema(t)),
@@ -37,18 +38,22 @@ export function LoginForm() {
       });
 
       if (!loginResponse?.ok) {
-        toast.error(loginResponse?.error ?? t('unknownError'))
+        if (
+          loginResponse?.error === 'Invalid credentials' ||
+          loginResponse?.error === 'CredentialsSignin'
+        ) {
+          toast.error(t('invalidCredentials'));
+        } else {
+          toast.error(loginResponse?.error ?? t('unknownError'));
+        }
         return;
       }
-      if (loginResponse?.error === "Invalid credentials") {
-        toast.error(t("invalidCredentials"))
-        return
-      }
 
-      toast.success(t("login-success"))
-
+      toast.success(t('login-success'));
+      router.push('/dashboard');
+      router.refresh();
     } catch (error) {
-
+      toast.error(t('unknownError'));
     }
   };
 
