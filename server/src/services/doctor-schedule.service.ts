@@ -1,6 +1,6 @@
 import { DoctorSchedule, Appointment, User, IDoctorDaySchedule } from '../models';
 import { getTodayClinicDate } from '../utils/clinic-date';
-import { BadRequestError, NotFoundError } from '../utils/errors';
+import { BadRequestError, NotFoundError, ValidationError } from '../utils/errors';
 
 export const ARABIC_DAYS = [
   'الأحد',     // 0
@@ -107,10 +107,14 @@ export class DoctorScheduleService {
       if (day.isAvailable && day.shifts) {
         for (const shift of day.shifts) {
           if (!shift.startTime || !shift.endTime) {
-            throw new BadRequestError('كل فترة عمل يجب أن تحتوي على وقت بدء ووقت انتهاء');
+            throw new ValidationError('Validation failed', [
+              { path: 'weeklySchedule.shifts', message: 'كل فترة عمل يجب أن تحتوي على وقت بدء ووقت انتهاء' },
+            ]);
           }
           if (timeToMinutes(shift.startTime) >= timeToMinutes(shift.endTime)) {
-            throw new BadRequestError(`وقت البدء (${shift.startTime}) يجب أن يسبق وقت الانتهاء (${shift.endTime})`);
+            throw new ValidationError('Validation failed', [
+              { path: 'weeklySchedule.shifts', message: `وقت البدء (${shift.startTime}) يجب أن يسبق وقت الانتهاء (${shift.endTime})` },
+            ]);
           }
         }
       }
@@ -131,7 +135,9 @@ export class DoctorScheduleService {
 
   static async getAvailableSlots(doctorId: string, dateStr: string) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-      throw new BadRequestError('صيغة التاريخ غير صالحة، الصيغة المطلوبة YYYY-MM-DD');
+      throw new ValidationError('Validation failed', [
+        { path: 'date', message: 'صيغة التاريخ غير صالحة، الصيغة المطلوبة YYYY-MM-DD' },
+      ]);
     }
 
     const today = getTodayClinicDate();

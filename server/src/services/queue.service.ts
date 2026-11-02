@@ -1,11 +1,13 @@
 import { Appointment, DoctorStatus, Patient, Visit } from '../models';
 import { getTodayClinicDate } from '../utils/clinic-date';
-import { BadRequestError } from '../utils/errors';
+import { BadRequestError, ValidationError } from '../utils/errors';
 
 export class QueueService {
   static async getTodayQueue(doctorId?: string) {
     if (!doctorId) {
-      throw new BadRequestError('doctorId is required');
+      throw new ValidationError('Validation failed', [
+        { path: 'doctorId', message: 'doctorId is required' },
+      ]);
     }
 
     const today = getTodayClinicDate();
@@ -47,7 +49,9 @@ export class QueueService {
 
   static async getDoctorStatus(doctorId?: string) {
     if (!doctorId) {
-      throw new BadRequestError('doctorId is required');
+      throw new ValidationError('Validation failed', [
+        { path: 'doctorId', message: 'doctorId is required' },
+      ]);
     }
 
     const docStatus = await DoctorStatus.findById(doctorId);
@@ -68,7 +72,9 @@ export class QueueService {
 
   static async setDoctorStatus(doctorId: string, status?: string) {
     if (!status || !['AVAILABLE', 'BREAK'].includes(status)) {
-      throw new BadRequestError('Status must be AVAILABLE or BREAK');
+      throw new ValidationError('Validation failed', [
+        { path: 'status', message: 'Status must be AVAILABLE or BREAK' },
+      ]);
     }
 
     const docStatus = await DoctorStatus.findByIdAndUpdate(

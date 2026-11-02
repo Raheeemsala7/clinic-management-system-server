@@ -1,16 +1,17 @@
 import { Request, Response } from 'express';
 import { PrescriptionsService } from '../services/prescriptions.service';
 import { asyncHandler } from '../middleware/asyncHandler';
+import { sendSuccess, sendPaginated, sendNoContent } from '../utils/response';
 
 export class PrescriptionsController {
   getPrintReady = asyncHandler(async (req: Request, res: Response) => {
     const result = await PrescriptionsService.getPrintReady(req.params.id, req.user!.id);
-    res.json(result);
+    sendSuccess(res, result);
   });
 
   markPrinted = asyncHandler(async (req: Request, res: Response) => {
     const result = await PrescriptionsService.markPrinted(req.params.id, req.user!.id);
-    res.json(result);
+    sendSuccess(res, result, { message: 'Prescription marked as printed' });
   });
 
   getByPatient = asyncHandler(async (req: Request, res: Response) => {
@@ -19,22 +20,22 @@ export class PrescriptionsController {
       req.query.page as string,
       req.query.pageSize as string,
     );
-    res.json(result);
+    sendPaginated(res, result);
   });
 
   getTemplates = asyncHandler(async (req: Request, res: Response) => {
     const templates = await PrescriptionsService.getTemplates(req.user!.id);
-    res.json(templates);
+    sendSuccess(res, templates);
   });
 
   createTemplate = asyncHandler(async (req: Request, res: Response) => {
     const template = await PrescriptionsService.createTemplate(req.user!.id, req.body);
-    res.status(201).json(template);
+    sendSuccess(res, template, { code: 201, message: 'Prescription template created successfully' });
   });
 
   deleteTemplate = asyncHandler(async (req: Request, res: Response) => {
     await PrescriptionsService.deleteTemplate(req.params.id, req.user!.id);
-    res.status(204).send();
+    sendNoContent(res);
   });
 }
 

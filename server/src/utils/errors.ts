@@ -1,3 +1,5 @@
+import { FieldError } from './response';
+
 export class AppError extends Error {
   public readonly statusCode: number;
   public readonly code: string;
@@ -9,6 +11,16 @@ export class AppError extends Error {
     this.code = code;
     this.statusCode = statusCode;
     this.details = details;
+  }
+}
+
+export class ValidationError extends AppError {
+  public readonly errors: FieldError[];
+
+  constructor(message = 'Validation failed', errors: FieldError[] = []) {
+    super('VALIDATION_ERROR', message, 422, errors);
+    this.name = 'ValidationError';
+    this.errors = errors;
   }
 }
 

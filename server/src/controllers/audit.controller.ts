@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { auditService } from '../services/audit.service';
 import { asyncHandler } from '../middleware/asyncHandler';
+import { sendPaginated } from '../utils/response';
 
 export class AuditController {
   getLogs = asyncHandler(async (req: Request, res: Response) => {
@@ -13,7 +14,7 @@ export class AuditController {
       page: page as string,
       pageSize: pageSize as string,
     });
-    res.json(result);
+    sendPaginated(res, result);
   });
 }
 

@@ -48,12 +48,17 @@ export const swaggerSpec = {
       ErrorResponse: {
         type: 'object',
         properties: {
-          error: {
-            type: 'object',
-            properties: {
-              code: { type: 'string', example: 'BAD_REQUEST' },
-              message: { type: 'string', example: 'بيانات غير صالحة' },
-              details: { type: 'object' },
+          status: { type: 'boolean', example: false },
+          code: { type: 'number', example: 400 },
+          message: { type: 'string', example: 'بيانات غير صالحة' },
+          errors: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                path: { type: 'string', example: 'field' },
+                message: { type: 'string', example: 'رسالة الخطأ' },
+              },
             },
           },
         },
@@ -63,7 +68,7 @@ export const swaggerSpec = {
         required: ['username', 'password'],
         properties: {
           username: { type: 'string', example: 'admin' },
-          password: { type: 'string', example: 'Adm@150b852037c3026d' },
+          password: { type: 'string', example: 'Admin@123' },
         },
       },
       UserDto: {
@@ -173,9 +178,17 @@ export const swaggerSpec = {
                 schema: {
                   type: 'object',
                   properties: {
-                    user: { $ref: '#/components/schemas/UserDto' },
-                    accessToken: { type: 'string' },
-                    refreshToken: { type: 'string' },
+                    status: { type: 'boolean', example: true },
+                    code: { type: 'number', example: 200 },
+                    message: { type: 'string', example: 'Logged in successfully' },
+                    payload: {
+                      type: 'object',
+                      properties: {
+                        user: { $ref: '#/components/schemas/UserDto' },
+                        accessToken: { type: 'string' },
+                        refreshToken: { type: 'string' },
+                      },
+                    },
                   },
                 },
               },

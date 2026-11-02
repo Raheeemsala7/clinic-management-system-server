@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { ExpensesService } from '../services/expenses.service';
 import { asyncHandler } from '../middleware/asyncHandler';
+import { sendSuccess, sendPaginated } from '../utils/response';
 
 export class ExpensesController {
   createExpense = asyncHandler(async (req: Request, res: Response) => {
@@ -10,7 +11,7 @@ export class ExpensesController {
       { id: req.user!.id, role: req.user!.role },
       ip,
     );
-    res.status(201).json(expense);
+    sendSuccess(res, expense, { code: 201, message: 'Expense created successfully' });
   });
 
   listExpenses = asyncHandler(async (req: Request, res: Response) => {
@@ -18,13 +19,13 @@ export class ExpensesController {
       req.query,
       { id: req.user!.id, role: req.user!.role },
     );
-    res.json(result);
+    sendPaginated(res, result);
   });
 
   approveExpense = asyncHandler(async (req: Request, res: Response) => {
     const ip = req.ip || req.socket.remoteAddress || '';
     const expense = await ExpensesService.approveExpense(req.params.id, req.user!.id, ip);
-    res.json(expense);
+    sendSuccess(res, expense, { message: 'Expense approved successfully' });
   });
 
   rejectExpense = asyncHandler(async (req: Request, res: Response) => {
@@ -35,17 +36,17 @@ export class ExpensesController {
       req.user!.id,
       ip,
     );
-    res.json(expense);
+    sendSuccess(res, expense, { message: 'Expense rejected successfully' });
   });
 
   getCategories = asyncHandler(async (_req: Request, res: Response) => {
     const categories = await ExpensesService.getCategories();
-    res.json(categories);
+    sendSuccess(res, categories);
   });
 
   createCategory = asyncHandler(async (req: Request, res: Response) => {
     const category = await ExpensesService.createCategory(req.body.name);
-    res.status(201).json(category);
+    sendSuccess(res, category, { code: 201, message: 'Expense category created successfully' });
   });
 }
 

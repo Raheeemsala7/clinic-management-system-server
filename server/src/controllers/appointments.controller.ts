@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { AppointmentsService } from '../services/appointments.service';
 import { asyncHandler } from '../middleware/asyncHandler';
+import { sendSuccess, sendPaginated } from '../utils/response';
 
 export class AppointmentsController {
   createAppointment = asyncHandler(async (req: Request, res: Response) => {
@@ -10,7 +11,7 @@ export class AppointmentsController {
       { id: req.user!.id },
       ip,
     );
-    res.status(201).json(result);
+    sendSuccess(res, result, { code: 201, message: 'Appointment created successfully' });
   });
 
   updateAppointment = asyncHandler(async (req: Request, res: Response) => {
@@ -21,17 +22,17 @@ export class AppointmentsController {
       { id: req.user!.id },
       ip,
     );
-    res.json(result);
+    sendSuccess(res, result, { message: 'Appointment updated successfully' });
   });
 
   listAppointments = asyncHandler(async (req: Request, res: Response) => {
     const result = await AppointmentsService.listAppointments(req.query);
-    res.json(result);
+    sendPaginated(res, result);
   });
 
   getAppointmentById = asyncHandler(async (req: Request, res: Response) => {
     const result = await AppointmentsService.getAppointmentById(req.params.id);
-    res.json(result);
+    sendSuccess(res, result);
   });
 
   transition = (action: 'arrive' | 'start' | 'complete' | 'cancel' | 'no-show' | 'postpone') =>
@@ -43,7 +44,7 @@ export class AppointmentsController {
         { id: req.user!.id },
         ip,
       );
-      res.json(result);
+      sendSuccess(res, result, { message: `Appointment transitioned to ${action}` });
     });
 
   payRemaining = asyncHandler(async (req: Request, res: Response) => {
@@ -54,7 +55,7 @@ export class AppointmentsController {
       { id: req.user!.id },
       ip,
     );
-    res.json(result);
+    sendSuccess(res, result, { message: 'Remaining balance paid successfully' });
   });
 }
 

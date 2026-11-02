@@ -1,55 +1,91 @@
 import { Request, Response, NextFunction } from 'express';
-import { AppError } from '../utils/errors';
+import { AppError, ValidationError } from '../utils/errors';
+import { errorResponse, FieldError } from '../utils/response';
 
 export function errorHandler(
   err: any,
   req: Request,
   res: Response,
   _next: NextFunction,
-) {
+): void {
   let statusCode = 500;
-  let code = 'INTERNAL_SERVER_ERROR';
-  let message = 'An unexpected error occurred';
-  let details: unknown = undefined;
+  let message = 'Internal server error';
+  let errors: FieldError[] | undefined = undefined;
 
-  if (err instanceof AppError) {
-    statusCode = err.statusCode;
-    code = err.code;
-    message = err.message;
-    details = err.details;
-  } else if (err.name === 'ValidationError') {
-    // Mongoose validation error
-    statusCode = 400;
-    code = 'VALIDATION_ERROR';
-    message = err.message;
-    details = err.errors;
-  } else if (err.code === 11000) {
-    // Mongoose duplicate key error
+  // 1. Explicit Domain ValidationError
+  if (err instanceof ValidationError) {
+    statusCode = err.statusCode || 422;
+    message = err.message || 'Validation failed';
+    errors = err.errors;
+  }
+  // 2. Mongoose Schema Validation Error
+  else if (err.name === 'ValidationError' && err.errors && typeof err.errors === 'object') {
+    statusCode = 422;
+    message = 'Validation failed';
+    errors = Object.keys(err.errors).map((key) => {
+      const field = err.errors[key];
+      return {
+        path: field.path || key,
+        message: field.message || `Invalid value for ${key}`,
+      };
+    });
+  }
+  // 3. Joi Validation Error (if err.isJoi or err.details is array)
+  else if (err.isJoi || (err.name === 'ValidationError' && Array.isArray(err.details))) {
+    statusCode = 422;
+    message = 'Validation failed';
+    errors = err.details.map((detail: any) => ({
+      path: Array.isArray(detail.path) ? detail.path.join('.') : String(detail.path || ''),
+      message: detail.message.replace(/['"]/g, ''),
+    }));
+  }
+  // 4. Mongoose CastError (e.g. invalid ObjectId)
+  else if (err.name === 'CastError') {
+    statusCode = 422;
+    message = 'Validation failed';
+    errors = [
+      {
+        path: err.path || 'id',
+        message: `Invalid format for field ${err.path || 'id'}`,
+      },
+    ];
+  }
+  // 5. Mongoose Duplicate Key Error
+  else if (err.code === 11000) {
     statusCode = 409;
-    code = 'CONFLICT';
-    message = 'A resource with this key already exists';
-    details = err.keyValue;
-  } else if (err.name === 'CastError') {
+    const duplicateKey = err.keyValue ? Object.keys(err.keyValue).join(', ') : 'resource';
+    message = `A ${duplicateKey} with this value already exists`;
+  }
+  // 6. JSON Parse Failure in Body
+  else if (err.type === 'entity.parse.failed') {
     statusCode = 400;
-    code = 'INVALID_ID';
-    message = `Invalid format for field ${err.path}`;
-  } else if (err.type === 'entity.parse.failed') {
-    statusCode = 400;
-    code = 'INVALID_JSON';
     message = 'Malformed JSON in request body';
-  } else if (err.statusCode || err.status) {
+  }
+  // 7. General Domain AppError
+  else if (err instanceof AppError) {
+    statusCode = err.statusCode;
+    message = err.message;
+    if (Array.isArray(err.details)) {
+      errors = err.details as FieldError[];
+    }
+  }
+  // 8. Other HTTP errors with status
+  else if (typeof err.statusCode === 'number' || typeof err.status === 'number') {
     statusCode = err.statusCode || err.status;
-    code = err.code || 'ERROR';
     message = err.message || 'Request failed';
-  } else {
-    console.error(`[Unhandled Error] on ${req.method} ${req.url}:`, err);
+  }
+  // 9. Unhandled internal errors
+  else {
+    console.error(`[Unhandled Error] on ${req.method} ${req.originalUrl || req.url}:`, err);
+    statusCode = 500;
+    message = 'Internal server error';
   }
 
-  res.status(statusCode).json({
-    error: {
-      code,
+  res.status(statusCode).json(
+    errorResponse({
+      code: statusCode,
       message,
-      ...(details !== undefined && { details }),
-    },
-  });
+      errors,
+    }),
+  );
 }

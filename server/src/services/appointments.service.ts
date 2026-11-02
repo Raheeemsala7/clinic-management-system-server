@@ -1,7 +1,7 @@
 import { Appointment, Patient, User, Visit, DoctorStatus } from '../models';
 import { getTodayClinicDate } from '../utils/clinic-date';
 import { parsePagination, buildPaginatedResult } from '../utils/pagination';
-import { NotFoundError, ConflictError, BadRequestError } from '../utils/errors';
+import { NotFoundError, ConflictError, BadRequestError, ValidationError } from '../utils/errors';
 import { logAudit } from '../utils/audit';
 import { DoctorScheduleService } from './doctor-schedule.service';
 
@@ -21,11 +21,18 @@ export class AppointmentsService {
     const clinicDate = dto.clinicDate || today;
 
     if (clinicDate < today) {
-      throw new BadRequestError('لا يمكن حجز موعد في تاريخ ماضٍ');
+      throw new ValidationError('Validation failed', [
+        { path: 'clinicDate', message: 'لا يمكن حجز موعد في تاريخ ماضٍ' },
+      ]);
     }
 
     if (!patientId || !doctorId || !source || !type) {
-      throw new BadRequestError('patientId, doctorId, source, and type are required');
+      const errors = [];
+      if (!patientId) errors.push({ path: 'patientId', message: 'patientId is required' });
+      if (!doctorId) errors.push({ path: 'doctorId', message: 'doctorId is required' });
+      if (!source) errors.push({ path: 'source', message: 'source is required' });
+      if (!type) errors.push({ path: 'type', message: 'type is required' });
+      throw new ValidationError('Validation failed', errors);
     }
 
     const doctor = await User.findOne({ _id: doctorId, role: 'DOCTOR', deletedAt: null, isActive: true });

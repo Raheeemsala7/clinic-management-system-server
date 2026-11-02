@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { reportsService } from '../services/reports.service';
 import { asyncHandler } from '../middleware/asyncHandler';
+import { sendSuccess } from '../utils/response';
 
 export class ReportsController {
   getSummary = asyncHandler(async (req: Request, res: Response) => {
@@ -8,7 +9,7 @@ export class ReportsController {
       req.query.from as string,
       req.query.to as string,
     );
-    res.json(result);
+    sendSuccess(res, result);
   });
 
   getIncomeByDay = asyncHandler(async (req: Request, res: Response) => {
@@ -16,7 +17,7 @@ export class ReportsController {
       req.query.from as string,
       req.query.to as string,
     );
-    res.json(result);
+    sendSuccess(res, result);
   });
 
   getExpensesByCategory = asyncHandler(async (req: Request, res: Response) => {
@@ -24,7 +25,7 @@ export class ReportsController {
       req.query.from as string,
       req.query.to as string,
     );
-    res.json(result);
+    sendSuccess(res, result);
   });
 
   getPaymentsByMethod = asyncHandler(async (req: Request, res: Response) => {
@@ -32,7 +33,7 @@ export class ReportsController {
       req.query.from as string,
       req.query.to as string,
     );
-    res.json(result);
+    sendSuccess(res, result);
   });
 }
 

@@ -1,7 +1,7 @@
 import { Patient, Visit, Prescription, Appointment, User } from '../models';
 import { normalizeArabic, validateFourPartName } from '../utils/arabic';
 import { parsePagination, buildPaginatedResult } from '../utils/pagination';
-import { NotFoundError, ForbiddenError, BadRequestError } from '../utils/errors';
+import { NotFoundError, ForbiddenError, BadRequestError, ValidationError } from '../utils/errors';
 import { logAudit } from '../utils/audit';
 
 const MEDICAL_FIELDS = ['allergies', 'chronicConditions', 'generalNotes'] as const;
@@ -19,13 +19,19 @@ export class PatientsService {
   static async createPatient(dto: any, actor: { id: string; role: string }, ip = '') {
     const { fullName, phone, gender, dateOfBirth, age, address, allergies, chronicConditions, generalNotes } = dto;
 
-    if (!fullName || !phone || !gender) {
-      throw new BadRequestError('fullName, phone, and gender are required');
+    const errors = [];
+    if (!fullName) errors.push({ path: 'fullName', message: 'fullName is required' });
+    if (!phone) errors.push({ path: 'phone', message: 'phone is required' });
+    if (!gender) errors.push({ path: 'gender', message: 'gender is required' });
+    if (errors.length > 0) {
+      throw new ValidationError('Validation failed', errors);
     }
 
     const nameValidation = validateFourPartName(fullName);
     if (!nameValidation.isValid) {
-      throw new BadRequestError('يجب إدخال اسم المريض رباعياً على الأقل (أربعة مقاطع)');
+      throw new ValidationError('Validation failed', [
+        { path: 'fullName', message: 'يجب إدخال اسم المريض رباعياً على الأقل (أربعة مقاطع)' },
+      ]);
     }
 
     if (actor.role === 'RECEPTION') {
@@ -131,7 +137,9 @@ export class PatientsService {
     if (dto.fullName !== undefined) {
       const nameValidation = validateFourPartName(dto.fullName);
       if (!nameValidation.isValid) {
-        throw new BadRequestError('يجب إدخال اسم المريض رباعياً على الأقل (أربعة مقاطع)');
+        throw new ValidationError('Validation failed', [
+          { path: 'fullName', message: 'يجب إدخال اسم المريض رباعياً على الأقل (أربعة مقاطع)' },
+        ]);
       }
       patient.fullName = nameValidation.normalized;
       patient.searchName = normalizeArabic(nameValidation.normalized);

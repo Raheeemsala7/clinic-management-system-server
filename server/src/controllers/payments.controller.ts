@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { PaymentsService } from '../services/payments.service';
 import { asyncHandler } from '../middleware/asyncHandler';
+import { sendSuccess, sendPaginated } from '../utils/response';
 
 export class PaymentsController {
   recordPayment = asyncHandler(async (req: Request, res: Response) => {
@@ -11,12 +12,12 @@ export class PaymentsController {
       { id: req.user!.id },
       ip,
     );
-    res.status(201).json(payment);
+    sendSuccess(res, payment, { code: 201, message: 'Payment recorded successfully' });
   });
 
   listPayments = asyncHandler(async (req: Request, res: Response) => {
     const result = await PaymentsService.listPayments(req.query, req.user!.role);
-    res.json(result);
+    sendPaginated(res, result);
   });
 
   voidPayment = asyncHandler(async (req: Request, res: Response) => {
@@ -27,7 +28,7 @@ export class PaymentsController {
       req.user!.id,
       ip,
     );
-    res.json(payment);
+    sendSuccess(res, payment, { message: 'Payment voided successfully' });
   });
 }
 

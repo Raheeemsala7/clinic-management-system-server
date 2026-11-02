@@ -1,7 +1,7 @@
 import { Expense, ExpenseCategory } from '../models';
 import { getTodayClinicDate } from '../utils/clinic-date';
 import { parsePagination, buildPaginatedResult } from '../utils/pagination';
-import { NotFoundError, ConflictError, BadRequestError } from '../utils/errors';
+import { NotFoundError, ConflictError, BadRequestError, ValidationError } from '../utils/errors';
 import { logAudit } from '../utils/audit';
 
 export class ExpensesService {
@@ -9,7 +9,12 @@ export class ExpensesService {
     const { categoryId, amount, description, spentAt } = dto;
 
     if (!categoryId || !amount || !description || !spentAt) {
-      throw new BadRequestError('categoryId, amount, description, and spentAt are required');
+      const errors = [];
+      if (!categoryId) errors.push({ path: 'categoryId', message: 'categoryId is required' });
+      if (!amount) errors.push({ path: 'amount', message: 'amount is required' });
+      if (!description) errors.push({ path: 'description', message: 'description is required' });
+      if (!spentAt) errors.push({ path: 'spentAt', message: 'spentAt is required' });
+      throw new ValidationError('Validation failed', errors);
     }
 
     const category = await ExpenseCategory.findOne({ _id: categoryId, isActive: true });

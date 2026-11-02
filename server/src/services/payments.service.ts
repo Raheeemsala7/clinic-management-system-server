@@ -1,7 +1,7 @@
 import { Payment, Appointment, DailyClosing } from '../models';
 import { getTodayClinicDate } from '../utils/clinic-date';
 import { parsePagination, buildPaginatedResult } from '../utils/pagination';
-import { NotFoundError, ForbiddenError, ConflictError, BadRequestError } from '../utils/errors';
+import { NotFoundError, ForbiddenError, ConflictError, BadRequestError, ValidationError } from '../utils/errors';
 import { logAudit } from '../utils/audit';
 
 export class PaymentsService {
@@ -9,7 +9,11 @@ export class PaymentsService {
     const { amount, method, kind } = dto;
 
     if (!amount || !method || !kind) {
-      throw new BadRequestError('amount, method, and kind are required');
+      const errors = [];
+      if (!amount) errors.push({ path: 'amount', message: 'amount is required' });
+      if (!method) errors.push({ path: 'method', message: 'method is required' });
+      if (!kind) errors.push({ path: 'kind', message: 'kind is required' });
+      throw new ValidationError('Validation failed', errors);
     }
 
     const appointment = await Appointment.findById(appointmentId);

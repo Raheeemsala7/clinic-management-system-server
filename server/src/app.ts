@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import { connectDB } from './db/connection';
 import { errorHandler } from './middleware/errorHandler';
 import { setupSwagger } from './config/swagger';
+import { sendSuccess, errorResponse } from './utils/response';
 
 import apiRouter from './routes';
 
@@ -51,7 +52,7 @@ setupSwagger(app);
 
 // Health check endpoints
 app.get(['/', '/health', '/api', '/api/health'], (_req: Request, res: Response) => {
-  res.json({
+  sendSuccess(res, {
     status: 'ok',
     service: 'Clinic Management API (Express + MongoDB)',
     version: '1.0.0',
@@ -67,12 +68,12 @@ app.use('/api', apiRouter);
 
 // 404 handler
 app.use((req: Request, res: Response) => {
-  res.status(404).json({
-    error: {
-      code: 'NOT_FOUND',
+  res.status(404).json(
+    errorResponse({
+      code: 404,
       message: `Cannot ${req.method} ${req.originalUrl}`,
-    },
-  });
+    }),
+  );
 });
 
 // Central Error Handler

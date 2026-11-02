@@ -1,6 +1,6 @@
 import { User } from '../models';
 import { parsePagination, buildPaginatedResult } from '../utils/pagination';
-import { NotFoundError, ConflictError, BadRequestError } from '../utils/errors';
+import { NotFoundError, ConflictError, BadRequestError, ValidationError } from '../utils/errors';
 import { logAudit } from '../utils/audit';
 import { hashPassword } from '../utils/crypto';
 
@@ -37,7 +37,12 @@ export class UsersService {
   ) {
     const { name, username, password, role } = dto;
     if (!name || !username || !password || !role) {
-      throw new BadRequestError('Name, username, password, and role are required');
+      const errors = [];
+      if (!name) errors.push({ path: 'name', message: 'Name is required' });
+      if (!username) errors.push({ path: 'username', message: 'Username is required' });
+      if (!password) errors.push({ path: 'password', message: 'Password is required' });
+      if (!role) errors.push({ path: 'role', message: 'Role is required' });
+      throw new ValidationError('Validation failed', errors);
     }
 
     const cleanUsername = username.toLowerCase().trim();
@@ -141,7 +146,9 @@ export class UsersService {
 
   static async resetPassword(id: string, newPassword?: string, actorId = '', ip = '') {
     if (!newPassword) {
-      throw new BadRequestError('newPassword is required');
+      throw new ValidationError('Validation failed', [
+        { path: 'newPassword', message: 'newPassword is required' },
+      ]);
     }
 
     const user = await User.findById(id);

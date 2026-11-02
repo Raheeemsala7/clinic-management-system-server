@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { User, RefreshToken } from '../models';
 import { config } from '../config/env';
 import { hashToken, generateToken, verifyPassword } from '../utils/crypto';
-import { UnauthorizedError, ForbiddenError, BadRequestError } from '../utils/errors';
+import { UnauthorizedError, ForbiddenError, BadRequestError, ValidationError } from '../utils/errors';
 import { logAudit, logAuditSystem } from '../utils/audit';
 
 export class AuthService {
@@ -44,7 +44,10 @@ export class AuthService {
 
   static async login(username?: string, password?: string, ip = '', userAgent?: string) {
     if (!username || !password) {
-      throw new BadRequestError('Username and password are required');
+      const errors = [];
+      if (!username) errors.push({ path: 'username', message: 'Username is required' });
+      if (!password) errors.push({ path: 'password', message: 'Password is required' });
+      throw new ValidationError('Validation failed', errors);
     }
 
     const cleanUsername = username.toLowerCase().trim();
@@ -98,7 +101,9 @@ export class AuthService {
 
   static async refresh(refreshToken?: string, ip = '', userAgent?: string) {
     if (!refreshToken) {
-      throw new BadRequestError('refreshToken is required');
+      throw new ValidationError('Validation failed', [
+        { path: 'refreshToken', message: 'refreshToken is required' },
+      ]);
     }
 
     const tokenHash = hashToken(refreshToken);

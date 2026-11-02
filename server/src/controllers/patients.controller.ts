@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { PatientsService } from '../services/patients.service';
 import { asyncHandler } from '../middleware/asyncHandler';
+import { sendSuccess, sendPaginated } from '../utils/response';
 
 export class PatientsController {
   createPatient = asyncHandler(async (req: Request, res: Response) => {
@@ -10,7 +11,7 @@ export class PatientsController {
       { id: req.user!.id, role: req.user!.role },
       ip,
     );
-    res.status(201).json(patient);
+    sendSuccess(res, patient, { code: 201, message: 'Patient created successfully' });
   });
 
   searchPatients = asyncHandler(async (req: Request, res: Response) => {
@@ -21,12 +22,12 @@ export class PatientsController {
       req.query.page as string,
       req.query.pageSize as string,
     );
-    res.json(result);
+    sendPaginated(res, result);
   });
 
   getPatientById = asyncHandler(async (req: Request, res: Response) => {
     const patient = await PatientsService.getPatientById(req.params.id, req.user!.role);
-    res.json(patient);
+    sendSuccess(res, patient);
   });
 
   updatePatient = asyncHandler(async (req: Request, res: Response) => {
@@ -37,7 +38,7 @@ export class PatientsController {
       { id: req.user!.id, role: req.user!.role },
       ip,
     );
-    res.json(patient);
+    sendSuccess(res, patient, { message: 'Patient updated successfully' });
   });
 
   getPatientHistory = asyncHandler(async (req: Request, res: Response) => {
@@ -46,17 +47,17 @@ export class PatientsController {
       req.query.page as string,
       req.query.pageSize as string,
     );
-    res.json(result);
+    sendPaginated(res, result);
   });
 
   getPatientSummary = asyncHandler(async (req: Request, res: Response) => {
     const summary = await PatientsService.getPatientSummary(req.params.id);
-    res.json(summary);
+    sendSuccess(res, summary);
   });
 
   getPatientBookingSummary = asyncHandler(async (req: Request, res: Response) => {
     const summary = await PatientsService.getPatientBookingSummary(req.params.id);
-    res.json(summary);
+    sendSuccess(res, summary);
   });
 }
 

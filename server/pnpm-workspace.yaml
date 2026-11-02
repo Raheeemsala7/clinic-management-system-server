@@ -1,4 +1,4 @@
 allowBuilds:
-  argon2: false
-  esbuild: false
+  argon2: true
+  esbuild: true
   '@scarf/scarf': false
