@@ -12,7 +12,7 @@ export const Providers = ({ children , locale }: { children: React.ReactNode , l
             {/* <ReactQueryProvider> */}
             {/* <ThemeProvider> */}
             <NextAuthProvider>
-                <Toaster richColors  position={locale === "ar" ? "top-left" : "top-right"}/>
+                <Toaster richColors  position={locale === "en" ? "top-left" : "top-right"}/>
                 {children}
             </NextAuthProvider>
             {/* </ThemeProvider> */}
