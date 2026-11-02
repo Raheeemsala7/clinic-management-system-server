@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 import { AlertCircle, Check, Loader2 } from "lucide-react";
 import { cn } from "cn";
 import { toast } from "sonner";
+import { useCreatePatientMutation } from "../hooks/patient.hooks";
 
 export function CreatePatientForm({setIsQuickAddOpen}:{setIsQuickAddOpen: (val:boolean) => void}) {
     const t = useTranslations()
@@ -26,7 +27,9 @@ export function CreatePatientForm({setIsQuickAddOpen}:{setIsQuickAddOpen: (val:b
         mode: 'all',
     });
 
-    console.log(quickErrors);
+  const { mutate: createPatientMutation, isPending: isCreateMutation } = useCreatePatientMutation()
+
+    
 
 
     const onQuickAddSubmit = async (data: QuickPatientFormValues) => {
@@ -214,10 +217,10 @@ export function CreatePatientForm({setIsQuickAddOpen}:{setIsQuickAddOpen: (val:b
                 <button
                     type="button"
                     onClick={() => void submitQuickPatient()}
-                    disabled={isCreatingPatient}
+                    disabled={isCreatingPatient || isCreateMutation}
                     className="flex-1 py-2.5 px-4 rounded-xl bg-[#0040D8] hover:bg-blue-700 active:scale-98 text-white font-bold text-xs transition-all cursor-pointer disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2 shadow-xs"
                 >
-                    {isCreatingPatient ? (
+                    {isCreatingPatient || isCreateMutation ? (
                         <>
                             <Loader2 className="w-3.5 h-3.5 animate-spin" />
                             <span>جاري حفظ المريض...</span>

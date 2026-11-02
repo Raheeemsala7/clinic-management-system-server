@@ -5,7 +5,7 @@ import { createNewPatientAction } from "../apis/patient.action";
 import { PatientPayload } from "../types/patient";
 import { toast } from "sonner";
 
-export function useCreatePatient() {
+export function useCreatePatientMutation() {
   return useMutation({
     mutationFn: async (payload: PatientPayload) => {
       const result = await createNewPatientAction(payload);
