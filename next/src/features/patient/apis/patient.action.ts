@@ -1,62 +1,32 @@
-import { PatientBasic } from "@/features/appointments";
+"use server"
+
+import { getNextAuthToken } from "@/shared/lib/utils/auth.util";
+import { PatientPayload } from "../types/patient";
+import { RESPONSES } from "@/shared/constant/api.responses";
 import { HEADERS } from "@/shared/constant/api.constant";
 
-/**
- * البحث الفعلي عن المرضى عبر خادم Express ومونجو دي بي
- */
-export async function searchPatientsAction(query: string, token?: string) {
-  if (!query || query.trim().length === 0) {
-    return [];
-  }
 
-  try {
+export async function createNewPatientAction({ fullName, address, age, chronicConditions, gender, phone }: PatientPayload) {
+    const token = await getNextAuthToken()
 
-    if (!token) {
-      return [];
+    if (!token?.accessToken) {
+        return RESPONSES.unauthorized
     }
-
-    const res = await fetch(
-      `${process.env.API_URL}/patients?q=${encodeURIComponent(query.trim())}&pageSize=10`,
-      {
+    const res = await fetch(`${process.env.API_URL}/patients`, {
+        method: "POST",
         headers: {
-          ...HEADERS.JsonBody,
-          ...HEADERS.authorize(token),
+            ...HEADERS.JsonBody,
+            ...HEADERS.authorize(token.accessToken)
         },
-        cache: 'no-store',
-      }
-    );
+        body: JSON.stringify({ fullName, address, age, chronicConditions, gender, phone })
+    })
 
-    if (!res.ok) {
-      const errData = await res.json().catch(() => null);
-      return {
-        status: false,
-        code: res.status,
-        message: errData?.message || 'حدث خطأ في الخادم',
-      };
-    }
+    const data: ApiResponse<{}> = await res.json()
 
-    const data: ApiResponse<PatientBasic[]> = await res.json();
-
-    // 2. لو الـ status بـ false قادمة من الـ API
     if (!data.status) {
-      return {
-        status: false,
-        code: data.code || 400,
-        message: data.message || 'فشلت عملية البحث',
-      };
-    }
-
-    if (data.code === 401 || data.message === "Invalid or expired access token") {
-      return {
-        status: false,
-        code: data.code,
-        message: data.message || 'فشلت عملية البحث',
-      };
+        throw new Error("")
     }
 
     return data
-  } catch (err: unknown) {
-    console.error('Error in searchPatientsAction:', err);
-    return [];
-  }
+
 }

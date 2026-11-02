@@ -7,7 +7,7 @@ import { Loader2, Search } from "lucide-react";
 import { BookingFormType, PatientBasic } from "../types/booking";
 import { useFormContext } from "react-hook-form";
 
-export function SearchPatientInput() {
+export function SearchPatientInput({}) {
     const [searchQuery, setSearchQuery] = useState("");
 
     const {
@@ -46,6 +46,7 @@ export function SearchPatientInput() {
         if (patient.chronicConditions && patient.chronicConditions.length > 0) {
             setValue('hasChronicDisease', true, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
             setValue('chronicDiseases', patient.chronicConditions, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
+
         }
     };
     return (

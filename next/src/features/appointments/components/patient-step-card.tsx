@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { useFormContext, Controller, useWatch } from 'react-hook-form';
 import { BookingFormType, PatientBasic } from '../types/booking';
 import { CHRONIC_DISEASES, SAMPLE_PATIENTS } from '../constants/booking.constant';
-import { searchPatientsAction, createQuickPatientAction } from '../apis/patients.action';
 import { Search, UserPlus, Check, Loader2, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -48,12 +47,7 @@ export function PatientStepCard() {
   const [quickChronicConditions, setQuickChronicConditions] = useState<string[]>([]);
   const [quickError, setQuickError] = useState<string | null>(null);
 
-  const [searchQuery, setSearchQuery] = useState("");
 
-  const [debouncedSearchQuery] = useDebounce(
-    searchQuery.trim(),
-    300,
-  );
 
 
 
@@ -107,7 +101,7 @@ export function PatientStepCard() {
       : (hasChronicDisease && selectedDiseases.length > 0 ? selectedDiseases : []);
 
     setIsCreatingPatient(true);
-  
+
   };
 
   // 4. مسح المريض المختار لإعادة البحث
@@ -425,36 +419,125 @@ export function PatientStepCard() {
           )}
         </div>
       ) : (
+        <>
         /* كارت المريض المختار المطابق تماماً للصورة 1 و 2 */
-        <div className="p-4 rounded-2xl bg-blue-50/60 border border-blue-200/70 flex items-center justify-between animate-in fade-in-50">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-[#0A164E] text-white flex items-center justify-center font-black text-sm shrink-0">
-              {selectedPatientName ? selectedPatientName.charAt(0) : 'م'}
+          <div className="p-4 rounded-2xl bg-blue-50/60 border border-blue-200/70 flex items-center justify-between animate-in fade-in-50">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-[#0A164E] text-white flex items-center justify-center font-black text-sm shrink-0">
+                {selectedPatientName ? selectedPatientName.charAt(0) : 'م'}
+              </div>
+              <div>
+                <p className="font-black text-sm text-[#0A164E]">{selectedPatientName}</p>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  {selectedPatientPhone ? `${selectedPatientPhone} · ` : ''}
+                  {selectedPatientAge ? `السن: ${selectedPatientAge} سنة · ` : ''}
+                  {selectedPatientGender
+                    ? selectedPatientGender === 'FEMALE' || selectedPatientGender === 'female'
+                      ? 'أنثى · '
+                      : 'ذكر · '
+                    : ''}
+                  سجل مريض معتمد
+                </p>
+              </div>
             </div>
-            <div>
-              <p className="font-black text-sm text-[#0A164E]">{selectedPatientName}</p>
-              <p className="text-xs text-slate-500 mt-0.5">
-                {selectedPatientPhone ? `${selectedPatientPhone} · ` : ''}
-                {selectedPatientAge ? `السن: ${selectedPatientAge} سنة · ` : ''}
-                {selectedPatientGender
-                  ? selectedPatientGender === 'FEMALE' || selectedPatientGender === 'female'
-                    ? 'أنثى · '
-                    : 'ذكر · '
-                  : ''}
-                سجل مريض معتمد
-              </p>
-            </div>
-          </div>
 
-          <button
-            type="button"
-            onClick={handleClearPatient}
-            className="text-xs font-bold text-[#1D4ED8] hover:underline cursor-pointer"
-          >
-            تغيير
-          </button>
-        </div>
+            <button
+              type="button"
+              onClick={handleClearPatient}
+              className="text-xs font-bold text-[#1D4ED8] hover:underline cursor-pointer"
+            >
+              تغيير
+            </button>
+          </div>
+          {/* قسم التاريخ المرضي والأمراض المزمنة (مربع بلون أصفر فاتح مطابق للصورة) */}
+          <div className="p-4 sm:p-5 rounded-2xl bg-[#FFFDF0] border border-amber-300 space-y-4">
+            {/* السؤال وزر التبديل (نعم / لا) */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <span className="font-bold text-xs sm:text-sm text-slate-800">
+                هل يعاني المريض من مرض مزمن؟ <span className="text-amber-600">*</span>
+              </span>
+
+              <div className="inline-flex items-center p-1 bg-white rounded-xl border border-slate-200">
+                <button
+                  type="button"
+                  onClick={() => setValue('hasChronicDisease', true, { shouldValidate: true, shouldDirty: true, shouldTouch: true })}
+                  className={cn(
+                    'px-5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer',
+                    hasChronicDisease
+                      ? 'bg-[#0A164E] text-white shadow-xs'
+                      : 'text-slate-500 hover:text-slate-800'
+                  )}
+                >
+                  نعم
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setValue('hasChronicDisease', false, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
+                    setValue('chronicDiseases', [], { shouldValidate: true, shouldDirty: true, shouldTouch: true });
+                    setValue('chronicNotes', '', { shouldValidate: true, shouldDirty: true, shouldTouch: true });
+                  }}
+                  className={cn(
+                    'px-5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer',
+                    !hasChronicDisease
+                      ? 'bg-[#0A164E] text-white shadow-xs'
+                      : 'text-slate-500 hover:text-slate-800'
+                  )}
+                >
+                  لا
+                </button>
+              </div>
+            </div>
+
+            {/* قائمة شرائح الأمراض المزمنة عند اختيار "نعم" */}
+            {hasChronicDisease && (
+              <div className="space-y-3 pt-2 border-t border-amber-200/60 animate-in fade-in-50">
+                <div className="flex flex-wrap gap-2">
+                  {CHRONIC_DISEASES.map((disease) => {
+                    const isSelected = selectedDiseases.includes(disease.id);
+                    return (
+                      <button
+                        key={disease.id}
+                        type="button"
+                        onClick={() => handleToggleDisease(disease.id)}
+                        className={cn(
+                          'px-3.5 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs',
+                          isSelected
+                            ? 'bg-brand-yellow text-slate-950 font-black shadow-xs ring-1 ring-amber-400'
+                            : 'bg-white text-slate-700 border border-slate-200 hover:border-amber-300'
+                        )}
+                      >
+                        {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
+                        <span>{disease.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* تفاصيل أو أدوية يتناولها المريض */}
+                <Controller
+                  name="chronicNotes"
+                  control={control}
+                  render={({ field }) => (
+                    <input
+                      type="text"
+                      placeholder="تفاصيل أو أدوية يتناولها المريض (اختياري)..."
+                      className="w-full h-10 px-3.5 rounded-xl border border-amber-200 bg-white text-xs placeholder:text-slate-400 focus:outline-none focus:border-amber-400 focus:ring-3 focus:ring-amber-200/30 transition-all"
+                      {...field}
+                    />
+                  )}
+                />
+
+                {errors.chronicDiseases && (
+                  <p className="text-xs text-rose-500 font-semibold">{errors.chronicDiseases.message}</p>
+                )}
+              </div>
+            )}
+          </div>
+        </>
       )}
+
+
 
 
     </div>
