@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from '@/components/ui/toast';
+import { updateSettingsAction } from '@/features/settings/actions';
 
 interface SettingsFormProps {
   initialSettings: Record<string, string>;
@@ -25,20 +26,12 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
     fd.forEach((v, k) => { if (v) data[k] = String(v); });
 
     startTransition(async () => {
-      try {
-        const res = await fetch('/api/settings/update', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data),
-        });
-        if (res.ok) {
-          toast.success(isAr ? 'تم حفظ الإعدادات' : 'Settings saved successfully');
-          setError(null);
-        } else {
-          setError(t.errors.INTERNAL_SERVER_ERROR);
-        }
-      } catch {
-        setError(t.errors.NETWORK_ERROR);
+      const res = await updateSettingsAction(data);
+      if (res.success) {
+        toast.success(isAr ? 'تم حفظ الإعدادات' : 'Settings saved successfully');
+        setError(null);
+      } else {
+        setError(res.error || t.errors.INTERNAL_SERVER_ERROR);
       }
     });
   };

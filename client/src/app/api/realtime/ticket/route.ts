@@ -35,7 +35,11 @@ export async function GET() {
       return NextResponse.json({ error: 'Failed to issue ticket' }, { status: res.status });
     }
 
-    const data = (await res.json()) as { ticket: string; expiresInSeconds: number };
+    const raw = (await res.json()) as any;
+    const data = (raw && typeof raw === 'object' && 'payload' in raw ? raw.payload : raw) as {
+      ticket: string;
+      expiresInSeconds: number;
+    };
     return NextResponse.json(data);
   } catch {
     return NextResponse.json({ error: 'Network error' }, { status: 503 });

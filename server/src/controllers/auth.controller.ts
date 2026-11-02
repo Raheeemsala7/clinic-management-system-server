@@ -32,6 +32,11 @@ export class AuthController {
     const user = await authService.getMe(req.user!.id);
     sendSuccess(res, user);
   });
+
+  getSocketTicket = asyncHandler(async (_req: Request, res: Response) => {
+    const result = authService.getSocketTicket();
+    sendSuccess(res, result);
+  });
 }
 
 export const authController = new AuthController();

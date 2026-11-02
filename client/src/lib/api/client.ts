@@ -14,19 +14,99 @@ const API_BASE_URL = process.env.API_BASE_URL ?? 'http://localhost:4000/api/v1';
 import arMessages from '@/i18n/messages/ar.json';
 import enMessages from '@/i18n/messages/en.json';
 
+export type MetadataData = {
+  page: string;
+  limit: string;
+  total: string;
+  totalPages: string;
+};
+
+export type FieldError = {
+  path: string;
+  message: string;
+};
+
+export interface SuccessResponse<T> {
+  status: true;
+  code: number;
+  message?: string;
+  payload: T;
+  metadata?: MetadataData;
+}
+
+export interface ErrorResponseBody {
+  status: false;
+  code: number | string;
+  message?: string;
+  errors?: FieldError[];
+  error?: { code?: string; message?: string; details?: unknown };
+}
+
+export type ApiResponse<T> = SuccessResponse<T> | ErrorResponseBody;
+
+export interface NormalizedPaginated<T> {
+  data: T[];
+  meta: {
+    page: number;
+    pageSize: number;
+    total: number;
+    totalPages: number;
+  };
+  payload: T[];
+  metadata: MetadataData;
+  status: true;
+  code: number;
+  message?: string;
+}
+
 /** Backend error codes → Localized messages. Unknown codes fall back by status. */
-export function getLocalizedError(code: string, status: number, locale: 'ar' | 'en' = 'ar'): string {
+export function getLocalizedError(
+  code: string,
+  status: number,
+  locale: 'ar' | 'en' = 'ar',
+  fallbackMessage?: string,
+): string {
   const dict = locale === 'en' ? enMessages : arMessages;
   const map = dict.errors as Record<string, string>;
   if (map[code]) return map[code];
+  if (fallbackMessage && map[fallbackMessage]) return map[fallbackMessage];
+
   if (status === 401) return dict.errors.UNAUTHORIZED;
   if (status === 403) return dict.errors.FORBIDDEN;
+  if (status === 404) return dict.errors.NOT_FOUND;
+  if (status === 409) return dict.errors.CONFLICT;
+  if (status === 422) return dict.errors.VALIDATION_FAILED;
   if (status >= 500) return dict.errors.INTERNAL_SERVER_ERROR;
+
+  if (
+    fallbackMessage &&
+    fallbackMessage !== 'An error occurred' &&
+    fallbackMessage !== 'Request failed' &&
+    !fallbackMessage.startsWith('HTTP ')
+  ) {
+    return fallbackMessage;
+  }
+
   return dict.errors.generic;
 }
 
-function arabicFor(code: string, status: number): string {
-  return getLocalizedError(code, status, 'ar');
+function statusCodeToCode(status: number): string {
+  switch (status) {
+    case 400:
+      return 'BAD_REQUEST';
+    case 401:
+      return 'UNAUTHORIZED';
+    case 403:
+      return 'FORBIDDEN';
+    case 404:
+      return 'NOT_FOUND';
+    case 409:
+      return 'CONFLICT';
+    case 422:
+      return 'VALIDATION_FAILED';
+    default:
+      return status >= 500 ? 'INTERNAL_SERVER_ERROR' : 'ERROR';
+  }
 }
 
 /**
@@ -38,14 +118,21 @@ export class ApiError extends Error {
   readonly statusCode: number;
   readonly arabicMessage: string;
   readonly englishMessage: string;
+  readonly errors?: FieldError[];
 
-  constructor(code: string, message: string, statusCode: number) {
+  constructor(
+    code: string,
+    message: string,
+    statusCode: number,
+    errors?: FieldError[],
+  ) {
     super(message);
     this.name = 'ApiError';
     this.code = code;
     this.statusCode = statusCode;
-    this.arabicMessage = getLocalizedError(code, statusCode, 'ar');
-    this.englishMessage = getLocalizedError(code, statusCode, 'en');
+    this.errors = errors;
+    this.arabicMessage = getLocalizedError(code, statusCode, 'ar', message);
+    this.englishMessage = getLocalizedError(code, statusCode, 'en', message);
   }
 
   getLocalizedMessage(locale?: string): string {
@@ -53,15 +140,12 @@ export class ApiError extends Error {
   }
 }
 
-interface BackendErrorBody {
-  error?: { code?: string; message?: string; details?: unknown };
-}
-
 function parseError(data: unknown, status: number): ApiError {
-  const body = data as BackendErrorBody | null;
-  const code = body?.error?.code ?? (status === 401 ? 'UNAUTHORIZED' : 'ERROR');
-  const message = body?.error?.message ?? `HTTP ${status}`;
-  return new ApiError(code, message, status);
+  const body = data as ErrorResponseBody | null;
+  const rawCode = body?.error?.code ?? (body?.code !== undefined ? String(body.code) : undefined);
+  const code = rawCode && isNaN(Number(rawCode)) ? rawCode : statusCodeToCode(status);
+  const message = body?.message ?? body?.error?.message ?? `HTTP ${status}`;
+  return new ApiError(code, message, status, body?.errors);
 }
 
 /**
@@ -83,7 +167,10 @@ async function attemptRefresh(): Promise<string | null> {
     });
     if (!res.ok) return null;
 
-    const data = (await res.json()) as TokenResponse;
+    const raw = (await res.json()) as any;
+    const data = (raw && typeof raw === 'object' && 'payload' in raw ? raw.payload : raw) as TokenResponse;
+    if (!data?.accessToken) return null;
+
     try {
       jar.set(ACCESS_COOKIE, data.accessToken, cookieOptions);
       jar.set(REFRESH_COOKIE, data.refreshToken, cookieOptions);
@@ -160,7 +247,69 @@ async function request<T>(
   if (!contentType.includes('application/json')) {
     return (await res.text()) as unknown as T;
   }
-  return (await res.json()) as T;
+
+  const json = (await res.json()) as any;
+
+  if (json && typeof json === 'object') {
+    // If backend returned an error payload
+    if (json.status === false) {
+      throw parseError(json, res.status);
+    }
+
+    // Standard paginated response: { status: true, code: 200, payload: [...], metadata: { page, limit, total, totalPages } }
+    if (json.metadata && 'payload' in json) {
+      const page = Number(json.metadata.page ?? 1);
+      const pageSize = Number(json.metadata.limit ?? 20);
+      const total = Number(json.metadata.total ?? 0);
+      const totalPages = Number(json.metadata.totalPages ?? 1);
+
+      const meta = {
+        page,
+        pageSize,
+        total,
+        totalPages,
+      };
+
+      const paginatedResult: any = {
+        status: json.status,
+        code: json.code,
+        message: json.message,
+        data: json.payload,
+        meta,
+        payload: json.payload,
+        metadata: json.metadata,
+        [Symbol.iterator]: function* () {
+          if (Array.isArray(json.payload)) {
+            yield* json.payload;
+          }
+        },
+      };
+
+      return paginatedResult as T;
+    }
+
+    // Standard SuccessResponse: { status: true, code: 200, payload: data }
+    if ('payload' in json) {
+      const payload = json.payload;
+      // If payload is an array and does not already have a `.data` property,
+      // attach `.data` for backward compatibility with callers expecting { data: Item[] }
+      if (Array.isArray(payload) && !('data' in payload)) {
+        try {
+          Object.defineProperty(payload, 'data', {
+            value: payload,
+            writable: true,
+            enumerable: false,
+            configurable: true,
+          });
+        } catch {
+          // ignore if non-extensible
+        }
+      }
+      return payload as T;
+    }
+  }
+
+  return json as T;
 }
 
 export const api = {

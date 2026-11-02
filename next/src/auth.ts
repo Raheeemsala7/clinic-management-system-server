@@ -1,10 +1,6 @@
-import { JWT } from 'next-auth/jwt';
-// import { sessionMaxAge } from './shared/constant/auth.constant';
 import Credentials from 'next-auth/providers/credentials';
-
 import type { NextAuthOptions } from "next-auth/";
 import { loginAction } from './features/auth/apis/auth.action';
-import { Session, User } from 'next-auth';
 import { sessionMaxAge } from './shared/constant/auth.constant';
 
 export const authOptions: NextAuthOptions = {
