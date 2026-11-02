@@ -1,6 +1,7 @@
 "use client"
 
 import { searchPatients } from "@/features/patient/services/patients.service";
+import { useQuery } from "@tanstack/react-query";
 
 
 

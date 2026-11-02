@@ -1,5 +1,5 @@
 
-import { searchPatientsAction } from "@/features/appointments/apis/patients.action";
+import { searchPatientsAction } from "@/features/patient/apis/patient.action";
 import { getToken } from "next-auth/jwt";
 import { NextRequest, NextResponse } from "next/server";
 
