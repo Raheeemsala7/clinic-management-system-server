@@ -7,7 +7,7 @@ import { useTranslations } from 'next-intl';
  * الجانب الإبداعي لصفحة تسجيل الدخول (Hero) - مطابق تماماً للصورة
  * يحتوي على شعار ENT Clinic، عنوان نظام إدارة العيادة، والأشكال الهندسية المتداخلة
  */
-export const LoginHero = () => {
+export  function LoginHero () {
   const t = useTranslations('Auth.login');
 
   return (

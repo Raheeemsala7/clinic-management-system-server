@@ -14,7 +14,7 @@ interface AuthLanguageBtnProps {
 /**
  * زر تبديل اللغة المخصص لصفحة تسجيل الدخول مطابقة للتصميم ⇄ ENGLISH
  */
-export const AuthLanguageBtn = ({ className }: AuthLanguageBtnProps) => {
+export function AuthLanguageBtn ({ className }: AuthLanguageBtnProps)  {
   const locale = useLocale();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();

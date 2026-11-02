@@ -173,6 +173,8 @@
   },
   "Auth": {
     "login": {
+      "metaTitle": "Sign In — Clinic Management System | Dr. Eslam Kareema",
+      "metaDescription": "Sign in to Dr. Eslam Abdallah Kareema ENT Clinic Management System",
       "title": "Sign In",
       "subtitle": "Enter your credentials to access the system",
       "usernameLabel": "Username",
@@ -185,7 +187,12 @@
       "heroTitleLine1": "Clinic Management",
       "heroTitleLine2": "System",
       "heroDesc": "Dr. Eslam Abdallah Kareema — Manage appointments, patients, and payments in one place.",
-      "switchLang": "العربية"
+      "switchLang": "العربية",
+      "backToHome": "Back to Home",
+      "footerCopyright": "Clinic Management System © Dr. Eslam Kareema — All rights reserved",
+      "heroAria": "Clinic System Information",
+      "formAria": "Sign In",
+      "validationRequired": "Please enter both username and password"
     }
   }
 }

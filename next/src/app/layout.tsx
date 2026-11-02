@@ -116,7 +116,7 @@ export default async function RootLayout({
       dir={locale === "ar" ? "rtl" : "ltr"}
       className={cn("h-full", "antialiased", "scroll-smooth", cairo.variable, "font-sans", geistSans.variable, geistMono.variable)}
     >
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-full flex flex-col" dir={locale === "ar" ? "rtl" : "ltr"}>
         <Providers>{children}</Providers>
       </body>
     </html>
