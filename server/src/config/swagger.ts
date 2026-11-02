@@ -2379,6 +2379,54 @@ export const swaggerSpec = {
     // ==========================================
     // ATTACHMENTS
     // ==========================================
+    '/api/v1/attachments/presigned-url': {
+      post: {
+        tags: ['Attachments'],
+        summary: 'توليد رابط توقيع مسبق (Presigned URL) للرفع المباشر إلى Tigris Data S3',
+        security: [{ BearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['fileName', 'mimeType'],
+                properties: {
+                  fileName: { type: 'string', example: 'xray-scan.jpg' },
+                  mimeType: { type: 'string', example: 'image/jpeg' },
+                  folder: { type: 'string', example: 'appointments' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: 'تم إصدار رابط الرفع المؤقت ورابط الملف العام بنجاح',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    status: { type: 'boolean', example: true },
+                    code: { type: 'integer', example: 200 },
+                    payload: {
+                      type: 'object',
+                      properties: {
+                        uploadUrl: { type: 'string', description: 'الرابط المؤقت للرفع المباشر PUT' },
+                        fileUrl: { type: 'string', description: 'الرابط العام النهائي للملف على Tigris' },
+                        fileKey: { type: 'string' },
+                        expiresInSeconds: { type: 'integer', example: 300 },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
     '/api/v1/attachments/upload': {
       post: {
         tags: ['Attachments'],

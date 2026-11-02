@@ -22,6 +22,14 @@ export const config = {
     timezone: process.env.CLINIC_TIMEZONE || 'Africa/Cairo',
     currency: process.env.CURRENCY_CODE || 'EGP',
   },
+  storage: {
+    driver: process.env.STORAGE_DRIVER || 's3',
+    endpoint: process.env.AWS_ENDPOINT_URL_S3 || 'https://t3.storage.dev',
+    region: process.env.AWS_REGION || 'auto',
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
+    bucketName: process.env.AWS_BUCKET_NAME || 'clinic-uploads-bucket',
+  },
   seed: {
     adminUsername: (process.env.SEED_ADMIN_USERNAME || 'admin').toLowerCase().trim(),
     adminPassword: process.env.SEED_ADMIN_PASSWORD || 'Adm@150b852037c3026d',

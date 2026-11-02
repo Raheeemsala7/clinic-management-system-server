@@ -1,10 +1,19 @@
 import { Request, Response } from 'express';
 import { AttachmentsService } from '../services/attachments.service';
+import { StorageService } from '../services/storage.service';
 import { asyncHandler } from '../middleware/asyncHandler';
 import { BadRequestError } from '../utils/errors';
 import { sendSuccess } from '../utils/response';
 
 export class AttachmentsController {
+  getPresignedUrl = asyncHandler(async (req: Request, res: Response) => {
+    const { fileName, mimeType, folder } = req.body;
+    const result = await StorageService.getPresignedUploadUrl(fileName, mimeType, folder);
+    sendSuccess(res, result, {
+      message: 'Presigned upload URL generated successfully',
+    });
+  });
+
   upload = asyncHandler(async (req: Request, res: Response) => {
     // Accepts single file { name, data } or multiple { files: [...] }
     if (req.body.files && Array.isArray(req.body.files)) {

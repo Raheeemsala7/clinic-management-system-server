@@ -2,17 +2,17 @@
 
 import React, { useEffect } from 'react';
 import { useFormContext, Controller, useWatch } from 'react-hook-form';
-import { BookingFormType, AvailableSlotItem } from '../types/booking';
+import { BookingFormType } from '../types/booking';
 import { SAMPLE_DOCTORS, SAMPLE_SLOTS } from '../constants/booking.constant';
 import { useDoctorsQuery, useDoctorAvailableSlotsQuery } from '../hooks/appointments.hook';
-import { Calendar, Clock, ChevronDown, AlertCircle, Loader2 } from 'lucide-react';
+import { Calendar, ChevronDown, AlertCircle, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 /**
  * القسم 3: الطبيب والتوقيت
- * - جلب الأطباء النشطين مع التخزين المؤقت (Cache)
- * - جلب المواعيد المتاحة تلقائياً حسب الطبيب واليوم المحدد
- * - زر «الآن» للحضور المباشر بالوقت الفعلي الحالي
+ * - تحديد الطبيب المعالج، وتاريخ الموعد، ونوع الحضور
+ * - اختيار وقت الموعد مباشرة من شبكة المواعيد المتاحة
+ * - زر «الآن» للحضور المباشر الفوري بالوقت الحالي
  */
 export function DoctorTimingStepCard() {
   const {
@@ -24,8 +24,9 @@ export function DoctorTimingStepCard() {
   const doctorId = useWatch({ control, name: 'doctorId' });
   const appointmentDate = useWatch({ control, name: 'appointmentDate' });
   const selectedTime = useWatch({ control, name: 'appointmentTime' });
+  const attendanceType = useWatch({ control, name: 'attendanceType' });
 
-  // 1. استعلام الأطباء وتخزينهم في الـ Cache (طويل الأمد لأنهم قليل التغيير)
+  // 1. استعلام الأطباء وتخزينهم في الـ Cache
   const { data: doctorsData, isLoading: isLoadingDoctors } = useDoctorsQuery();
   const doctorsList = doctorsData && doctorsData.length > 0 ? doctorsData : SAMPLE_DOCTORS;
 
@@ -72,7 +73,7 @@ export function DoctorTimingStepCard() {
     });
   };
 
-  // تعيين فترة زمنية محددة
+  // تعيين فترة زمنية محددة عند الضغط على وقت متاح
   const handleSelectSlot = (slotLabel: string) => {
     setValue('appointmentTime', slotLabel, {
       shouldValidate: true,
@@ -86,7 +87,7 @@ export function DoctorTimingStepCard() {
     });
   };
 
-  // قائمة المواعيد المعروضة: المتاحة والمحجوزة فقط (مع استبعاد الفترات المنتهية غير المحجوزة)
+  // قائمة المواعيد المعروضة: المتاحة والمحجوزة فقط
   const hasApiSlots = Boolean(slotsData && Array.isArray(slotsData.slots));
   const rawSlots = hasApiSlots ? slotsData!.slots : SAMPLE_SLOTS;
 
@@ -106,13 +107,13 @@ export function DoctorTimingStepCard() {
             الطبيب والتوقيت
           </h3>
           <p className="text-xs text-slate-400 mt-0.5">
-            حدد الطبيب والتاريخ والساعة ونوع الحضور
+            حدد الطبيب والتاريخ ونوع الحضور، واختر موعداً متاحاً
           </p>
         </div>
       </div>
 
-      {/* عناصر التحكم الرئيسية في سطر متجاوب (4 حقول بالترتيب الموضح في التصميم) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-end">
+      {/* عناصر التحكم الرئيسية في 3 حقول متناسقة: الطبيب المعالج + تاريخ الموعد + نوع الحضور */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 items-end">
         {/* 1. الطبيب المعالج */}
         <div>
           <label className="block text-xs font-bold text-[#0A164E] mb-1.5">
@@ -181,39 +182,7 @@ export function DoctorTimingStepCard() {
           )}
         </div>
 
-        {/* 3. ساعة الموعد */}
-        <div>
-          <label className="block text-xs font-bold text-[#0A164E] mb-1.5">
-            ساعة الموعد <span className="text-rose-500">*</span>
-          </label>
-          <Controller
-            name="appointmentTime"
-            control={control}
-            render={({ field }) => (
-              <div className="relative">
-                <input
-                  type="text"
-                  value={field.value}
-                  onChange={field.onChange}
-                  placeholder="04:30 م"
-                  className={cn(
-                    'w-full h-11 pr-3.5 pl-9 rounded-2xl border bg-white text-xs font-bold text-[#0A164E] focus:outline-none focus:border-[#1D4ED8] focus:ring-4 focus:ring-blue-600/10 transition-all text-center',
-                    errors.appointmentTime ? 'border-rose-400' : 'border-slate-200'
-                  )}
-                />
-                <Clock className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-              </div>
-            )}
-          />
-          {errors.appointmentTime && (
-            <p className="text-xs text-rose-500 font-bold flex items-center gap-1 mt-1">
-              <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-              <span>{errors.appointmentTime.message}</span>
-            </p>
-          )}
-        </div>
-
-        {/* 4. نوع الحضور */}
+        {/* 3. نوع الحضور */}
         <div>
           <label className="block text-xs font-bold text-[#0A164E] mb-1.5">
             نوع الحضور <span className="text-rose-500">*</span>
@@ -255,13 +224,18 @@ export function DoctorTimingStepCard() {
         </div>
       </div>
 
-      {/* قسم المواعيد المتاحة حسب اليوم والطبيب */}
+      {/* قسم المواعيد المتاحة واختيار الوقت */}
       <div className="pt-4 border-t border-slate-100 space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <h4 className="text-xs font-black text-[#0A164E]">
               المواعيد المتاحة لهذا اليوم
             </h4>
+            {selectedTime && (
+              <span className="px-2.5 py-0.5 rounded-lg bg-blue-50 border border-blue-200 text-[#0040D8] text-[11px] font-black">
+                الوقت المختار: {selectedTime}
+              </span>
+            )}
             {isFetchingSlots && (
               <Loader2 className="w-3.5 h-3.5 animate-spin text-[#1D4ED8]" />
             )}
@@ -299,13 +273,16 @@ export function DoctorTimingStepCard() {
             لا توجد مواعيد متاحة أو محجوزة متبقية لهذا اليوم.
           </div>
         ) : (
-          /* شبكة أزرار الفترات الزمنية: المتاحة والمحجوزة فقط */
+          /* شبكة أزرار الفترات الزمنية المتاحة لاختيار الوقت */
           <div className="flex flex-wrap items-center gap-2">
             {/* زر «الآن» الأصفر المميز */}
             <button
               type="button"
               onClick={handleSelectNow}
-              className="px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer shadow-xs bg-brand-yellow text-slate-950 hover:brightness-95 active:scale-98 select-none"
+              className={cn(
+                'px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer shadow-xs bg-brand-yellow text-slate-950 hover:brightness-95 active:scale-98 select-none',
+                attendanceType === 'direct' && 'ring-2 ring-amber-500 ring-offset-1'
+              )}
             >
               الآن
             </button>
@@ -331,7 +308,7 @@ export function DoctorTimingStepCard() {
                 );
               }
 
-              // موعد متاح (قابل للاختيار)
+              // موعد متاح (قابل للاختيار بالضغط عليه)
               return (
                 <button
                   key={slot.time || slot.startTime || idx}
@@ -349,6 +326,14 @@ export function DoctorTimingStepCard() {
               );
             })}
           </div>
+        )}
+
+        {/* تنبيه الخطأ في حال عدم اختيار وقت موعد */}
+        {errors.appointmentTime && (
+          <p className="text-xs text-rose-500 font-bold flex items-center gap-1 pt-1">
+            <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+            <span>{errors.appointmentTime.message}</span>
+          </p>
         )}
       </div>
     </div>
