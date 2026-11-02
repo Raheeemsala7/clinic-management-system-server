@@ -1,13 +1,12 @@
+import { z } from "zod";
 import { quickPatientSchema } from "../schema/patient.schema";
 
-
 export interface PatientPayload {
-    fullName: string
-    phone: string
+    fullName: string;
+    phone: string;
     gender: "MALE" | "FEMALE";
     age: number;
-    chronicConditions: string[]
-    address: string
+    chronicConditions: string[];
 }
 
-type QuickPatientFormValues = z.infer<typeof quickPatientSchema>;
+export type QuickPatientFormValues = z.infer<ReturnType<typeof quickPatientSchema>>;

@@ -5,7 +5,7 @@ import { PatientPayload } from "../types/patient";
 import { RESPONSES } from "@/shared/constant/api.responses";
 import { HEADERS } from "@/shared/constant/api.constant";
 
-export async function createNewPatientAction({ fullName, address, age, chronicConditions, gender, phone }: PatientPayload): Promise<ApiResponse<PatientPayload>> {
+export async function createNewPatientAction({ fullName, age, chronicConditions, gender, phone  }: PatientPayload): Promise<ApiResponse<PatientPayload>> {
     const token = await getNextAuthToken()
 
     if (!token?.accessToken) {
@@ -17,7 +17,7 @@ export async function createNewPatientAction({ fullName, address, age, chronicCo
             ...HEADERS.JsonBody,
             ...HEADERS.authorize(token.accessToken)
         },
-        body: JSON.stringify({ fullName, address, age, chronicConditions, gender, phone })
+        body: JSON.stringify({ fullName, age, chronicConditions, gender, phone })
     })
 
     const data: ApiResponse<PatientPayload> = await res.json()

@@ -8,13 +8,16 @@ import { cn } from "cn";
 import { toast } from "sonner";
 import { useCreatePatientMutation } from "../hooks/patient.hooks";
 import { QuickPatientFormValues } from "../types/patient";
+import { CHRONIC_DISEASES } from "@/features/appointments/constants/booking.constant";
 
-export function CreatePatientForm({setIsQuickAddOpen}:{setIsQuickAddOpen: (val:boolean) => void}) {
+export function CreatePatientForm({ setIsQuickAddOpen }: { setIsQuickAddOpen: (val: boolean) => void }) {
     const t = useTranslations()
     const {
         control: quickControl,
         handleSubmit: handleQuickSubmit,
+        setValue,
         reset: resetQuick,
+        watch,
         formState: { errors: quickErrors, isSubmitting: isCreatingPatient },
     } = useForm<QuickPatientFormValues>({
         resolver: zodResolver(quickPatientSchema(t)),
@@ -23,23 +26,43 @@ export function CreatePatientForm({setIsQuickAddOpen}:{setIsQuickAddOpen: (val:b
             phone: '',
             age: 30,
             gender: 'MALE',
+            hasChronicDisease: false,
+            chronicDiseases: [],
         },
         mode: 'all',
     });
 
-  const { mutateAsync: createPatientMutation, isPending: isCreateMutation } = useCreatePatientMutation()
+    const hasChronicDisease = watch('hasChronicDisease');
+    const selectedDiseases = watch('chronicDiseases') || [];
 
-    
+    const handleToggleDisease = (diseaseId: string) => {
+        const next = selectedDiseases.includes(diseaseId)
+            ? selectedDiseases.filter((id: string) => id !== diseaseId)
+            : [...selectedDiseases, diseaseId];
+        setValue('chronicDiseases', next, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
+    };
+
+    const { mutateAsync: createPatientMutation, isPending: isCreateMutation } = useCreatePatientMutation()
+
+
 
 
     const onQuickAddSubmit = async (values: QuickPatientFormValues) => {
 
-        console.log(values.fullName);
-        
+        console.log(values);
+
 
         try {
-            // await createPatientMutation({fullName: values.fullName, phone: values.phone, age: values.age, gender: values.gender})
-            await createPatientMutation({fullName: values.fullName, phone: values.phone, age: values.age, gender: values.gender,chronicConditions:["d"], address:""})
+            // await createPatientMutation({fullName: values.fullName, phone: values.phone, age: values.age, gender: values.gender, chronicConditions: values.hasChronicDisease ? values.chronicDiseases : [], generalNotes: values.generalNotes})
+            await createPatientMutation({
+                fullName: values.fullName,
+                phone: values.phone,
+                age: values.age,
+                gender: values.gender,
+                chronicConditions: values.hasChronicDisease ? values.chronicDiseases : [],
+            });
+            resetQuick();
+            setIsQuickAddOpen(false);
 
             // if (res.success && res.patient) {
             //     // handleSelectPatient(res.patient);
@@ -209,6 +232,76 @@ export function CreatePatientForm({setIsQuickAddOpen}:{setIsQuickAddOpen: (val:b
                         </div>
                     )}
                 />
+
+
+            </div>
+
+            <div className="p-4 sm:p-5 rounded-2xl bg-[#FFFDF0] border border-amber-300 space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <span className="font-bold text-xs sm:text-sm text-slate-800">
+                        هل يعاني المريض من مرض مزمن؟ <span className="text-amber-600">*</span>
+                    </span>
+
+                    <div className="inline-flex items-center p-1 bg-white rounded-xl border border-slate-200">
+                        <button
+                            type="button"
+                            onClick={() => setValue('hasChronicDisease', true, { shouldValidate: true, shouldDirty: true, shouldTouch: true })}
+                            className={cn(
+                                'px-5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer',
+                                hasChronicDisease
+                                    ? 'bg-[#0A164E] text-white shadow-xs'
+                                    : 'text-slate-500 hover:text-slate-800'
+                            )}
+                        >
+                            نعم
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setValue('hasChronicDisease', false, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
+                                setValue('chronicDiseases', [], { shouldValidate: true, shouldDirty: true, shouldTouch: true });
+                            }}
+                            className={cn(
+                                'px-5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer',
+                                !hasChronicDisease
+                                    ? 'bg-[#0A164E] text-white shadow-xs'
+                                    : 'text-slate-500 hover:text-slate-800'
+                            )}
+                        >
+                            لا
+                        </button>
+                    </div>
+                </div>
+
+                {hasChronicDisease && (
+                    <div className="space-y-3 pt-2 border-t border-amber-200/60 animate-in fade-in-50">
+                        <div className="flex flex-wrap gap-2">
+                            {CHRONIC_DISEASES.map((disease) => {
+                                const isSelected = selectedDiseases.includes(disease.id);
+                                return (
+                                    <button
+                                        key={disease.id}
+                                        type="button"
+                                        onClick={() => handleToggleDisease(disease.id)}
+                                        className={cn(
+                                            'px-3.5 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs',
+                                            isSelected
+                                                ? 'bg-brand-yellow text-slate-950 font-black shadow-xs ring-1 ring-amber-400'
+                                                : 'bg-white text-slate-700 border border-slate-200 hover:border-amber-300'
+                                        )}
+                                    >
+                                        {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
+                                        <span>{disease.label}</span>
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        {quickErrors.chronicDiseases && (
+                            <p className="text-xs text-rose-500 font-semibold">{quickErrors.chronicDiseases.message}</p>
+                        )}
+                    </div>
+                )}
             </div>
 
             <div className="flex items-center gap-2.5 pt-1 mt-4">
