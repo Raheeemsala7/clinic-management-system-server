@@ -1,6 +1,5 @@
 "use client"
 import { Controller, Form, useForm } from "react-hook-form";
-import { QuickPatientFormValues } from "../types/patient";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { quickPatientSchema } from "../schema/patient.schema";
 import { useTranslations } from "next-intl";
@@ -8,6 +7,7 @@ import { AlertCircle, Check, Loader2 } from "lucide-react";
 import { cn } from "cn";
 import { toast } from "sonner";
 import { useCreatePatientMutation } from "../hooks/patient.hooks";
+import { QuickPatientFormValues } from "../types/patient";
 
 export function CreatePatientForm({setIsQuickAddOpen}:{setIsQuickAddOpen: (val:boolean) => void}) {
     const t = useTranslations()
@@ -27,21 +27,18 @@ export function CreatePatientForm({setIsQuickAddOpen}:{setIsQuickAddOpen: (val:b
         mode: 'all',
     });
 
-  const { mutate: createPatientMutation, isPending: isCreateMutation } = useCreatePatientMutation()
+  const { mutateAsync: createPatientMutation, isPending: isCreateMutation } = useCreatePatientMutation()
 
     
 
 
-    const onQuickAddSubmit = async (data: QuickPatientFormValues) => {
-        console.log("TTTTTTTTTTTTTTTTTTTT");
+    const onQuickAddSubmit = async (values: QuickPatientFormValues) => {
+
+        console.log(values);
+        
 
         try {
-            // const res = await createQuickPatientAction({
-            //     fullName: data.fullName,
-            //     phone: data.phone,
-            //     gender: data.gender,
-            //     age: Number(data.age),
-            // });
+            // await createPatientMutation({fullName: values.fullName, phone: values.phone, age: values.age, gender: values.gender})
 
             // if (res.success && res.patient) {
             //     // handleSelectPatient(res.patient);
