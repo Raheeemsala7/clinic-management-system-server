@@ -14,6 +14,7 @@ import { Footer } from './footer';
 import { getWhatsAppUrl } from '../constants';
 import { WhatsAppIcon } from '@/shared/components/whatsapp-icon';
 import { cn } from 'cn';
+import { useSession } from 'next-auth/react';
 
 /**
  * المكون الرئيسي للصفحة الرئيسية - يتضمن شريط تقدم التمرير الانسيابي وزر الواتساب العائم التفاعلي
@@ -22,6 +23,10 @@ export const HomePageClient = () => {
   const t = useTranslations('Common');
   const locale = useLocale();
   const isArabic = locale === 'ar';
+
+  const session = useSession()
+  console.log(session);
+  
 
   // شريط تقدم التمرير الرشيق في أعلى الصفحة
   const { scrollYProgress } = useScroll();

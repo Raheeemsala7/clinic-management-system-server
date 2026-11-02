@@ -1,6 +1,7 @@
 // import { Toaster } from "sonner"
 // import ReactQueryProvider from "./_components/react-query-provider"
 import { NextIntlClientProvider } from 'next-intl';
+import { Toaster } from '../components/ui/sonner';
 // import { ThemeProvider } from "./_components/theme-provider";
 // import NextAuthProvider from "./_components/next-auth-provider";
 
@@ -10,7 +11,7 @@ export const Providers = ({ children }: { children: React.ReactNode }) => {
             {/* <ReactQueryProvider> */}
             {/* <ThemeProvider> */}
             {/* <NextAuthProvider> */}
-            {/* <Toaster richColors /> */}
+            <Toaster richColors />
             {children}
             {/* </NextAuthProvider> */}
             {/* </ThemeProvider> */}

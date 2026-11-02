@@ -9,15 +9,15 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { FieldError, FieldLabel, Field } from '@/shared/components/ui/field';
 import { Button } from '@/shared/components/ui/button';
 import { Loader2 } from 'lucide-react';
+import { signIn } from 'next-auth/react';
+import { toast } from 'sonner';
 
-interface LoginFormProps {
-  onSubmitSuccess?: () => void;
-}
+
 
 /**
  * نموذج تسجيل الدخول المطابق للتصميم تماماً مع التحقق البصري ودعم اللغتين
  */
-export function LoginForm({ onSubmitSuccess }: LoginFormProps) {
+export function LoginForm() {
   const t = useTranslations('Auth.login');
 
   const form = useForm<LoginFormType>({
@@ -29,8 +29,27 @@ export function LoginForm({ onSubmitSuccess }: LoginFormProps) {
   });
 
   const onSubmit = async (data: LoginFormType) => {
-    console.log('✅ Form submitted successfully with data:', data);
-    onSubmitSuccess?.();
+    try {
+      const loginResponse = await signIn('credentials', {
+        username: data.username,
+        password: data.password,
+        redirect: false,
+      });
+
+      if (!loginResponse?.ok) {
+        toast.error(loginResponse?.error ?? t('unknownError'))
+        return;
+      }
+      if (loginResponse?.error === "Invalid credentials") {
+        toast.error(t("invalidCredentials"))
+        return
+      }
+
+      toast.success(t("login-success"))
+
+    } catch (error) {
+
+    }
   };
 
   const onError = (errors: typeof form.formState.errors) => {
