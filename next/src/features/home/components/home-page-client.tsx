@@ -25,7 +25,7 @@ export const HomePageClient = () => {
   const isArabic = locale === 'ar';
 
   const session = useSession()
-  console.log(session);
+  console.log(session.data?.user);
   
 
   // شريط تقدم التمرير الرشيق في أعلى الصفحة
