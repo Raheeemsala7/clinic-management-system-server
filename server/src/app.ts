@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import dotenv from 'dotenv';
 import { connectDB } from './db/connection';
 import { errorHandler } from './middleware/errorHandler';
+import { setupSwagger } from './config/swagger';
 
 import apiRouter from './routes';
 
@@ -45,12 +46,16 @@ app.use(async (_req: Request, _res: Response, next: NextFunction) => {
   }
 });
 
+// Interactive Swagger UI API Documentation
+setupSwagger(app);
+
 // Health check endpoints
 app.get(['/', '/health', '/api', '/api/health'], (_req: Request, res: Response) => {
   res.json({
     status: 'ok',
     service: 'Clinic Management API (Express + MongoDB)',
     version: '1.0.0',
+    documentation: '/api-docs',
     timestamp: new Date().toISOString(),
   });
 });

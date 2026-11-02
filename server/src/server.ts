@@ -33,6 +33,7 @@ async function bootstrap() {
     const server = app.listen(PORT, HOST, () => {
       console.log(`🌐 [SERVER] Clinic Management Server running on http://${HOST}:${PORT}`);
       console.log(`📡 [API] Base URL: http://${HOST}:${PORT}/api/v1`);
+      console.log(`📚 [DOCS] Swagger UI: http://${HOST}:${PORT}/api-docs`);
       console.log(`❤️  [HEALTH] Health check: http://${HOST}:${PORT}/health`);
     });
 
