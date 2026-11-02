@@ -3,6 +3,7 @@
 import React from 'react';
 import { SidebarTrigger } from '@/shared/components/ui/sidebar';
 import { AuthLanguageBtn } from '@/features/auth/components/auth-language-btn';
+import { DashboardSignOutBtn } from './dashboard-sign-out-btn';
 import { UserRole } from '../types';
 import { ROLE_CONFIG } from '../constants';
 
@@ -12,7 +13,7 @@ interface DashboardHeaderProps {
 
 /**
  * شريط الرأس الموحد للوحة التحكم - مبني على زر SidebarTrigger الرسمي من shadcn
- * يتضمن الترحيب بالدور الحالي، شارة حالة الطبيب، زر تغيير اللغة، وزر التنبيهات
+ * يتضمن الترحيب بالدور الحالي، شارة حالة الطبيب، زر تغيير اللغة، زر التنبيهات، وزر تسجيل الخروج
  */
 export function DashboardHeader({ role }: DashboardHeaderProps) {
   const config = ROLE_CONFIG[role] || ROLE_CONFIG.ADMIN;
@@ -28,7 +29,7 @@ export function DashboardHeader({ role }: DashboardHeaderProps) {
         </h1>
       </div>
 
-      {/* الجانب الأيسر (في RTL): حالة الطبيب + زر اللغة + زر التنبيه */}
+      {/* الجانب الأيسر (في RTL): حالة الطبيب + زر اللغة + زر التنبيه + زر تسجيل الخروج */}
       <div className="flex items-center gap-2.5 sm:gap-3">
         {/* شارة حالة الطبيب (تظهر للطبيب والاستقبال كما في الصورة) */}
         {config.showDoctorStatus && (
@@ -50,6 +51,9 @@ export function DashboardHeader({ role }: DashboardHeaderProps) {
         >
           !
         </button>
+
+        {/* زر تسجيل الخروج من لوحة التحكم */}
+        <DashboardSignOutBtn />
       </div>
     </header>
   );

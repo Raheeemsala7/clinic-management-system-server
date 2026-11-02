@@ -8,7 +8,7 @@ import NextAuthProvider from './components/next-auth-provider';
 
 export const Providers = ({ children , locale }: { children: React.ReactNode , locale :string }) => {
     return (
-        <NextIntlClientProvider>
+        <NextIntlClientProvider locale={locale}>
             {/* <ReactQueryProvider> */}
             {/* <ThemeProvider> */}
             <NextAuthProvider>

@@ -3,6 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useLocale } from 'next-intl';
 import { cn } from '@/lib/utils';
 import {
   Sidebar,
@@ -27,7 +28,7 @@ interface DashboardSidebarProps extends React.ComponentProps<typeof Sidebar> {
 
 /**
  * شريط التنقل الجانبي للوحة التحكم مبني على shadcn Sidebar الرسمي
- * مخصص بألوان وهوية العيادة ويتكيف تلقائياً مع دور المستخدم (ADMIN / DOCTOR / RECEPTIONIST)
+ * مخصص بألوان وهوية العيادة، يتضمن أيقونات الروابط، ويميز التبويب النشط بلون brand-yellow
  */
 export function DashboardSidebar({
   role,
@@ -36,6 +37,10 @@ export function DashboardSidebar({
   ...props
 }: DashboardSidebarProps) {
   const pathname = usePathname();
+  const locale = useLocale();
+  const dir = locale === 'ar' ? 'rtl' : 'ltr';
+  const side = dir === 'rtl' ? 'right' : 'left';
+
   const config = ROLE_CONFIG[role] || ROLE_CONFIG.ADMIN;
   const { isMobile, setOpenMobile } = useSidebar();
 
@@ -48,6 +53,8 @@ export function DashboardSidebar({
 
   return (
     <Sidebar
+      side={side}
+      dir={dir}
       collapsible="icon"
       className={cn('border-none bg-[#091336] text-white select-none shadow-xl', className)}
       {...props}
@@ -65,7 +72,7 @@ export function DashboardSidebar({
                 <span className="font-black text-base sm:text-lg text-white tracking-tight group-data-[collapsible=icon]:hidden">
                   نظام إدارة العيادة
                 </span>
-                {/* شعار العيادة المربّع المميّز */}
+                {/* شعار العيادة المربّع المميّز بالألوان الأربعة */}
                 <div
                   className="grid grid-cols-2 gap-1 w-6 h-6 shrink-0"
                   aria-hidden="true"
@@ -73,7 +80,7 @@ export function DashboardSidebar({
                   <span className="w-2.5 h-2.5 rounded-xs bg-[#1D4ED8]" />
                   <span className="w-2.5 h-2.5 rounded-xs bg-white" />
                   <span className="w-2.5 h-2.5 rounded-xs bg-[#081544]" />
-                  <span className="w-2.5 h-2.5 rounded-xs bg-[#F5B800]" />
+                  <span className="w-2.5 h-2.5 rounded-xs bg-brand-yellow" />
                 </div>
               </div>
             </SidebarMenuButton>
@@ -81,7 +88,7 @@ export function DashboardSidebar({
         </SidebarMenu>
       </SidebarHeader>
 
-      {/* 2. محتوى الشريط: قائمة الروابط بحسب الدور */}
+      {/* 2. محتوى الشريط: قائمة الروابط مع الأيقونات وتمييز brand-yellow */}
       <SidebarContent className="px-3 py-4 group-data-[collapsible=icon]:px-1 bg-[#091336]">
         <SidebarGroup>
           <SidebarGroupContent>
@@ -91,6 +98,8 @@ export function DashboardSidebar({
                   item.href === '/dashboard'
                     ? pathname === '/dashboard' || pathname === '/dashboard/'
                     : pathname?.startsWith(item.href);
+
+                const Icon = item.icon;
 
                 return (
                   <SidebarMenuItem key={item.id}>
@@ -104,19 +113,34 @@ export function DashboardSidebar({
                         />
                       }
                       className={cn(
-                        'h-11 px-3.5 rounded-xl font-bold transition-all text-sm group-data-[collapsible=icon]:justify-center',
+                        'h-11 px-3.5 rounded-xl font-bold transition-all text-sm group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0',
                         isActive
-                          ? 'bg-[#F5B800] text-slate-950 hover:bg-[#F5B800] hover:text-slate-950 font-black shadow-md'
+                          ? 'bg-brand-yellow text-slate-950 hover:bg-brand-yellow hover:text-slate-950 font-black shadow-md'
                           : 'text-slate-300 hover:text-white hover:bg-white/10 font-medium'
                       )}
                     >
-                      <div className="flex items-center justify-between w-full">
-                        <span className="truncate">{item.title}</span>
+                      <div className="flex items-center gap-3 w-full group-data-[collapsible=icon]:justify-center">
+                        {/* أيقونة العنصر من lucide-react */}
+                        {Icon && (
+                          <Icon
+                            className={cn(
+                              'w-5 h-5 shrink-0 transition-transform duration-150',
+                              isActive
+                                ? 'text-slate-950'
+                                : 'text-slate-400 group-hover:text-white'
+                            )}
+                          />
+                        )}
 
-                        {/* أيقونة المربع الصغير المطابقة تماماً لتصميم الـ Figma والصور */}
+                        {/* نص الرابط */}
+                        <span className="truncate flex-1 group-data-[collapsible=icon]:hidden">
+                          {item.title}
+                        </span>
+
+                        {/* أيقونة المربع المطابقة للتصميم الأصلي */}
                         <span
                           className={cn(
-                            'w-4 h-4 rounded-xs border-2 flex items-center justify-center shrink-0 transition-colors group-data-[collapsible=icon]:hidden',
+                            'w-3.5 h-3.5 rounded-xs border-2 flex items-center justify-center shrink-0 transition-colors group-data-[collapsible=icon]:hidden',
                             isActive
                               ? 'border-slate-950 bg-slate-950'
                               : 'border-slate-400 group-hover:border-slate-200'

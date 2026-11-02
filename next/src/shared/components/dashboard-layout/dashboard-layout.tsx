@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useLocale } from 'next-intl';
 import { SidebarProvider, SidebarInset } from '@/shared/components/ui/sidebar';
 
 interface DashboardLayoutProps {
@@ -11,15 +12,21 @@ interface DashboardLayoutProps {
 
 /**
  * Shell تخطيط لوحة التحكم المعتمد على مكونات shadcn/ui الرسمية
- * مطابق للنمط المعماري في منصة AI-Productivity-Platform
+ * يدعم تلقائياً اتجاه RTL في اللغة العربية وLTR في الإنجليزية
  */
 export const DashboardLayout = ({
   children,
   sidebar,
   header,
 }: DashboardLayoutProps) => {
+  const locale = useLocale();
+  const dir = locale === 'ar' ? 'rtl' : 'ltr';
+
   return (
-    <SidebarProvider className="flex h-dvh w-full overflow-hidden bg-[#F6F8FC]">
+    <SidebarProvider
+      dir={dir}
+      className="flex h-dvh w-full overflow-hidden bg-[#F6F8FC]"
+    >
       {sidebar}
       <SidebarInset className="flex flex-1 flex-col overflow-hidden min-w-0 bg-[#F6F8FC]">
         {header}
@@ -32,4 +39,3 @@ export const DashboardLayout = ({
     </SidebarProvider>
   );
 };
-
