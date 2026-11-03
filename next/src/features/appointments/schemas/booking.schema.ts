@@ -1,11 +1,7 @@
 import { z } from 'zod';
 
 export const APPOINTMENT_TYPE_VALUES = [
-  'examination',
-  'revisit',
-  'surgery_followup',
-  'lab_radiology',
-  'tests_review',
+  "EXAMINATION", "FOLLOW_UP", "POST_OPERATIVE", "LAB_TESTS_IMAGING", "TEST_RESULTS_REVIEW", "CONSULTATION"
 ] as const;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -31,7 +27,7 @@ export const bookingSchema = (t?: any) =>
       doctorId: z.string().min(1, t?.('doctorRequired') || 'يرجى اختيار الطبيب المعالج'),
       appointmentDate: z.string().min(1, t?.('dateRequired') || 'تاريخ الموعد مطلوب'),
       appointmentTime: z.string().min(1, t?.('timeRequired') || 'ساعة الموعد مطلوبة'),
-      attendanceType: z.enum(['direct', 'scheduled']),
+      source: z.enum(['WALK_IN', 'SCHEDULED']),
 
       // 4. الرسوم والبيانات المالية
       examinationFee: z.number().min(0, t?.('feePositive') || 'سعر الكشف لا يمكن أن يكون سالباً'),

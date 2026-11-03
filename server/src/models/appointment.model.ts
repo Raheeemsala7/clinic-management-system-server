@@ -100,9 +100,9 @@ const AppointmentSchema = new Schema(
     attachments: [
       {
         id: { type: String, default: uuidv4 },
-        fileName: { type: String, required: true },
-        fileSize: { type: Number, required: true },
-        mimeType: { type: String, required: true },
+        fileName: { type: String, default: 'attachment.jpg' },
+        fileSize: { type: Number, default: 0 },
+        mimeType: { type: String, default: 'image/jpeg' },
         url: { type: String, required: true },
         uploadedAt: { type: Date, default: Date.now },
       },

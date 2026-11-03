@@ -23,11 +23,7 @@ export interface PatientBasic {
 }
 
 export type AppointmentTypeId =
-  | 'examination'
-  | 'revisit'
-  | 'surgery_followup'
-  | 'lab_radiology'
-  | 'tests_review';
+  |"EXAMINATION" | "FOLLOW_UP" | "POST_OPERATIVE" | "LAB_TESTS_IMAGING" | "TEST_RESULTS_REVIEW" | "CONSULTATION"
 
 export interface AppointmentTypeOption {
   id: AppointmentTypeId;
@@ -74,3 +70,58 @@ export interface AvailableSlotsResponse {
   availableCount: number;
   bookedCount: number;
 }
+/**
+ * البيانات المرسلة إلى الخادم (Backend API) عند إنشاء موعد حجز جديد
+ * مسار الـ API: POST /api/v1/appointments
+ */
+export interface CreateAppointmentPayload {
+  /** معرف المريض المسجل (مطلوب) */
+  patientId: string;
+
+  /** نوع الموعد / الكشف (مطلوب) */
+  type:AppointmentTypeId
+
+  /** موعد الكشف بالساعة (يقبل 24h مثل "16:30" أو 12h بالعربية مثل "04:30 م") */
+  appointmentTime?: string;
+
+  /** نوع الحضور / الحجز (مسبق أم كشف مباشر) */
+  source: 'WALK_IN' | 'SCHEDULED';
+
+  /** تاريخ الحجز بصيغة YYYY-MM-DD (اختياري - الافتراضي اليوم الحالي) */
+  clinicDate: string;
+
+  /** سعر الكشف الإجمالي (يقبل fee أو totalAmount أو examinationFee) */
+  totalAmount?: number;
+
+  /** الجزء المدفوع مقدماً من سعر الكشف (عربون أو سداد كامل) */
+  paidAmount?: number;
+
+
+
+  /** تفعيل إعفاء المريض من رسوم الكشف (إذا كانت true، يتم تصفير السعر تلقائياً) */
+  isExempt: boolean;
+
+  /** سبب الإعفاء عند تفعيل isExempt */
+  exemptionReason?: string;
+
+  /** روابط صور الفحوصات أو الروشتات المرفوعة على Tigris Data */
+  attachments?:
+    | string[]
+    | Array<{
+        url: string;
+        fileName?: string;
+        fileSize?: number;
+        mimeType?: string;
+      }>;
+
+  /** ملاحظات إضافية على الحجز */
+  notes?: string;
+
+  /** معرف الطبيب المعالج (اختياري - يعتمد الطبيب النشط تلقائياً إذا لم يُحدد) */
+  doctorId: string;
+
+
+}
+
+// التوافق مع أي استيراد سابق للاسم القديم
+export type AppointmentPayload = CreateAppointmentPayload;

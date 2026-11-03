@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { bookingSchema } from '../schemas/booking.schema';
-import { BookingFormType } from '../types/booking';
+import { AppointmentPayload, BookingFormType } from '../types/booking';
 import { PatientStepCard } from './patient-step-card';
 import { AppointmentTypeStepCard } from './appointment-type-step-card';
 import { DoctorTimingStepCard } from './doctor-timing-step-card';
@@ -15,14 +15,14 @@ import { AttachmentsNotesStepCard } from './attachments-notes-step-card';
 import { BookingSummaryPanel } from './booking-summary-panel';
 import { ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
+import { useCreateAppointmentMutation } from '../hooks/appointments.hook';
 
-/**
- * النموذج الشامل لحجز موعد جديد
- * منسق بأسلوب احترافي ومقسّم إلى أجزاء مستقلة مع استخدام react-hook-form و zodResolver
- */
+
 export function BookingForm() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const { mutateAsync: createAppointment, isPaused: isCreating } = useCreateAppointmentMutation()
 
   const methods = useForm<BookingFormType>({
     resolver: zodResolver(bookingSchema()),
@@ -35,11 +35,11 @@ export function BookingForm() {
       hasChronicDisease: false,
       chronicDiseases: [],
       chronicNotes: '',
-      appointmentType: 'examination',
-      doctorId: 'doc-1',
+      appointmentType: 'CONSULTATION',
+      doctorId: '',
       appointmentDate: '2026-11-02',
-      appointmentTime: '04:30 م',
-      attendanceType: 'direct',
+      appointmentTime: '',
+      source: 'WALK_IN',
       examinationFee: 300,
       paidAmount: 0,
       isExempt: false,
@@ -50,28 +50,45 @@ export function BookingForm() {
     mode: 'onChange',
   });
 
-  const onSubmit = async (data: BookingFormType) => {
+  console.log(methods.formState.errors);
+
+
+  async function onSubmit(data: BookingFormType) {
     setIsSubmitting(true);
     try {
       console.log('✅ تم إرسال بيانات الحجز بنجاح:', data);
-      await new Promise((resolve) => setTimeout(resolve, 800));
-      toast.success('تم تأكيد وحفظ الحجز بنجاح!');
-      router.push('/dashboard');
+      const payload: AppointmentPayload = {
+        clinicDate: data.appointmentDate,
+        type: data.appointmentType,
+        totalAmount: data.examinationFee,
+        paidAmount: data.paidAmount,
+        source: data.source,
+        isExempt: data.isExempt,
+        exemptionReason: data.exemptionReason,
+        attachments: data.attachments,
+        notes: data.notes,
+        patientId: data.patientId,
+        doctorId: data.doctorId,
+        scheduledAt:data.appointmentDate,
+        
+      }
+      console.log("await createAppointment(payload)111");
+
+      await createAppointment(payload)
+      console.log("await createAppointment(payload)222");
+      // toast.success('تم تأكيد وحفظ الحجز بنجاح!');
+      // router.push('/dashboard');
     } catch (error) {
-      toast.error('حدث خطأ أثناء حفظ الحجز، يرجى المحاولة مرة أخرى.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const onError = (errors: typeof methods.formState.errors) => {
-    console.log('❌ خطأ في التحقق من البيانات:', errors);
-    toast.error('يرجى التحقق من صحة البيانات وإكمال الحقول المطلوبة.');
-  };
+
 
   return (
     <FormProvider {...methods}>
-      <form onSubmit={methods.handleSubmit(onSubmit, onError)} className="space-y-6 pb-24 lg:pb-8">
+      <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-6 pb-24 lg:pb-8">
         {/* شريط الإلغاء والعودة للرئيسية */}
         <div className="flex items-center justify-between">
           <Link

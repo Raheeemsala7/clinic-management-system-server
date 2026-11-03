@@ -1,4 +1,5 @@
 import { Appointment, Patient, User, Visit, DoctorStatus } from '../models';
+import { v4 as uuidv4 } from 'uuid';
 import { getTodayClinicDate } from '../utils/clinic-date';
 import { parsePagination, buildPaginatedResult } from '../utils/pagination';
 import { NotFoundError, ConflictError, BadRequestError, ValidationError } from '../utils/errors';
@@ -14,9 +15,66 @@ const TRANSITIONS: Record<string, string[]> = {
   NO_SHOW: [],
 };
 
+const TYPE_MAP: Record<string, string> = {
+  examination: 'EXAMINATION',
+  revisit: 'FOLLOW_UP',
+  surgery_followup: 'POST_OPERATIVE',
+  lab_radiology: 'LAB_TESTS_IMAGING',
+  tests_review: 'TEST_RESULTS_REVIEW',
+  consultation: 'CONSULTATION',
+  follow_up: 'FOLLOW_UP',
+  post_operative: 'POST_OPERATIVE',
+  lab_tests_imaging: 'LAB_TESTS_IMAGING',
+  test_results_review: 'TEST_RESULTS_REVIEW',
+};
+
+function parseTimeString(timeStr?: string): string | null {
+  if (!timeStr || typeof timeStr !== 'string') return null;
+  const trimmed = timeStr.trim();
+  // Standard 24h: "16:30" or "09:00"
+  if (/^([01]\d|2[0-3]):([0-5]\d)$/.test(trimmed)) {
+    return trimmed;
+  }
+  // 12h formats: "04:30 م", "4:30 م", "10:15 ص", "04:30 PM", "10:15 AM"
+  const match = trimmed.match(/^(\d{1,2}):(\d{2})\s*(ص|م|am|pm)?$/i);
+  if (match) {
+    let hour = parseInt(match[1], 10);
+    const minute = match[2];
+    const period = match[3]?.toLowerCase();
+    if ((period === 'م' || period === 'pm') && hour < 12) {
+      hour += 12;
+    } else if ((period === 'ص' || period === 'am') && hour === 12) {
+      hour = 0;
+    }
+    return `${hour.toString().padStart(2, '0')}:${minute}`;
+  }
+  return trimmed;
+}
+
 export class AppointmentsService {
   static async createAppointment(dto: any, actor: { id: string }, ip = '') {
-    const { patientId, doctorId, source, type, scheduledAt, startTime, endTime, notes } = dto;
+    const patientId = dto.patientId;
+    let doctorId = dto.doctorId;
+    if (!doctorId) {
+      const defaultDoctor = await User.findOne({ role: 'DOCTOR', deletedAt: null, isActive: true });
+      if (defaultDoctor) {
+        doctorId = defaultDoctor.id;
+      }
+    }
+
+    let source = dto.source;
+    if (!source && dto.attendanceType) {
+      source = dto.attendanceType === 'direct' ? 'WALK_IN' : 'SCHEDULED';
+    }
+    if (!source) {
+      source = (dto.startTime || dto.appointmentTime || dto.scheduledAt) ? 'SCHEDULED' : 'WALK_IN';
+    }
+
+    const rawType = String(dto.type || '').trim().toLowerCase();
+    const type = TYPE_MAP[rawType] || (dto.type ? String(dto.type).toUpperCase() : 'EXAMINATION');
+
+    const startTime = parseTimeString(dto.startTime || dto.appointmentTime) || dto.startTime;
+    const { scheduledAt, endTime, notes } = dto;
     const today = getTodayClinicDate();
     const clinicDate = dto.clinicDate || today;
 
@@ -72,11 +130,11 @@ export class AppointmentsService {
     const initialStatus = source === 'WALK_IN' ? 'WAITING' : 'BOOKED';
     const now = new Date();
 
-    // Financial calculationsddd
-    const isExempt = Boolean(dto.isExempt)
-    const exemptionReason = dto.exemptionReason || null;
-    let totalAmount = isExempt ? 0 : Math.max(0, Number(dto.totalAmount || 0));
-    let paidAmount = isExempt ? 0 : Math.max(0, Number(dto.paidAmount || 0));
+    // Financial calculations: If exempt, fee is 0, paid is 0, status is EXEMPT
+    const isExempt = Boolean(dto.isExempt);
+    const exemptionReason = isExempt ? (dto.exemptionReason || 'إعفاء بقرار الطبيب/الإدارة') : null;
+    let totalAmount = isExempt ? 0 : Math.max(0, Number(dto.totalAmount ?? dto.fee ?? dto.examinationFee ?? 0));
+    let paidAmount = isExempt ? 0 : Math.max(0, Number(dto.paidAmount ?? 0));
     if (paidAmount > totalAmount && totalAmount > 0) {
       paidAmount = totalAmount;
     }
@@ -100,6 +158,34 @@ export class AppointmentsService {
       parsedScheduledAt = new Date(`${clinicDate}T${startTime}:00.000Z`);
     }
 
+    // Normalize attachments: accepts link strings (urls) or structured objects
+    const rawAttachments = Array.isArray(dto.attachments) ? dto.attachments : [];
+    const normalizedAttachments = rawAttachments
+      .map((item: any) => {
+        if (typeof item === 'string') {
+          const url = item.trim();
+          const urlParts = url.split('/');
+          const rawName = urlParts[urlParts.length - 1]?.split('?')[0] || 'attachment.jpg';
+          return {
+            id: uuidv4(),
+            fileName: rawName,
+            fileSize: 0,
+            mimeType: rawName.endsWith('.pdf') ? 'application/pdf' : 'image/jpeg',
+            url,
+            uploadedAt: new Date(),
+          };
+        }
+        return {
+          id: item.id || uuidv4(),
+          fileName: item.fileName || item.name || 'attachment.jpg',
+          fileSize: item.fileSize || item.size || 0,
+          mimeType: item.mimeType || item.type || 'image/jpeg',
+          url: item.url || item.fileUrl,
+          uploadedAt: item.uploadedAt ? new Date(item.uploadedAt) : new Date(),
+        };
+      })
+      .filter((att: any) => Boolean(att.url));
+
     const appointment = await Appointment.create({
       patientId,
       doctorId,
@@ -120,7 +206,7 @@ export class AppointmentsService {
       isExempt,
       exemptionReason,
       notes: notes || null,
-      attachments: Array.isArray(dto.attachments) ? dto.attachments : [],
+      attachments: normalizedAttachments,
       createdById: actor.id,
     });
 

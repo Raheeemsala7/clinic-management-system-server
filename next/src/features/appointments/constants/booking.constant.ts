@@ -11,11 +11,11 @@ export const CHRONIC_DISEASES = [
 ] as const;
 
 export const APPOINTMENT_TYPES: AppointmentTypeOption[] = [
-  { id: 'examination', label: 'كشف', dotColor: 'bg-[#1D4ED8]', defaultFee: 300 },
-  { id: 'revisit', label: 'إعادة', dotColor: 'bg-emerald-500', defaultFee: 0 },
-  { id: 'surgery_followup', label: 'متابعة عملية', dotColor: 'bg-purple-600', defaultFee: 0 },
-  { id: 'lab_radiology', label: 'تحليل وأشعة', dotColor: 'bg-amber-400', defaultFee: 150 },
-  { id: 'tests_review', label: 'مراجعة فحوصات', dotColor: 'bg-slate-400', defaultFee: 50 },
+  { id: 'EXAMINATION', label: 'كشف', dotColor: 'bg-[#1D4ED8]', defaultFee: 300 },
+  { id: 'FOLLOW_UP', label: 'إعادة', dotColor: 'bg-emerald-500', defaultFee: 0 },
+  { id: 'FOLLOW_UP', label: 'متابعة عملية', dotColor: 'bg-purple-600', defaultFee: 0 },
+  { id: 'LAB_TESTS_IMAGING', label: 'تحليل وأشعة', dotColor: 'bg-amber-400', defaultFee: 150 },
+  { id: 'TEST_RESULTS_REVIEW', label: 'مراجعة فحوصات', dotColor: 'bg-slate-400', defaultFee: 50 },
 ];
 
 export const EXEMPTION_PRESETS = [

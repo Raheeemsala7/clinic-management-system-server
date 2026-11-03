@@ -24,7 +24,7 @@ export function DoctorTimingStepCard() {
   const doctorId = useWatch({ control, name: 'doctorId' });
   const appointmentDate = useWatch({ control, name: 'appointmentDate' });
   const selectedTime = useWatch({ control, name: 'appointmentTime' });
-  const attendanceType = useWatch({ control, name: 'attendanceType' });
+  const attendanceType = useWatch({ control, name: 'source' });
 
   // 1. استعلام الأطباء وتخزينهم في الـ Cache
   const { data: doctorsData, isLoading: isLoadingDoctors } = useDoctorsQuery();
@@ -53,7 +53,7 @@ export function DoctorTimingStepCard() {
 
   // تعيين الحضور المباشر الآن بالوقت الحالي الفعلي
   const handleSelectNow = () => {
-    setValue('attendanceType', 'direct', {
+    setValue('source', 'WALK_IN', {
       shouldValidate: true,
       shouldDirty: true,
       shouldTouch: true,
@@ -80,7 +80,7 @@ export function DoctorTimingStepCard() {
       shouldDirty: true,
       shouldTouch: true,
     });
-    setValue('attendanceType', 'scheduled', {
+    setValue('source', 'SCHEDULED', {
       shouldValidate: true,
       shouldDirty: true,
       shouldTouch: true,
@@ -188,16 +188,16 @@ export function DoctorTimingStepCard() {
             نوع الحضور <span className="text-rose-500">*</span>
           </label>
           <Controller
-            name="attendanceType"
+            name="source"
             control={control}
             render={({ field }) => (
               <div className="grid grid-cols-2 gap-1 p-1 h-11 rounded-2xl border border-slate-200 bg-slate-50/70 items-center">
                 <button
                   type="button"
-                  onClick={() => field.onChange('direct')}
+                  onClick={() => field.onChange('WALK_IN')}
                   className={cn(
                     'h-full rounded-xl text-[11px] font-black transition-all cursor-pointer flex flex-col items-center justify-center leading-tight py-0.5',
-                    field.value === 'direct'
+                    field.value === 'WALK_IN'
                       ? 'bg-[#0040D8] text-white shadow-xs'
                       : 'text-slate-600 hover:text-slate-900'
                   )}
@@ -207,10 +207,10 @@ export function DoctorTimingStepCard() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => field.onChange('scheduled')}
+                  onClick={() => field.onChange('SCHEDULED')}
                   className={cn(
                     'h-full rounded-xl text-[11px] font-black transition-all cursor-pointer flex flex-col items-center justify-center leading-tight py-0.5',
-                    field.value === 'scheduled'
+                    field.value === 'SCHEDULED'
                       ? 'bg-[#0040D8] text-white shadow-xs'
                       : 'text-slate-600 hover:text-slate-900'
                   )}
@@ -281,7 +281,7 @@ export function DoctorTimingStepCard() {
               onClick={handleSelectNow}
               className={cn(
                 'px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer shadow-xs bg-brand-yellow text-slate-950 hover:brightness-95 active:scale-98 select-none',
-                attendanceType === 'direct' && 'ring-2 ring-amber-500 ring-offset-1'
+                attendanceType === 'WALK_IN' && 'ring-2 ring-amber-500 ring-offset-1'
               )}
             >
               الآن
