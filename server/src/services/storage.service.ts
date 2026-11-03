@@ -1,4 +1,5 @@
-import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
+import path from 'path';
+import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { v4 as uuidv4 } from 'uuid';
 import { config } from '../config/env';
@@ -94,7 +95,7 @@ export class StorageService {
     fileName: string,
     mimeType: string,
     folder = 'appointments',
-  ): Promise<{ fileUrl: string; fileKey: string; id: string }> {
+  ): Promise<{ fileUrl: string; fileKey: string; id: string; fileName: string }> {
     const cleanMime = mimeType.toLowerCase().trim();
     if (!ALLOWED_MIME_TYPES.includes(cleanMime)) {
       throw new BadRequestError(
@@ -105,8 +106,9 @@ export class StorageService {
     const client = this.getClient();
     const bucket = config.storage.bucketName || 'clinic-uploads-bucket';
     const extension = fileName.split('.').pop()?.toLowerCase() || 'jpg';
-    const uniqueId = uuidv4();
-    const fileKey = `${folder}/${uniqueId}.${extension}`;
+    const fileId = path.parse(fileName).name || uuidv4();
+    const storedFileName = `${fileId}.${extension}`;
+    const fileKey = `${folder}/${storedFileName}`;
 
     const command = new PutObjectCommand({
       Bucket: bucket,
@@ -123,7 +125,28 @@ export class StorageService {
     return {
       fileUrl,
       fileKey,
-      id: uniqueId,
+      id: fileId,
+      fileName: storedFileName,
+    };
+  }
+
+  /**
+   * Fetches the S3 object from Tigris as a readable stream
+   */
+  static async getFileStream(
+    fileKey: string,
+  ): Promise<{ stream: any; contentType: string; contentLength?: number }> {
+    const client = this.getClient();
+    const bucket = config.storage.bucketName || 'clinic-uploads-bucket';
+    const command = new GetObjectCommand({
+      Bucket: bucket,
+      Key: fileKey,
+    });
+    const res = await client.send(command);
+    return {
+      stream: res.Body,
+      contentType: res.ContentType || 'application/octet-stream',
+      contentLength: res.ContentLength,
     };
   }
 

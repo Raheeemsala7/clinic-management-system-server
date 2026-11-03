@@ -100,7 +100,7 @@ export class AttachmentsService {
           fileName: safeOriginalName,
           fileSize: buffer.length,
           mimeType: detectedType.mime,
-          url: uploadResult.fileUrl,
+          url: `/api/v1/attachments/file/${storedFileName}`,
           uploadedAt: new Date(),
         };
       } catch (s3Error: any) {
