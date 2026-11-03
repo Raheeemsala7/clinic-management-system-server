@@ -87,6 +87,47 @@ export class StorageService {
   }
 
   /**
+   * Directly uploads a binary Buffer to Tigris Data (S3)
+   */
+  static async uploadBuffer(
+    buffer: Buffer,
+    fileName: string,
+    mimeType: string,
+    folder = 'appointments',
+  ): Promise<{ fileUrl: string; fileKey: string; id: string }> {
+    const cleanMime = mimeType.toLowerCase().trim();
+    if (!ALLOWED_MIME_TYPES.includes(cleanMime)) {
+      throw new BadRequestError(
+        'نوع الملف غير مدعوم، الصيغ المسموح بها هي صور (JPEG, PNG, WebP) وملفات PDF',
+      );
+    }
+
+    const client = this.getClient();
+    const bucket = config.storage.bucketName || 'clinic-uploads-bucket';
+    const extension = fileName.split('.').pop()?.toLowerCase() || 'jpg';
+    const uniqueId = uuidv4();
+    const fileKey = `${folder}/${uniqueId}.${extension}`;
+
+    const command = new PutObjectCommand({
+      Bucket: bucket,
+      Key: fileKey,
+      Body: buffer,
+      ContentType: cleanMime,
+    });
+
+    await client.send(command);
+
+    const endpointUrl = config.storage.endpoint.replace(/\/+$/, '');
+    const fileUrl = `${endpointUrl}/${bucket}/${fileKey}`;
+
+    return {
+      fileUrl,
+      fileKey,
+      id: uniqueId,
+    };
+  }
+
+  /**
    * Deletes a file from Tigris Data if needed
    */
   static async deleteFile(fileKey: string): Promise<void> {

@@ -4,6 +4,8 @@ import os from 'os';
 import { v4 as uuidv4 } from 'uuid';
 import FileType from 'file-type';
 import { BadRequestError } from '../utils/errors';
+import { StorageService } from './storage.service';
+import { config } from '../config/env';
 
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 5MB
@@ -78,17 +80,39 @@ export class AttachmentsService {
       );
     }
 
-    // Ensure directory exists right before write
-    ensureUploadDir();
-
     const safeExt = detectedType.ext;
     const fileId = uuidv4();
     const storedFileName = `${fileId}.${safeExt}`;
+    const safeOriginalName = path.basename(fileName || `attachment.${safeExt}`);
+
+    // If S3 / Tigris driver is active, upload to Tigris S3
+    if (config.storage.driver === 's3' && config.storage.accessKeyId) {
+      try {
+        const uploadResult = await StorageService.uploadBuffer(
+          buffer,
+          storedFileName,
+          detectedType.mime,
+          'appointments'
+        );
+
+        return {
+          id: uploadResult.id,
+          fileName: safeOriginalName,
+          fileSize: buffer.length,
+          mimeType: detectedType.mime,
+          url: uploadResult.fileUrl,
+          uploadedAt: new Date(),
+        };
+      } catch (s3Error: any) {
+        console.warn('⚠️ [STORAGE] Tigris S3 upload failed, falling back to local disk:', s3Error?.message);
+      }
+    }
+
+    // Ensure directory exists right before write to local disk
+    ensureUploadDir();
     const destinationPath = path.join(UPLOAD_DIR, storedFileName);
 
     await fs.promises.writeFile(destinationPath, buffer);
-
-    const safeOriginalName = path.basename(fileName || `attachment.${safeExt}`);
 
     return {
       id: fileId,

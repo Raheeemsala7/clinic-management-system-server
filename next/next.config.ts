@@ -19,6 +19,27 @@ const nextConfig: NextConfig = {
       },
     },
   },
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 't3.storage.dev',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.storage.dev',
+      },
+    ],
+  },
+  async rewrites() {
+    const apiBase = process.env.API_URL || 'http://localhost:4000/api/v1';
+    return [
+      {
+        source: '/api/v1/attachments/file/:filename*',
+        destination: `${apiBase}/attachments/file/:filename*`,
+      },
+    ];
+  },
 };
 
 export default withNextIntl(nextConfig);
