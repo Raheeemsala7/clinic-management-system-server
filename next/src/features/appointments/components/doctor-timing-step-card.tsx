@@ -5,7 +5,7 @@ import { useFormContext, Controller, useWatch } from 'react-hook-form';
 import { BookingFormType } from '../types/booking';
 import { SAMPLE_DOCTORS, SAMPLE_SLOTS } from '../constants/booking.constant';
 import { useDoctorsQuery, useDoctorAvailableSlotsQuery } from '../hooks/appointments.hook';
-import { Calendar, ChevronDown, AlertCircle, Loader2 } from 'lucide-react';
+import { Calendar, ChevronDown, AlertCircle, Loader2, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 /**
@@ -131,13 +131,13 @@ export function DoctorTimingStepCard() {
             الطبيب والتوقيت
           </h3>
           <p className="text-xs text-slate-400 mt-0.5">
-            حدد الطبيب والتاريخ ونوع الحضور، واختر موعداً متاحاً
+            حدد الطبيب والتاريخ والساعة ونوع الحضور
           </p>
         </div>
       </div>
 
-      {/* عناصر التحكم الرئيسية في 3 حقول متناسقة: الطبيب المعالج + تاريخ الموعد + نوع الحضور */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 items-end">
+      {/* عناصر التحكم الرئيسية في 4 حقول متناسقة مطابقة للتصميم: الطبيب المعالج + تاريخ الموعد + ساعة الموعد + نوع الحضور */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 items-start">
         {/* 1. الطبيب المعالج */}
         <div>
           <label className="block text-xs font-bold text-[#0A164E] mb-1.5">
@@ -190,11 +190,11 @@ export function DoctorTimingStepCard() {
                   value={field.value}
                   onChange={field.onChange}
                   className={cn(
-                    'w-full h-11 pr-3.5 pl-9 rounded-2xl border bg-white text-xs font-bold text-[#0A164E] focus:outline-none focus:border-[#1D4ED8] focus:ring-4 focus:ring-blue-600/10 transition-all cursor-pointer',
+                    'w-full h-11 pr-10 pl-3.5 rounded-2xl border bg-white text-xs font-bold text-[#0A164E] focus:outline-none focus:border-[#1D4ED8] focus:ring-4 focus:ring-blue-600/10 transition-all cursor-pointer',
                     errors.appointmentDate ? 'border-rose-400' : 'border-slate-200'
                   )}
                 />
-                <Calendar className="w-4 h-4 text-blue-600 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <Calendar className="w-4 h-4 text-[#1D4ED8] absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>
             )}
           />
@@ -206,7 +206,31 @@ export function DoctorTimingStepCard() {
           )}
         </div>
 
-        {/* 3. نوع الحضور */}
+        {/* 3. ساعة الموعد (عرض ذكي بالقراءة فقط لاختيار الوقت من المواعيد المتاحة) */}
+        <div>
+          <label className="block text-xs font-bold text-[#0A164E] mb-1.5">
+            ساعة الموعد <span className="text-rose-500">*</span>
+          </label>
+          <div
+            className={cn(
+              'w-full h-11 px-3.5 rounded-2xl border bg-white flex items-center justify-between text-xs font-bold transition-all select-none',
+              errors.appointmentTime ? 'border-rose-400 ring-1 ring-rose-400' : 'border-slate-200'
+            )}
+          >
+            <span className={cn(selectedTime ? 'text-[#0A164E]' : 'text-slate-400 font-normal')}>
+              {selectedTime || 'اختر من المواعيد'}
+            </span>
+            <Clock className="w-4 h-4 text-slate-400 shrink-0" />
+          </div>
+          {errors.appointmentTime && (
+            <p className="text-xs text-rose-500 font-bold flex items-center gap-1 mt-1">
+              <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+              <span>{errors.appointmentTime.message}</span>
+            </p>
+          )}
+        </div>
+
+        {/* 4. نوع الحضور */}
         <div>
           <label className="block text-xs font-bold text-[#0A164E] mb-1.5">
             نوع الحضور <span className="text-rose-500">*</span>
@@ -223,7 +247,7 @@ export function DoctorTimingStepCard() {
                     handleSelectNow();
                   }}
                   className={cn(
-                    'h-full rounded-xl text-[11px] font-black transition-all cursor-pointer flex flex-col items-center justify-center leading-tight py-0.5',
+                    'h-full rounded-xl text-[11px] font-black transition-all cursor-pointer flex flex-col items-center justify-center leading-tight py-0.5 select-none',
                     field.value === 'WALK_IN'
                       ? 'bg-[#0040D8] text-white shadow-xs'
                       : 'text-slate-600 hover:text-slate-900'
@@ -244,7 +268,7 @@ export function DoctorTimingStepCard() {
                     }
                   }}
                   className={cn(
-                    'h-full rounded-xl text-[11px] font-black transition-all cursor-pointer flex flex-col items-center justify-center leading-tight py-0.5',
+                    'h-full rounded-xl text-[11px] font-black transition-all cursor-pointer flex flex-col items-center justify-center leading-tight py-0.5 select-none',
                     field.value === 'SCHEDULED'
                       ? 'bg-[#0040D8] text-white shadow-xs'
                       : 'text-slate-600 hover:text-slate-900'
@@ -264,7 +288,7 @@ export function DoctorTimingStepCard() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
           <div className="flex items-center gap-2 flex-wrap">
             <h4 className="text-xs font-black text-[#0A164E]">
-              المواعيد المتاحة لهذا اليوم
+              المواعيد المتاحة اليوم
             </h4>
             {selectedTime && (
               <span className="px-2.5 py-0.5 rounded-lg bg-blue-50 border border-blue-200 text-[#0040D8] text-[11px] font-black">
@@ -276,7 +300,7 @@ export function DoctorTimingStepCard() {
             )}
           </div>
           <span className="text-[11px] text-slate-400">
-            المشطوبة محجوزة · «الآن» للحضور المباشر
+            المشطوبة محجوزة • «الآن» للحضور المباشر
           </span>
         </div>
 

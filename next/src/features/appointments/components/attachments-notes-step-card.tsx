@@ -3,7 +3,8 @@
 import React, { useRef, useState } from 'react';
 import { useFormContext, Controller, useWatch } from 'react-hook-form';
 import { BookingFormType, StagedAttachment } from '../types/booking';
-import { Upload, X, AlertCircle } from 'lucide-react';
+import { Upload, X, AlertCircle, Loader2, CheckCircle2 } from 'lucide-react';
+import { fileToBase64, uploadAttachmentsApi } from '../services/attachments.service';
 import { toast } from 'sonner';
 
 const MAX_ATTACHMENTS = 5;
@@ -12,13 +13,15 @@ const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
 /**
  * القسم 5: مرفقات وملاحظات
- * - رفع صور الروشتات، التحاليل أو الفحوصات الطبية (حتى 5 صور، 5MB)
+ * - رفع صور الروشتات أو الفحوصات الطبية مع دعم السحب والإفلات
+ * - رفع تلقائي فوري للخادم مع إظهار حالة الرفع (Uploading / Done)
  * - حقل ملاحظات إضافية للطبيب أو الاستقبال
  */
 export function AttachmentsNotesStepCard() {
   const {
     control,
     setValue,
+    getValues,
     formState: { errors },
   } = useFormContext<BookingFormType>();
 
@@ -26,8 +29,8 @@ export function AttachmentsNotesStepCard() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
 
-  // معالجة اختيار الملفات سواء من خلال النافذة أو السحب والإفلات
-  const handleFiles = (files: FileList | File[]) => {
+  // معالجة اختيار الملفات ورفعها فورياً في الخلفية
+  const handleFiles = async (files: FileList | File[]) => {
     const fileArray = Array.from(files);
     if (fileArray.length === 0) return;
 
@@ -38,7 +41,7 @@ export function AttachmentsNotesStepCard() {
     const availableSlots = MAX_ATTACHMENTS - attachments.length;
     const filesToProcess = fileArray.slice(0, availableSlots);
 
-    const validNewAttachments: StagedAttachment[] = [];
+    const newStagedList: StagedAttachment[] = [];
 
     for (const file of filesToProcess) {
       if (!ALLOWED_TYPES.includes(file.type)) {
@@ -52,25 +55,79 @@ export function AttachmentsNotesStepCard() {
       }
 
       const previewUrl = URL.createObjectURL(file);
-      validNewAttachments.push({
-        id: `att-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`,
+      const tempId = `att-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+
+      newStagedList.push({
+        id: tempId,
         file,
         previewUrl,
         name: file.name,
         size: file.size,
         type: file.type,
+        isUploading: true,
       });
     }
 
-    if (validNewAttachments.length > 0) {
-      setValue('attachments', [...attachments, ...validNewAttachments], {
-        shouldValidate: true,
-        shouldDirty: true,
-      });
-    }
+    if (newStagedList.length === 0) return;
+
+    // إضافة الصور المبدئية في الواجهة فوراً مع علامة جاري الرفع
+    const currentList = [...attachments, ...newStagedList];
+    setValue('attachments', currentList, {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
 
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
+    }
+
+    // البدء برفع كل صورة على الخادم
+    for (const staged of newStagedList) {
+      if (!staged.file) continue;
+
+      try {
+        const base64Data = await fileToBase64(staged.file);
+        const uploadedResult = await uploadAttachmentsApi([
+          { name: staged.name, data: base64Data },
+        ]);
+
+        const uploadedMeta = uploadedResult[0];
+
+        if (uploadedMeta) {
+          // تحديث بيانات الصورة بمعلومات السيرفر (URL, ID)
+          const currentList = (getValues('attachments') || []) as StagedAttachment[];
+          const updatedList = currentList.map((item) =>
+            item.id === staged.id
+              ? {
+                  ...item,
+                  id: uploadedMeta.id,
+                  url: uploadedMeta.url,
+                  isUploading: false,
+                }
+              : item
+          );
+          setValue('attachments', updatedList, {
+            shouldValidate: true,
+            shouldDirty: true,
+          });
+        }
+      } catch (err: any) {
+        toast.error(`فشل رفع ${staged.name}: ${err.message || 'خطأ في الخادم'}`);
+        const currentList = (getValues('attachments') || []) as StagedAttachment[];
+        const updatedList = currentList.map((item) =>
+          item.id === staged.id
+            ? {
+                ...item,
+                isUploading: false,
+                uploadError: 'فشل الرفع',
+              }
+            : item
+        );
+        setValue('attachments', updatedList, {
+          shouldValidate: true,
+          shouldDirty: true,
+        });
+      }
     }
   };
 
@@ -148,15 +205,18 @@ export function AttachmentsNotesStepCard() {
             : 'border-blue-200/80 bg-blue-50/20 hover:bg-blue-50/50 hover:border-blue-400'
         }`}
       >
+        <div className="size-10 rounded-full bg-blue-50 text-[#0040D8] flex items-center justify-center mx-auto mb-1">
+          <Upload className="size-5" />
+        </div>
         <p className="text-xs sm:text-sm font-black text-[#0040D8]">
           اضغط لرفع الصور أو اسحبها هنا
         </p>
         <p className="text-2xs sm:text-xs text-slate-400 font-medium">
-          حتى 5 صور (5MB)
+          حتى 5 صور (5MB لكل صورة)
         </p>
       </div>
 
-      {/* معاينة الصور المرفوعة إن وُجدت */}
+      {/* معاينة الصور المرفوعة */}
       {attachments.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-1">
           {attachments.map((att, idx) => (
@@ -164,25 +224,53 @@ export function AttachmentsNotesStepCard() {
               key={att.id || idx}
               className="relative group rounded-xl border border-slate-200 bg-slate-50 overflow-hidden shadow-2xs"
             >
-              <div className="aspect-video w-full flex items-center justify-center bg-slate-100 overflow-hidden">
+              <div className="aspect-video w-full flex items-center justify-center bg-slate-100 overflow-hidden relative">
                 <img
                   src={att.previewUrl}
                   alt={att.name}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
                 />
+
+                {/* طبقة حالة الرفع */}
+                {att.isUploading && (
+                  <div className="absolute inset-0 bg-black/40 backdrop-blur-2xs flex flex-col items-center justify-center text-white gap-1">
+                    <Loader2 className="w-5 h-5 animate-spin text-white" />
+                    <span className="text-[10px] font-bold">جاري الرفع...</span>
+                  </div>
+                )}
+
+                {/* شارة اكتمال الرفع بنجاح */}
+                {att.url && !att.isUploading && (
+                  <div className="absolute top-1 start-1 px-1.5 py-0.5 rounded-md bg-emerald-500/90 text-white text-[9px] font-black flex items-center gap-1 shadow-xs">
+                    <CheckCircle2 className="w-3 h-3 stroke-[3]" />
+                    <span>تم الرفع</span>
+                  </div>
+                )}
+
+                {/* شارة الخطأ */}
+                {att.uploadError && !att.isUploading && (
+                  <div className="absolute top-1 start-1 px-1.5 py-0.5 rounded-md bg-rose-500/90 text-white text-[9px] font-black flex items-center gap-1 shadow-xs">
+                    <AlertCircle className="w-3 h-3 stroke-[3]" />
+                    <span>فشل الرفع</span>
+                  </div>
+                )}
               </div>
 
-              <div className="p-1.5 bg-white text-[10px] font-bold text-slate-600 truncate border-t border-slate-100">
-                {att.name}
+              <div className="p-1.5 bg-white text-[10px] font-bold text-slate-600 truncate border-t border-slate-100 flex items-center justify-between">
+                <span className="truncate max-w-[120px]">{att.name}</span>
+                <span className="text-[9px] text-slate-400 font-mono">
+                  {(att.size / 1024).toFixed(0)} KB
+                </span>
               </div>
 
+              {/* زر حذف الصورة */}
               <button
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleRemoveAttachment(idx);
                 }}
-                className="absolute top-1 end-1 w-5 h-5 rounded-full bg-rose-600 text-white flex items-center justify-center shadow-xs opacity-90 hover:opacity-100 transition-opacity cursor-pointer"
+                className="absolute top-1 end-1 w-5 h-5 rounded-full bg-rose-600 text-white flex items-center justify-center shadow-xs opacity-90 hover:opacity-100 transition-opacity cursor-pointer z-10"
                 title="حذف الصورة"
               >
                 <X className="w-3 h-3 stroke-[3]" />
@@ -215,4 +303,3 @@ export function AttachmentsNotesStepCard() {
     </div>
   );
 }
-

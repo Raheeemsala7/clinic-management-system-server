@@ -17,6 +17,7 @@ import { ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { useCreateAppointmentMutation } from '../hooks/appointments.hook';
 import { to24HourTime, getCurrentTime24 } from '../services/doctors.service';
+import { fileToBase64, uploadAttachmentsApi } from '../services/attachments.service';
 
 
 export function BookingForm() {
@@ -74,6 +75,46 @@ export function BookingForm() {
         return;
       }
 
+      // 4. معالجة الصور والمرفقات: التأكد من اكتمال الرفع
+      const rawAttachments = (data.attachments || []) as any[];
+      const isAnyUploading = rawAttachments.some((att) => att.isUploading);
+      if (isAnyUploading) {
+        toast.warning('جاري استكمال رفع الصور في الخلفية، يرجى الانتظار لحظات...');
+        setIsSubmitting(false);
+        return;
+      }
+
+      let finalAttachments: any[] = rawAttachments
+        .filter((att) => att.url)
+        .map((att) => ({
+          id: att.id,
+          fileName: att.name || att.fileName,
+          fileSize: att.size || att.fileSize,
+          mimeType: att.type || att.mimeType,
+          url: att.url,
+        }));
+
+      // في حال وجود صور تم اختيارها ولم يتم استكمال رفعها تلقائياً
+      const unuploaded = rawAttachments.filter((att) => !att.url && att.file);
+      if (unuploaded.length > 0) {
+        toast.info('جاري رفع الصور المتبقية...');
+        const toUploadPayload = await Promise.all(
+          unuploaded.map(async (att) => ({
+            name: att.name,
+            data: await fileToBase64(att.file),
+          }))
+        );
+        const uploadedBatch = await uploadAttachmentsApi(toUploadPayload);
+        const newMetas = uploadedBatch.map((u) => ({
+          id: u.id,
+          fileName: u.fileName,
+          fileSize: u.fileSize,
+          mimeType: u.mimeType,
+          url: u.url,
+        }));
+        finalAttachments = [...finalAttachments, ...newMetas];
+      }
+
       const scheduledAtIso = time24
         ? `${data.appointmentDate}T${time24}:00.000Z`
         : undefined;
@@ -91,7 +132,7 @@ export function BookingForm() {
         source: data.source,
         isExempt: data.isExempt,
         exemptionReason: data.isExempt ? data.exemptionReason : undefined,
-        attachments: data.attachments || [],
+        attachments: finalAttachments,
         notes: data.notes || '',
       };
 

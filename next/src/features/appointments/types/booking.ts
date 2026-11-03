@@ -39,6 +39,9 @@ export interface StagedAttachment {
   name: string;
   size: number;
   type: string;
+  url?: string;
+  isUploading?: boolean;
+  uploadError?: string;
 }
 
 export interface DoctorOption {
