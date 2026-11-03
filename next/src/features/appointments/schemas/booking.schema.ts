@@ -26,7 +26,7 @@ export const bookingSchema = (t?: any) =>
       // 3. الطبيب والتوقيت
       doctorId: z.string().min(1, t?.('doctorRequired') || 'يرجى اختيار الطبيب المعالج'),
       appointmentDate: z.string().min(1, t?.('dateRequired') || 'تاريخ الموعد مطلوب'),
-      appointmentTime: z.string().min(1, t?.('timeRequired') || 'ساعة الموعد مطلوبة'),
+      appointmentTime: z.string().optional(),
       source: z.enum(['WALK_IN', 'SCHEDULED']),
 
       // 4. الرسوم والبيانات المالية
@@ -39,6 +39,18 @@ export const bookingSchema = (t?: any) =>
       attachments: z.array(z.any()).max(5, t?.('maxAttachments') || 'الحد الأقصى 5 صور'),
       notes: z.string(),
     })
+    .refine(
+      (data) => {
+        if (data.source === 'SCHEDULED') {
+          return Boolean(data.appointmentTime && data.appointmentTime.trim().length > 0);
+        }
+        return true;
+      },
+      {
+        message: t?.('timeRequiredForScheduled') || 'يرجى اختيار وقت الموعد من قائمة المواعيد المتاحة',
+        path: ['appointmentTime'],
+      }
+    )
     .refine(
       (data) => {
         if (data.isExempt) {

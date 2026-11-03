@@ -24,7 +24,7 @@ export function DoctorTimingStepCard() {
   const doctorId = useWatch({ control, name: 'doctorId' });
   const appointmentDate = useWatch({ control, name: 'appointmentDate' });
   const selectedTime = useWatch({ control, name: 'appointmentTime' });
-  const attendanceType = useWatch({ control, name: 'source' });
+  const source = useWatch({ control, name: 'source' });
 
   // 1. استعلام الأطباء وتخزينهم في الـ Cache
   const { data: doctorsData, isLoading: isLoadingDoctors } = useDoctorsQuery();
@@ -94,6 +94,30 @@ export function DoctorTimingStepCard() {
   const displayableSlots = rawSlots.filter((slot: any) => {
     return Boolean(slot.isAvailable || slot.isBooked);
   });
+
+  // حماية ذكية: إذا تغير اليوم أو الطبيب في وضع الحجز المسبق، نتحقق أن الوقت المختار ما زال متاحاً في اليوم الجديد
+  useEffect(() => {
+    if (source === 'SCHEDULED' && displayableSlots.length > 0) {
+      const isCurrentTimeAvailable = displayableSlots.some(
+        (s: any) => s.isAvailable && (s.label === selectedTime || s.startTime === selectedTime)
+      );
+      if (!isCurrentTimeAvailable) {
+        const firstAvailable = displayableSlots.find((s: any) => s.isAvailable);
+        if (firstAvailable) {
+          const slotLabel = (firstAvailable as any).label || (firstAvailable as any).startTime || (firstAvailable as any).time;
+          setValue('appointmentTime', slotLabel, {
+            shouldValidate: true,
+            shouldDirty: true,
+          });
+        } else {
+          setValue('appointmentTime', '', {
+            shouldValidate: true,
+            shouldDirty: true,
+          });
+        }
+      }
+    }
+  }, [displayableSlots, source, selectedTime, setValue]);
 
   return (
     <div className="bg-white rounded-3xl p-5 sm:p-7 shadow-xs border border-slate-100 space-y-6 animate-in fade-in-50">
@@ -194,7 +218,10 @@ export function DoctorTimingStepCard() {
               <div className="grid grid-cols-2 gap-1 p-1 h-11 rounded-2xl border border-slate-200 bg-slate-50/70 items-center">
                 <button
                   type="button"
-                  onClick={() => field.onChange('WALK_IN')}
+                  onClick={() => {
+                    field.onChange('WALK_IN');
+                    handleSelectNow();
+                  }}
                   className={cn(
                     'h-full rounded-xl text-[11px] font-black transition-all cursor-pointer flex flex-col items-center justify-center leading-tight py-0.5',
                     field.value === 'WALK_IN'
@@ -207,7 +234,15 @@ export function DoctorTimingStepCard() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => field.onChange('SCHEDULED')}
+                  onClick={() => {
+                    field.onChange('SCHEDULED');
+                    // إذا لم يكن هناك موعد مسبق مختار، نحدد أول موعد متاح
+                    const firstAvailable = displayableSlots.find((s: any) => s.isAvailable);
+                    if (firstAvailable) {
+                      const slotLabel = (firstAvailable as any).label || (firstAvailable as any).startTime || (firstAvailable as any).time;
+                      handleSelectSlot(slotLabel);
+                    }
+                  }}
                   className={cn(
                     'h-full rounded-xl text-[11px] font-black transition-all cursor-pointer flex flex-col items-center justify-center leading-tight py-0.5',
                     field.value === 'SCHEDULED'
@@ -281,7 +316,7 @@ export function DoctorTimingStepCard() {
               onClick={handleSelectNow}
               className={cn(
                 'px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer shadow-xs bg-brand-yellow text-slate-950 hover:brightness-95 active:scale-98 select-none',
-                attendanceType === 'WALK_IN' && 'ring-2 ring-amber-500 ring-offset-1'
+                source === 'WALK_IN' && 'ring-2 ring-amber-500 ring-offset-1'
               )}
             >
               الآن

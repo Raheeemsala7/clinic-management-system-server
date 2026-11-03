@@ -26,7 +26,7 @@ export function BookingSummaryPanel({ isSubmitting = false, onCancel }: BookingS
   const appointmentType = useWatch({ control, name: 'appointmentType' });
   const appointmentDate = useWatch({ control, name: 'appointmentDate' });
   const appointmentTime = useWatch({ control, name: 'appointmentTime' });
-  const attendanceType = useWatch({ control, name: 'attendanceType' });
+  const source = useWatch({ control, name: 'source' });
   const hasChronicDisease = useWatch({ control, name: 'hasChronicDisease' });
   const chronicDiseases = useWatch({ control, name: 'chronicDiseases' }) || [];
   const examinationFee = useWatch({ control, name: 'examinationFee' }) || 0;
@@ -109,7 +109,7 @@ export function BookingSummaryPanel({ isSubmitting = false, onCancel }: BookingS
             <div className="flex items-center justify-between">
               <span className="text-slate-400 font-semibold">الحضور</span>
               <span className="font-bold text-[#0A164E]">
-                {attendanceType === 'direct' ? 'بدون موعد (مباشر)' : 'موعد مسبق'}
+                {source === 'WALK_IN' ? 'بدون موعد (مباشر)' : 'موعد مسبق'}
               </span>
             </div>
 

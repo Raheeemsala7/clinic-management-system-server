@@ -16,6 +16,7 @@ import { BookingSummaryPanel } from './booking-summary-panel';
 import { ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { useCreateAppointmentMutation } from '../hooks/appointments.hook';
+import { to24HourTime, getCurrentTime24 } from '../services/doctors.service';
 
 
 export function BookingForm() {
@@ -57,32 +58,62 @@ export function BookingForm() {
     setIsSubmitting(true);
     try {
       console.log('✅ تم إرسال بيانات الحجز بنجاح:', data);
+
+      // 1. تحويل الوقت لنظام 24 ساعة الموحد (مثل "16:30")
+      let time24 = to24HourTime(data.appointmentTime);
+
+      // 2. إذا كان كشف مباشر (WALK_IN) ولم يُحدد وقت، نعتمد الوقت الحالي تلقائياً
+      if (!time24 && data.source === 'WALK_IN') {
+        time24 = getCurrentTime24();
+      }
+
+      // 3. حماية تامة: إذا كان موعد مسبق (SCHEDULED) ولم يختر المستخدم وقتاً
+      if (data.source === 'SCHEDULED' && !time24) {
+        toast.error('يرجى اختيار وقت الموعد من قائمة المواعيد المتاحة أولاً.');
+        setIsSubmitting(false);
+        return;
+      }
+
+      const scheduledAtIso = time24
+        ? `${data.appointmentDate}T${time24}:00.000Z`
+        : undefined;
+
       const payload: AppointmentPayload = {
-        clinicDate: data.appointmentDate,
-        type: data.appointmentType,
-        totalAmount: data.examinationFee,
-        paidAmount: data.paidAmount,
-        source: data.source,
-        isExempt: data.isExempt,
-        exemptionReason: data.exemptionReason,
-        attachments: data.attachments,
-        notes: data.notes,
         patientId: data.patientId,
         doctorId: data.doctorId,
-        scheduledAt:data.appointmentDate,
-        
-      }
-      console.log("await createAppointment(payload)111");
+        clinicDate: data.appointmentDate,
+        appointmentTime: time24,
+        startTime: time24,
+        scheduledAt: scheduledAtIso,
+        type: data.appointmentType,
+        totalAmount: data.isExempt ? 0 : Number(data.examinationFee) || 0,
+        paidAmount: data.isExempt ? 0 : Number(data.paidAmount) || 0,
+        source: data.source,
+        isExempt: data.isExempt,
+        exemptionReason: data.isExempt ? data.exemptionReason : undefined,
+        attachments: data.attachments || [],
+        notes: data.notes || '',
+      };
 
-      await createAppointment(payload)
-      console.log("await createAppointment(payload)222");
-      // toast.success('تم تأكيد وحفظ الحجز بنجاح!');
-      // router.push('/dashboard');
-    } catch (error) {
+      console.log('🚀 إرسال الـ Payload للخادم:', payload);
+
+      const result = await createAppointment(payload);
+      console.log('✅ نتيجة الحجز من الخادم:', result);
+
+      if (result && !result.status) {
+        toast.error(result.message || 'فشل في حفظ الحجز');
+        return;
+      }
+
+      toast.success('تم تأكيد وحفظ الحجز بنجاح!');
+      router.push('/dashboard');
+    } catch (error: any) {
+      console.error('Submit booking error:', error);
+      toast.error(error?.message || 'حدث خطأ أثناء حفظ الحجز، يرجى المحاولة مرة أخرى.');
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }
 
 
 

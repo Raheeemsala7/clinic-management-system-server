@@ -84,6 +84,12 @@ export interface CreateAppointmentPayload {
   /** موعد الكشف بالساعة (يقبل 24h مثل "16:30" أو 12h بالعربية مثل "04:30 م") */
   appointmentTime?: string;
 
+  /** وقت بداية الموعد بنظام 24h مثل "16:30" */
+  startTime?: string;
+
+  /** تاريخ ووقت الموعد الكامل بصيغة ISO */
+  scheduledAt?: string;
+
   /** نوع الحضور / الحجز (مسبق أم كشف مباشر) */
   source: 'WALK_IN' | 'SCHEDULED';
 

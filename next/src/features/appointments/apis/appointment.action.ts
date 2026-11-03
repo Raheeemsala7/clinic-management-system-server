@@ -26,27 +26,16 @@ export async function createQuickPatientAction(payload: CreateAppointmentPayload
     console.log(res);
     
 
-    const data: ApiResponse<AppointmentPayload> = await res.json()
-
-    console.log(data);
-    
+    const data: ApiResponse<AppointmentPayload> = await res.json();
 
     if (!data.status) {
         return {
             status: false,
-            code: 404,
-            message: data.message,
-        }
+            code: data.code || res.status,
+            message: data.message || 'فشل تسجيل الموعد',
+        };
     }
 
-     if (data.code === 401 || data.message === "Invalid or expired access token") {
-      return {
-        status: false,
-        code: data.code,
-        message: data.message || 'فشلت عملية البحث',
-      };
-    }    
-
-    return data
+    return data;
 
 }

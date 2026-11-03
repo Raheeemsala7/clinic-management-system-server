@@ -16,6 +16,50 @@ export function formatSlotTimeToArabic(timeStr: string): string {
 }
 
 /**
+ * تحويل صيغة الوقت بنظام 12 ساعة العربي أو الإنجليزي (مثل: 04:30 م) إلى نظام 24 ساعة الموحد (16:30)
+ * لضمان توافقه الكامل مع متطلبات الخادم وقاعدة البيانات
+ */
+export function to24HourTime(timeStr?: string): string {
+  if (!timeStr) return '';
+  const trimmed = timeStr.trim();
+  if (/^([01]\d|2[0-3]):([0-5]\d)$/.test(trimmed)) {
+    return trimmed;
+  }
+  const isPm = trimmed.includes('م') || trimmed.toLowerCase().includes('pm');
+  const isAm = trimmed.includes('ص') || trimmed.toLowerCase().includes('am');
+  const digitsOnly = trimmed.replace(/[^\d:]/g, '');
+  const [hStr, mStr] = digitsOnly.split(':');
+  let h = parseInt(hStr, 10);
+  const m = (mStr || '00').padStart(2, '0');
+  if (isNaN(h)) return trimmed;
+  if (isPm && h < 12) h += 12;
+  if (isAm && h === 12) h = 0;
+  return `${h.toString().padStart(2, '0')}:${m}`;
+}
+
+/**
+ * الحصول على الوقت الحالي الفعلي بنظام 24 ساعة (مثال: 14:35)
+ */
+export function getCurrentTime24(): string {
+  const now = new Date();
+  const hours = now.getHours().toString().padStart(2, '0');
+  const minutes = now.getMinutes().toString().padStart(2, '0');
+  return `${hours}:${minutes}`;
+}
+
+/**
+ * الحصول على الوقت الحالي الفعلي بالصيغة العربية (مثال: 02:35 م)
+ */
+export function getCurrentTimeArabic(): string {
+  const now = new Date();
+  const hours = now.getHours();
+  const minutes = now.getMinutes().toString().padStart(2, '0');
+  const isPm = hours >= 12;
+  const displayHours = (hours % 12 || 12).toString().padStart(2, '0');
+  return `${displayHours}:${minutes} ${isPm ? 'م' : 'ص'}`;
+}
+
+/**
  * جلب قائمة الأطباء النشطين مع التحقق من صلاحية التوكين
  */
 export async function getDoctorsList(signal?: AbortSignal): Promise<DoctorOption[]> {

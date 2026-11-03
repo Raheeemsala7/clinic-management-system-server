@@ -85,18 +85,18 @@ export function useDoctorAvailableSlotsQuery(doctorId?: string, date?: string) {
 export function useCreateAppointmentMutation() {
     return useMutation({
         mutationFn: async (payload: CreateAppointmentPayload) => {
-            const res = await createQuickPatientAction(payload)
-
-            if (!res.status) {
-                throw new Error(res.message)
-            }
+            const res = await createQuickPatientAction(payload);
 
             if (res.code === 401) {
                 await signOut({ callbackUrl: "/auth/login?expired=true" });
                 throw new Error("انتهت صلاحية الجلسة، يرجى تسجيل الدخول مرة أخرى");
             }
 
-            return res
+            if (!res.status) {
+                throw new Error(res.message || "فشل تسجيل الموعد");
+            }
+
+            return res;
         },
         onSuccess: (data) => {
             toast.success(data.message)
