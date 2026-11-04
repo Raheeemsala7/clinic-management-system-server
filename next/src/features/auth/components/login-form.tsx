@@ -19,7 +19,6 @@ import { toast } from 'sonner';
  */
 export function LoginForm() {
   const t = useTranslations('Auth.login');
-  const router = useRouter();
 
   const form = useForm<LoginFormType>({
     resolver: zodResolver(loginSchema(t)),
@@ -50,8 +49,7 @@ export function LoginForm() {
       }
 
       toast.success(t('login-success'));
-      router.push('/dashboard');
-      router.refresh();
+      window.location.href = '/dashboard';
     } catch (error) {
       toast.error(t('unknownError'));
     }
