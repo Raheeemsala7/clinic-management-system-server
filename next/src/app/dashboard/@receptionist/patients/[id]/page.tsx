@@ -4,7 +4,7 @@ import { getPatientDetailsApi } from '@/features/patient/apis/patient.api';
 import { PatientProfileView } from '@/features/patient/components/patient-profile-view';
 import { ErrorBoundary } from '@/shared/components/error-boundary';
 import { TablePatientsError } from '@/features/patient/components/table-patients-error';
-import { Loader2 } from 'lucide-react';
+import { PatientProfileSkeleton } from '@/features/patient/components/patient-profile-skeleton';
 
 interface PatientPageProps {
   params: Promise<{ id: string }>;
@@ -48,14 +48,7 @@ export default function ReceptionistPatientDetailsPage({ params }: PatientPagePr
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
       <ErrorBoundary errorComponent={TablePatientsError}>
-        <Suspense
-          fallback={
-            <div className="p-16 text-center flex flex-col items-center justify-center gap-3">
-              <Loader2 className="w-8 h-8 animate-spin text-[#0040D8]" />
-              <p className="text-sm font-bold text-[#0A164E]">جاري تحميل ملف المريض...</p>
-            </div>
-          }
-        >
+        <Suspense fallback={<PatientProfileSkeleton />}>
           <PatientProfileContent params={params} />
         </Suspense>
       </ErrorBoundary>
