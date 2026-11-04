@@ -333,18 +333,21 @@ export class AppointmentsService {
     appt.paymentStatus = appt.remainingAmount === 0 ? 'PAID' : 'PARTIAL';
     await appt.save();
 
+    const totalPaidForAppt = appt.paidAmount;
+    const isFullyPaid = appt.remainingAmount === 0;
+
     const { Payment } = await import('../models');
     const existingPayment = await Payment.findOne({ appointmentId: appt.id, status: 'RECORDED' });
     let payment;
     if (existingPayment) {
-      existingPayment.amount = payAmount;
-      existingPayment.paymentType = 'REMAINING';
+      existingPayment.amount = totalPaidForAppt;
+      existingPayment.paymentType = isFullyPaid ? 'FULL' : 'DEPOSIT';
       existingPayment.method = dto.method || existingPayment.method || 'CASH';
       existingPayment.notes =
         dto.notes ||
-        (appt.remainingAmount === 0
-          ? 'سداد كامل للمبلغ المتبقي'
-          : `سداد دفعة متبقية - باقي ${appt.remainingAmount} ج.م`);
+        (isFullyPaid
+          ? 'سداد كامل لقيمة الكشف'
+          : `سداد دفعة جزئية - باقي ${appt.remainingAmount} ج.م`);
       existingPayment.receivedById = actor.id;
       await existingPayment.save();
       await Payment.deleteMany({ appointmentId: appt.id, _id: { $ne: existingPayment._id } });
@@ -353,15 +356,15 @@ export class AppointmentsService {
       payment = await Payment.create({
         appointmentId: appt.id,
         patientId: appt.patientId,
-        amount: payAmount,
+        amount: totalPaidForAppt,
         method: dto.method || 'CASH',
         kind: appt.type,
-        paymentType: 'REMAINING',
+        paymentType: isFullyPaid ? 'FULL' : 'DEPOSIT',
         notes:
           dto.notes ||
-          (appt.remainingAmount === 0
-            ? 'سداد كامل للمبلغ المتبقي'
-            : `سداد دفعة متبقية - باقي ${appt.remainingAmount} ج.م`),
+          (isFullyPaid
+            ? 'سداد كامل لقيمة الكشف'
+            : `سداد دفعة جزئية - باقي ${appt.remainingAmount} ج.م`),
         receivedById: actor.id,
         status: 'RECORDED',
       });
@@ -541,14 +544,17 @@ export class AppointmentsService {
         appt.remainingAmount = Math.max(0, appt.totalAmount - appt.paidAmount);
         appt.paymentStatus = appt.remainingAmount === 0 ? 'PAID' : 'PARTIAL';
 
+        const totalPaidForAppt = appt.paidAmount;
+        const isFullyPaid = appt.remainingAmount === 0;
+
         const { Payment } = await import('../models');
-        // إذا كان هناك دفعة سابقة (عربون)، نقوم بتحديثها لتصبح دفعة واحدة بالمبلغ المتبقي فقط لعدم التكرار
+        // تحديث إيصال الدفع ليمثل إجمالي المسدد للكشف كاملاً (بدلاً من الاقتصار على المتبقي أو التكرار)
         const existingPayment = await Payment.findOne({ appointmentId: appt.id, status: 'RECORDED' });
         if (existingPayment) {
-          existingPayment.amount = payAmount;
-          existingPayment.paymentType = 'REMAINING';
+          existingPayment.amount = totalPaidForAppt;
+          existingPayment.paymentType = isFullyPaid ? 'FULL' : 'DEPOSIT';
           existingPayment.method = dto.method || existingPayment.method || 'CASH';
-          existingPayment.notes = dto.notes || 'سداد باقي قيمة الكشف عند الخروج';
+          existingPayment.notes = dto.notes || (isFullyPaid ? 'سداد كامل لقيمة الكشف' : `سداد جزئي - متبقي ${appt.remainingAmount} ج.م`);
           existingPayment.receivedById = actor.id;
           await existingPayment.save();
           await Payment.deleteMany({ appointmentId: appt.id, _id: { $ne: existingPayment._id } });
@@ -556,11 +562,11 @@ export class AppointmentsService {
           await Payment.create({
             appointmentId: appt.id,
             patientId: appt.patientId,
-            amount: payAmount,
+            amount: totalPaidForAppt,
             method: dto.method || 'CASH',
             kind: appt.type === 'CONSULTATION' ? 'EXAMINATION' : appt.type,
-            paymentType: 'REMAINING',
-            notes: dto.notes || 'سداد باقي قيمة الكشف عند الخروج',
+            paymentType: isFullyPaid ? 'FULL' : 'DEPOSIT',
+            notes: dto.notes || (isFullyPaid ? 'سداد كامل لقيمة الكشف' : `سداد جزئي - متبقي ${appt.remainingAmount} ج.م`),
             receivedById: actor.id,
             status: 'RECORDED',
           });
