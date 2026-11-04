@@ -41,7 +41,7 @@ export class AppointmentsController {
       const result = await AppointmentsService.transition(
         req.params.id,
         action,
-        { id: req.user!.id },
+        { id: req.user!.id, role: req.user!.role },
         ip,
       );
       sendSuccess(res, result, { message: `Appointment transitioned to ${action}` });

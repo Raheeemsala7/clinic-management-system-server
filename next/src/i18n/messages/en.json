@@ -330,7 +330,19 @@
         "emptySubtitle": "No patients registered in the queue yet. You can book a new appointment.",
         "errorTitle": "Failed to load queue",
         "errorMessage": "An error occurred while fetching queue data. Please try again.",
-        "retry": "Retry"
+        "retry": "Retry",
+        "pendingCheckout": "Pending Checkout (Exam Finished)",
+        "finishExam": "Finish Exam",
+        "checkout": "Complete Visit",
+        "checkoutAndSettle": "Collect & Complete",
+        "checkoutModalTitle": "Settle Payment & Complete Visit",
+        "checkoutModalDesc": "Collect remaining balance and finalize patient visit",
+        "selectPaymentMethod": "Payment Method",
+        "cash": "Cash",
+        "card": "Credit/Debit Card",
+        "wallet": "E-Wallet",
+        "confirmAndCheckout": "Confirm & Complete",
+        "close": "Cancel"
       }
     }
   }

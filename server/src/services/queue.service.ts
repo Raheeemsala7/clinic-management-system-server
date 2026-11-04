@@ -8,7 +8,11 @@ export class QueueService {
 
     const filter: any = {
       clinicDate: today,
-      status: { $in: ['WAITING', 'IN_PROGRESS', 'BOOKED', 'PENDING_CHECKOUT'] },
+      $or: [
+        { status: { $in: ['WAITING', 'IN_PROGRESS', 'BOOKED', 'PENDING_CHECKOUT'] } },
+        // أي موعد عليه مبلغ متبقي ولم يُلغَ يظل دائماً ظاهراً في قائمة انتظار الاستقبال للمحاسبة
+        { remainingAmount: { $gt: 0 }, isExempt: { $ne: true }, status: { $ne: 'CANCELLED' } },
+      ],
     };
     // إذا تم تمرير معرف طبيب محدد، يتم الفلترة عليه، وإذا لم يُرسل يتم جلب طابور جميع أطباء العيادة
     if (doctorId) {
@@ -34,11 +38,17 @@ export class QueueService {
         const isPaid = Boolean(appt.isExempt) || appt.paymentStatus === 'PAID' || (appt.totalAmount > 0 && remaining === 0);
         const hasRem = !appt.isExempt && remaining > 0;
 
+        // إذا كان الموعد عليه متبقي وتم إنهاء كشفه، يظهر في حالة PENDING_CHECKOUT لحين تحصيل الاستقبال
+        const effectiveStatus =
+          (appt.status === 'COMPLETED' && hasRem)
+            ? 'PENDING_CHECKOUT'
+            : appt.status;
+
         return {
           id: appt.id,
           queueNumber: appt.queueNumber,
           queueOrder: appt.queueOrder,
-          status: appt.status,
+          status: effectiveStatus,
           source: appt.source,
           type: appt.type,
           startTime: appt.startTime,

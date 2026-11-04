@@ -11,7 +11,7 @@ const TRANSITIONS: Record<string, string[]> = {
   WAITING: ['IN_PROGRESS', 'CANCELLED', 'WAITING'],
   IN_PROGRESS: ['PENDING_CHECKOUT', 'COMPLETED'],
   PENDING_CHECKOUT: ['COMPLETED', 'IN_PROGRESS', 'WAITING'],
-  COMPLETED: [],
+  COMPLETED: ['PENDING_CHECKOUT'],
   CANCELLED: [],
   NO_SHOW: [],
 };
@@ -386,24 +386,35 @@ export class AppointmentsService {
   static async transition(
     id: string,
     action: 'arrive' | 'start' | 'finish-exam' | 'checkout' | 'complete' | 'cancel' | 'no-show' | 'postpone',
-    actor: { id: string },
+    actor: { id: string; role?: string },
     ip = '',
   ) {
     const appt = await Appointment.findById(id);
     if (!appt) throw new NotFoundError('Appointment not found');
 
-    const actionMap: Record<string, string> = {
-      arrive: 'WAITING',
-      start: 'IN_PROGRESS',
-      'finish-exam': 'PENDING_CHECKOUT',
-      checkout: 'COMPLETED',
-      complete: 'COMPLETED',
-      cancel: 'CANCELLED',
-      'no-show': 'NO_SHOW',
-      postpone: 'WAITING',
-    };
-
-    const targetStatus = actionMap[action];
+    // إذا كان الإجراء complete:
+    // إذا كان الفاعل DOCTOR، أو الموعد كان IN_PROGRESS، أو المريض عليه متبقي لم يُسدد:
+    // فإن إنهاء الكشف الطبي ينقل الموعد إلى PENDING_CHECKOUT (خرج من الكشف وبانتظار المحاسبة والاستقبال)
+    // حتى يظل المريض في قائمة الانتظار أمام الاستقبال حتى يتم إنهاء الزيارة أو تحصيل المتبقي!
+    let targetStatus: string;
+    if (action === 'complete') {
+      if (actor.role === 'DOCTOR' || appt.status === 'IN_PROGRESS' || (!appt.isExempt && appt.remainingAmount > 0)) {
+        targetStatus = 'PENDING_CHECKOUT';
+      } else {
+        targetStatus = 'COMPLETED';
+      }
+    } else {
+      const actionMap: Record<string, string> = {
+        arrive: 'WAITING',
+        start: 'IN_PROGRESS',
+        'finish-exam': 'PENDING_CHECKOUT',
+        checkout: 'COMPLETED',
+        cancel: 'CANCELLED',
+        'no-show': 'NO_SHOW',
+        postpone: 'WAITING',
+      };
+      targetStatus = actionMap[action];
+    }
     const currentStatus = appt.status;
 
     if (currentStatus === targetStatus && action !== 'postpone') {
@@ -520,7 +531,7 @@ export class AppointmentsService {
           amount: payAmount,
           method: dto.method || 'CASH',
           kind: appt.type === 'CONSULTATION' ? 'EXAMINATION' : appt.type,
-          paymentType: 'FINAL',
+          paymentType: 'REMAINING',
           notes: dto.notes || 'سداد باقي قيمة الكشف عند الخروج',
           receivedById: actor.id,
           status: 'RECORDED',
@@ -555,9 +566,6 @@ export class AppointmentsService {
       },
       ip,
     });
-
-    return appt.toJSON();
-  }
 
     return appt.toJSON();
   }
