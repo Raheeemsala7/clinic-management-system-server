@@ -274,7 +274,7 @@ export const swaggerSpec = {
           },
           status: {
             type: 'string',
-            enum: ['BOOKED', 'WAITING', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED', 'NO_SHOW'],
+            enum: ['BOOKED', 'WAITING', 'IN_PROGRESS', 'PENDING_CHECKOUT', 'COMPLETED', 'CANCELLED', 'NO_SHOW'],
             example: 'BOOKED',
           },
           queueNumber: { type: 'integer', example: 5 },

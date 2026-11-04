@@ -8,7 +8,7 @@ export class QueueService {
 
     const filter: any = {
       clinicDate: today,
-      status: { $in: ['WAITING', 'IN_PROGRESS', 'BOOKED'] },
+      status: { $in: ['WAITING', 'IN_PROGRESS', 'BOOKED', 'PENDING_CHECKOUT'] },
     };
     // إذا تم تمرير معرف طبيب محدد، يتم الفلترة عليه، وإذا لم يُرسل يتم جلب طابور جميع أطباء العيادة
     if (doctorId) {

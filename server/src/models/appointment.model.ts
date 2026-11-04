@@ -27,7 +27,7 @@ export interface IAppointment extends Document {
   source: 'SCHEDULED' | 'WALK_IN';
   scheduledAt?: Date;
   type: AppointmentType;
-  status: 'BOOKED' | 'WAITING' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW';
+  status: 'BOOKED' | 'WAITING' | 'IN_PROGRESS' | 'PENDING_CHECKOUT' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW';
   queueNumber: number;
   queueOrder: number;
   postponedCount: number;
@@ -74,7 +74,7 @@ const AppointmentSchema = new Schema(
     },
     status: {
       type: String,
-      enum: ['BOOKED', 'WAITING', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED', 'NO_SHOW'],
+      enum: ['BOOKED', 'WAITING', 'IN_PROGRESS', 'PENDING_CHECKOUT', 'COMPLETED', 'CANCELLED', 'NO_SHOW'],
       default: 'BOOKED',
       index: true,
     },

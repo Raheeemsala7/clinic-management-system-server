@@ -7,9 +7,10 @@ import { logAudit } from '../utils/audit';
 import { DoctorScheduleService } from './doctor-schedule.service';
 
 const TRANSITIONS: Record<string, string[]> = {
-  BOOKED: ['WAITING', 'CANCELLED', 'NO_SHOW'],
+  BOOKED: ['WAITING', 'IN_PROGRESS', 'CANCELLED', 'NO_SHOW'],
   WAITING: ['IN_PROGRESS', 'CANCELLED', 'WAITING'],
-  IN_PROGRESS: ['COMPLETED'],
+  IN_PROGRESS: ['PENDING_CHECKOUT', 'COMPLETED'],
+  PENDING_CHECKOUT: ['COMPLETED', 'IN_PROGRESS', 'WAITING'],
   COMPLETED: [],
   CANCELLED: [],
   NO_SHOW: [],
@@ -384,7 +385,7 @@ export class AppointmentsService {
 
   static async transition(
     id: string,
-    action: 'arrive' | 'start' | 'complete' | 'cancel' | 'no-show' | 'postpone',
+    action: 'arrive' | 'start' | 'finish-exam' | 'checkout' | 'complete' | 'cancel' | 'no-show' | 'postpone',
     actor: { id: string },
     ip = '',
   ) {
@@ -394,6 +395,8 @@ export class AppointmentsService {
     const actionMap: Record<string, string> = {
       arrive: 'WAITING',
       start: 'IN_PROGRESS',
+      'finish-exam': 'PENDING_CHECKOUT',
+      checkout: 'COMPLETED',
       complete: 'COMPLETED',
       cancel: 'CANCELLED',
       'no-show': 'NO_SHOW',
@@ -431,7 +434,7 @@ export class AppointmentsService {
 
     if (action === 'arrive') appt.arrivedAt = now;
     if (action === 'start') appt.startedAt = now;
-    if (action === 'complete') appt.completedAt = now;
+    if (action === 'complete' || action === 'checkout') appt.completedAt = now;
     if (action === 'cancel') appt.cancelledAt = now;
 
     if (action === 'postpone') {
@@ -462,7 +465,7 @@ export class AppointmentsService {
       );
     }
 
-    if (action === 'complete') {
+    if (action === 'finish-exam' || action === 'complete' || action === 'checkout') {
       await Visit.updateMany(
         { appointmentId: appt.id, status: 'OPEN' },
         { status: 'CLOSED', closedAt: now },
@@ -483,6 +486,78 @@ export class AppointmentsService {
       after: { status: targetStatus },
       ip,
     });
+
+    return appt.toJSON();
+  }
+
+  static async checkout(
+    id: string,
+    dto: { method?: 'CASH' | 'CARD' | 'WALLET'; amount?: number; notes?: string } = {},
+    actor: { id: string },
+    ip = '',
+  ) {
+    const appt = await Appointment.findById(id);
+    if (!appt) throw new NotFoundError('Appointment not found');
+
+    if (appt.status === 'COMPLETED') {
+      return appt.toJSON();
+    }
+
+    const now = new Date();
+
+    // إذا كان المريض غير معفى وعليه متبقي، نسجل دفعة السداد
+    if (!appt.isExempt && appt.remainingAmount > 0) {
+      const payAmount = Number(dto.amount !== undefined ? dto.amount : appt.remainingAmount);
+      if (payAmount > 0) {
+        appt.paidAmount += payAmount;
+        appt.remainingAmount = Math.max(0, appt.totalAmount - appt.paidAmount);
+        appt.paymentStatus = appt.remainingAmount === 0 ? 'PAID' : 'PARTIAL';
+
+        const { Payment } = await import('../models');
+        await Payment.create({
+          appointmentId: appt.id,
+          patientId: appt.patientId,
+          amount: payAmount,
+          method: dto.method || 'CASH',
+          kind: appt.type === 'CONSULTATION' ? 'EXAMINATION' : appt.type,
+          paymentType: 'FINAL',
+          notes: dto.notes || 'سداد باقي قيمة الكشف عند الخروج',
+          receivedById: actor.id,
+          status: 'RECORDED',
+        });
+      }
+    }
+
+    appt.status = 'COMPLETED';
+    appt.completedAt = now;
+    await appt.save();
+
+    await Visit.updateMany(
+      { appointmentId: appt.id, status: 'OPEN' },
+      { status: 'CLOSED', closedAt: now },
+    );
+
+    await DoctorStatus.findByIdAndUpdate(
+      appt.doctorId,
+      { _id: appt.doctorId, status: 'AVAILABLE' },
+      { upsert: true, returnDocument: 'after' },
+    );
+
+    await logAudit({
+      userId: actor.id,
+      action: 'CHECKOUT',
+      entityType: 'Appointment',
+      entityId: appt.id,
+      after: {
+        status: 'COMPLETED',
+        remainingAmount: appt.remainingAmount,
+        paidAmount: appt.paidAmount,
+      },
+      ip,
+    });
+
+    return appt.toJSON();
+  }
 
     return appt.toJSON();
   }

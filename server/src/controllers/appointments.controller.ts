@@ -35,7 +35,7 @@ export class AppointmentsController {
     sendSuccess(res, result);
   });
 
-  transition = (action: 'arrive' | 'start' | 'complete' | 'cancel' | 'no-show' | 'postpone') =>
+  transition = (action: 'arrive' | 'start' | 'finish-exam' | 'checkout' | 'complete' | 'cancel' | 'no-show' | 'postpone') =>
     asyncHandler(async (req: Request, res: Response) => {
       const ip = req.ip || req.socket.remoteAddress || '';
       const result = await AppointmentsService.transition(
@@ -46,6 +46,17 @@ export class AppointmentsController {
       );
       sendSuccess(res, result, { message: `Appointment transitioned to ${action}` });
     });
+
+  checkout = asyncHandler(async (req: Request, res: Response) => {
+    const ip = req.ip || req.socket.remoteAddress || '';
+    const result = await AppointmentsService.checkout(
+      req.params.id,
+      req.body,
+      { id: req.user!.id },
+      ip,
+    );
+    sendSuccess(res, result, { message: 'Appointment checked out successfully' });
+  });
 
   payRemaining = asyncHandler(async (req: Request, res: Response) => {
     const ip = req.ip || req.socket.remoteAddress || '';
