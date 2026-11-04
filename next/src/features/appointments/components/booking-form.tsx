@@ -24,7 +24,7 @@ export function BookingForm() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { mutateAsync: createAppointment, isPaused: isCreating } = useCreateAppointmentMutation()
+  const { mutateAsync: createAppointment, isPending: isCreating } = useCreateAppointmentMutation();
 
   const methods = useForm<BookingFormType>({
     resolver: zodResolver(bookingSchema()),
@@ -208,7 +208,7 @@ export function BookingForm() {
 
           {/* عمود الملخص الجانبي الثابت */}
           <BookingSummaryPanel
-            isSubmitting={isSubmitting}
+            isSubmitting={isSubmitting || isCreating}
             onCancel={() => router.push('/dashboard')}
           />
         </div>

@@ -2,9 +2,17 @@
 
 import { searchPatients } from "@/features/patient/services/patients.service";
 import { getDoctorsList, getDoctorAvailableSlots } from "../services/doctors.service";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { CreateAppointmentPayload } from "../types/booking";
-import { createQuickPatientAction } from "../apis/appointment.action";
+import {
+  createQuickPatientAction,
+  admitAppointmentAction,
+  finishExamAppointmentAction,
+  checkoutAppointmentAction,
+  postponeAppointmentAction,
+  cancelAppointmentAction,
+} from "../apis/appointment.action";
 import { signOut } from "next-auth/react";
 import { toast } from "sonner";
 
@@ -19,6 +27,16 @@ export const doctorKeys = {
     lists: () => [...doctorKeys.all, "list"] as const,
     slots: (doctorId: string, date: string) =>
         [...doctorKeys.all, "slots", doctorId, date] as const,
+};
+
+export const queueKeys = {
+    all: ["queue"] as const,
+    today: (doctorId?: string) =>
+        [...queueKeys.all, "today", doctorId || "all"] as const,
+};
+
+export const appointmentKeys = {
+    all: ["appointments"] as const,
 };
 
 /**
@@ -83,6 +101,9 @@ export function useDoctorAvailableSlotsQuery(doctorId?: string, date?: string) {
 
 
 export function useCreateAppointmentMutation() {
+    const queryClient = useQueryClient();
+    const router = useRouter();
+
     return useMutation({
         mutationFn: async (payload: CreateAppointmentPayload) => {
             const res = await createQuickPatientAction(payload);
@@ -99,10 +120,174 @@ export function useCreateAppointmentMutation() {
             return res;
         },
         onSuccess: (data) => {
-            toast.success(data.message)
+            queryClient.invalidateQueries({ queryKey: queueKeys.all });
+            queryClient.invalidateQueries({ queryKey: doctorKeys.all });
+            queryClient.invalidateQueries({ queryKey: appointmentKeys.all });
+            queryClient.invalidateQueries({ queryKey: ['payments'] });
+            toast.success(data.message || "تم تسجيل الموعد بنجاح");
+            router.refresh();
         },
         onError: (err) => {
-            toast.error(err.message)
-        }
-    })
+            toast.error(err.message);
+        },
+    });
+}
+
+/**
+ * هوك React Query لإدخال المريض لغرفة الكشف (Admit)
+ */
+export function useAdmitAppointmentMutation() {
+    const queryClient = useQueryClient();
+    const router = useRouter();
+
+    return useMutation({
+        mutationFn: async (appointmentId: string) => {
+            const res = await admitAppointmentAction(appointmentId);
+            if (res.code === 401) {
+                await signOut({ callbackUrl: "/auth/login?expired=true" });
+                throw new Error("انتهت صلاحية الجلسة");
+            }
+            if (!res.status) {
+                throw new Error(res.message || "فشل إدخال المريض");
+            }
+            return res;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: queueKeys.all });
+            queryClient.invalidateQueries({ queryKey: doctorKeys.all });
+            toast.success("تم إدخال المريض لغرفة الكشف");
+            router.refresh();
+        },
+        onError: (err) => {
+            toast.error(err.message);
+        },
+    });
+}
+
+/**
+ * هوك React Query لإنهاء الكشف من جانب الطبيب (Finish Exam -> Pending Checkout)
+ */
+export function useFinishExamAppointmentMutation() {
+    const queryClient = useQueryClient();
+    const router = useRouter();
+
+    return useMutation({
+        mutationFn: async (appointmentId: string) => {
+            const res = await finishExamAppointmentAction(appointmentId);
+            if (res.code === 401) {
+                await signOut({ callbackUrl: "/auth/login?expired=true" });
+                throw new Error("انتهت صلاحية الجلسة");
+            }
+            if (!res.status) {
+                throw new Error(res.message || "فشل إنهاء الكشف");
+            }
+            return res;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: queueKeys.all });
+            toast.info("انتهى كشف المريض، وأصبح بانتظار المحاسبة بالاستقبال");
+            router.refresh();
+        },
+        onError: (err) => {
+            toast.error(err.message);
+        },
+    });
+}
+
+/**
+ * هوك React Query لتسوية الحساب وإنهاء الزيارة وخروج المريض (Checkout & Settle)
+ */
+export function useCheckoutAppointmentMutation() {
+    const queryClient = useQueryClient();
+    const router = useRouter();
+
+    return useMutation({
+        mutationFn: async ({
+            id,
+            payload,
+        }: {
+            id: string;
+            payload?: { method?: "CASH" | "CARD" | "WALLET"; amount?: number; notes?: string };
+        }) => {
+            const res = await checkoutAppointmentAction(id, payload);
+            if (res.code === 401) {
+                await signOut({ callbackUrl: "/auth/login?expired=true" });
+                throw new Error("انتهت صلاحية الجلسة");
+            }
+            if (!res.status) {
+                throw new Error(res.message || "فشل إنهاء الزيارة وتسوية الحساب");
+            }
+            return res;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: queueKeys.all });
+            queryClient.invalidateQueries({ queryKey: appointmentKeys.all });
+            queryClient.invalidateQueries({ queryKey: ['payments'] });
+            toast.success("تم تسوية الحساب وإنهاء الزيارة بنجاح");
+            router.refresh();
+        },
+        onError: (err) => {
+            toast.error(err.message);
+        },
+    });
+}
+
+/**
+ * هوك React Query لتأجيل دور المريض
+ */
+export function usePostponeAppointmentMutation() {
+    const queryClient = useQueryClient();
+    const router = useRouter();
+
+    return useMutation({
+        mutationFn: async (appointmentId: string) => {
+            const res = await postponeAppointmentAction(appointmentId);
+            if (res.code === 401) {
+                await signOut({ callbackUrl: "/auth/login?expired=true" });
+                throw new Error("انتهت صلاحية الجلسة");
+            }
+            if (!res.status) {
+                throw new Error(res.message || "فشل تأجيل الموعد");
+            }
+            return res;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: queueKeys.all });
+            toast.info("تم تأجيل دور المريض في قائمة الانتظار");
+            router.refresh();
+        },
+        onError: (err) => {
+            toast.error(err.message);
+        },
+    });
+}
+
+/**
+ * هوك React Query لإلغاء الموعد
+ */
+export function useCancelAppointmentMutation() {
+    const queryClient = useQueryClient();
+    const router = useRouter();
+
+    return useMutation({
+        mutationFn: async (appointmentId: string) => {
+            const res = await cancelAppointmentAction(appointmentId);
+            if (res.code === 401) {
+                await signOut({ callbackUrl: "/auth/login?expired=true" });
+                throw new Error("انتهت صلاحية الجلسة");
+            }
+            if (!res.status) {
+                throw new Error(res.message || "فشل إلغاء الموعد");
+            }
+            return res;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: queueKeys.all });
+            toast.error("تم إلغاء الموعد");
+            router.refresh();
+        },
+        onError: (err) => {
+            toast.error(err.message);
+        },
+    });
 }

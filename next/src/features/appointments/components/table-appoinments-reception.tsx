@@ -93,7 +93,13 @@ export async function TableAppoinmentsReception({ doctorId }: TableAppoinmentsRe
               return (
                 <tr
                   key={patient.id}
-                  className="hover:bg-slate-50/60 transition-colors"
+                  className={`transition-colors ${
+                    patient.status === 'PENDING_CHECKOUT'
+                      ? 'bg-amber-50/50 hover:bg-amber-50/80 border-r-4 border-r-amber-500'
+                      : patient.status === 'IN_PROGRESS'
+                      ? 'bg-emerald-50/30 hover:bg-emerald-50/60 border-r-4 border-r-emerald-500'
+                      : 'hover:bg-slate-50/60'
+                  }`}
                 >
                   {/* رقم الكشف */}
                   <td className="py-4 px-6 text-start">
@@ -151,6 +157,11 @@ export async function TableAppoinmentsReception({ doctorId }: TableAppoinmentsRe
                       <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/60 shadow-2xs">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                         {t('inCheckup')}
+                      </span>
+                    ) : patient.status === 'PENDING_CHECKOUT' ? (
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-amber-100 text-amber-900 border border-amber-300 shadow-2xs">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-ping" />
+                        {t('pendingCheckout')}
                       </span>
                     ) : patient.status === 'WAITING' ? (
                       <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200/70 shadow-2xs">
@@ -234,8 +245,11 @@ export async function TableAppoinmentsReception({ doctorId }: TableAppoinmentsRe
                     <TableAppointmentsRowActions
                       appointmentId={patient.id}
                       patientName={patient.patientName}
+                      status={patient.status}
                       hasRemaining={patient.hasRemaining}
                       remainingAmount={patient.remainingAmount}
+                      totalAmount={patient.totalAmount}
+                      paidAmount={patient.paidAmount}
                     />
                   </td>
                 </tr>

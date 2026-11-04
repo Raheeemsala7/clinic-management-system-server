@@ -6,7 +6,7 @@ export interface TodayQueueItem {
   id: string;
   queueNumber: number;
   queueOrder: number;
-  status: 'WAITING' | 'IN_PROGRESS' | 'BOOKED';
+  status: 'WAITING' | 'IN_PROGRESS' | 'BOOKED' | 'PENDING_CHECKOUT';
   source: 'SCHEDULED' | 'WALK_IN';
   type: string;
   startTime?: string;
@@ -31,51 +31,6 @@ export interface TodayQueueItem {
   isExempt: boolean;
 }
 
-/**
- * جلب قائمة طابور وصالة الانتظار لليوم الحالي لموظف الاستقبال
- * المسار: GET /api/v1/queue/today
- */
-export async function getTodayQueueAction(doctorId?: string) {
-  const token = await getNextAuthToken();
-  if (!token?.accessToken) {
-    return {
-      status: false,
-      code: 401,
-      message: 'غير مصرح به، يرجى تسجيل الدخول',
-      payload: [] as TodayQueueItem[],
-    };
-  }
-
-  const queryParams = doctorId ? `?doctorId=${encodeURIComponent(doctorId)}` : '';
-  const apiUrl = process.env.API_URL || 'http://localhost:4000/api/v1';
-
-  try {
-    const res = await fetch(`${apiUrl}/queue/today${queryParams}`, {
-      method: 'GET',
-      headers: {
-        ...HEADERS.JsonBody,
-        ...HEADERS.authorize(token.accessToken),
-      },
-      cache: 'no-store',
-    });
-
-    const data = await res.json();
-    return data;
-  } catch (err: unknown) {
-    console.error('Error in getTodayQueueAction:', err);
-    return {
-      status: false,
-      code: 500,
-      message: 'فشل جلب قائمة الانتظار',
-      payload: [] as TodayQueueItem[],
-    };
-  }
-}
-
-/**
- * جلب قائمة طابور الانتظار لليوم الحالي للعيادة (لجميع الأطباء أو لطبيب محدد)
- * المسار: GET /api/v1/queue/today
- */
 export async function getTodayWaitingAppointmentsApi(doctorId?: string): Promise<ApiResponse<TodayQueueItem[]>> {
   const token = await getNextAuthToken();
   if (!token?.accessToken) {
@@ -91,7 +46,9 @@ export async function getTodayWaitingAppointmentsApi(doctorId?: string): Promise
         ...HEADERS.JsonBody,
         ...HEADERS.authorize(token.accessToken),
       },
-      cache: 'no-store',
+      next: {
+        tags: ['today-queue', 'appointments'],
+      },
     });
 
     const data: ApiResponse<TodayQueueItem[]> = await res.json();
@@ -114,52 +71,5 @@ export async function getTodayWaitingAppointmentsApi(doctorId?: string): Promise
       code: 500,
       message: 'فشل الاتصال بالخادم، يرجى التحقق من الشبكة',
     } 
-  }
-}
-
-
-/**
- * جلب مواعيد اليوم مع إمكانية الفلترة بحالة الانتظار WAITING
- * المسار: GET /api/v1/appointments?date=YYYY-MM-DD&status=WAITING
- */
-export async function getTodayWaitingAppointmentsAction(status = 'WAITING') {
-  const token = await getNextAuthToken();
-  if (!token?.accessToken) {
-    return {
-      status: false,
-      code: 401,
-      message: 'غير مصرح به، يرجى تسجيل الدخول',
-      payload: [],
-    };
-  }
-
-  const todayStr = new Date().toISOString().split('T')[0];
-  const queryParams = new URLSearchParams({
-    date: todayStr,
-    status,
-  });
-
-  const apiUrl = process.env.API_URL || 'http://localhost:4000/api/v1';
-
-  try {
-    const res = await fetch(`${apiUrl}/appointments?${queryParams.toString()}`, {
-      method: 'GET',
-      headers: {
-        ...HEADERS.JsonBody,
-        ...HEADERS.authorize(token.accessToken),
-      },
-      cache: 'no-store',
-    });
-
-    const data = await res.json();
-    return data;
-  } catch (err: unknown) {
-    console.error('Error in getTodayWaitingAppointmentsAction:', err);
-    return {
-      status: false,
-      code: 500,
-      message: 'فشل جلب مواعيد الانتظار',
-      payload: [],
-    };
   }
 }
