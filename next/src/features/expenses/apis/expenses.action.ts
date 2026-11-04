@@ -167,3 +167,4 @@ export async function createExpenseCategoryAction(name: string): Promise<ApiResp
     return { status: false, code: 500, message: 'فشل إضافة تصنيف المصروف' };
   }
 }
+

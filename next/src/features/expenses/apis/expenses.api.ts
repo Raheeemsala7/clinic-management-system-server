@@ -102,3 +102,4 @@ export async function getExpenseCategoriesApi(): Promise<ApiResponse<ExpenseCate
     };
   }
 }
+
