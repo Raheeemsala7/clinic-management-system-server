@@ -9,6 +9,8 @@ router.post('/', patientsController.createPatient);
 router.get('/', patientsController.searchPatients);
 router.get('/:id', patientsController.getPatientById);
 router.put('/:id', patientsController.updatePatient);
+router.delete('/:id', patientsController.deletePatient);
+router.post('/:id/archive', patientsController.archivePatient);
 router.get('/:id/history', requireRoles('ADMIN', 'DOCTOR'), patientsController.getPatientHistory);
 router.get('/:id/summary', requireRoles('ADMIN', 'DOCTOR'), patientsController.getPatientSummary);
 router.get(

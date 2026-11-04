@@ -15,6 +15,8 @@ export interface IPatient extends Document {
   chronicConditions: string[];
   generalNotes?: string;
   createdById: string;
+  isArchived?: boolean;
+  archivedAt?: Date;
   deletedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -34,6 +36,8 @@ const PatientSchema = new Schema(
     chronicConditions: { type: [String], default: [] },
     generalNotes: { type: String },
     createdById: { type: String, required: true },
+    isArchived: { type: Boolean, default: false },
+    archivedAt: { type: Date },
     deletedAt: { type: Date },
   },
   { timestamps: true, toJSON: transformOptions, toObject: transformOptions },

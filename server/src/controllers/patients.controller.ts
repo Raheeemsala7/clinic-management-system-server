@@ -16,11 +16,13 @@ export class PatientsController {
 
   searchPatients = asyncHandler(async (req: Request, res: Response) => {
     const q = (req.query.q as string) || '';
+    const filter = (req.query.filter as string) || 'all';
     const result = await PatientsService.searchPatients(
       q,
       req.user!.role,
       req.query.page as string,
       req.query.pageSize as string,
+      filter,
     );
     sendPaginated(res, result);
   });
@@ -58,6 +60,26 @@ export class PatientsController {
   getPatientBookingSummary = asyncHandler(async (req: Request, res: Response) => {
     const summary = await PatientsService.getPatientBookingSummary(req.params.id);
     sendSuccess(res, summary);
+  });
+
+  deletePatient = asyncHandler(async (req: Request, res: Response) => {
+    const ip = req.ip || req.socket.remoteAddress || '';
+    const result = await PatientsService.deletePatient(
+      req.params.id,
+      { id: req.user!.id, role: req.user!.role },
+      ip,
+    );
+    sendSuccess(res, result, { message: 'تم حذف المريض بنجاح' });
+  });
+
+  archivePatient = asyncHandler(async (req: Request, res: Response) => {
+    const ip = req.ip || req.socket.remoteAddress || '';
+    const result = await PatientsService.archivePatient(
+      req.params.id,
+      { id: req.user!.id, role: req.user!.role },
+      ip,
+    );
+    sendSuccess(res, result, { message: 'تم أرشفة ملف المريض بنجاح' });
   });
 }
 

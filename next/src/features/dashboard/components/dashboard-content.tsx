@@ -68,7 +68,7 @@ export default async function DashboardContent({
 
   return (
     <DashboardLayoutClient role={role}>
-      { renderRoleContent()}
+      { renderRoleContent() || children }
     </DashboardLayoutClient>
   );
 }

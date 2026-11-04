@@ -86,13 +86,37 @@ export class PatientsService {
     return actor.role === 'RECEPTION' ? filterForReception(patient) : patient.toJSON();
   }
 
-  static async searchPatients(q = '', actorRole = '', pageQuery?: string, pageSizeQuery?: string) {
+  static async searchPatients(
+    q = '',
+    actorRole = '',
+    pageQuery?: string,
+    pageSizeQuery?: string,
+    filterType = 'all',
+  ) {
     const { skip, take, page, pageSize } = parsePagination({
       page: pageQuery,
       pageSize: pageSizeQuery,
     });
 
     const filter: any = { deletedAt: null };
+
+    // تطبيق تصنيف الفلترة
+    if (filterType === 'chronic') {
+      filter.chronicConditions = { $exists: true, $not: { $size: 0 } };
+    } else if (filterType === 'male') {
+      filter.gender = 'MALE';
+    } else if (filterType === 'female') {
+      filter.gender = 'FEMALE';
+    } else if (filterType === 'month') {
+      const now = new Date();
+      const currentYearMonth = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}`;
+      const monthAppts = await Appointment.find({
+        clinicDate: { $regex: `^${currentYearMonth}` },
+        status: { $ne: 'CANCELLED' },
+      }).select('patientId');
+      const patientIds = Array.from(new Set(monthAppts.map((a) => a.patientId)));
+      filter._id = { $in: patientIds };
+    }
 
     if (q.trim()) {
       const normalized = normalizeArabic(q);
@@ -113,9 +137,36 @@ export class PatientsService {
       Patient.countDocuments(filter),
     ]);
 
-    const formatted = patients.map((p) =>
-      actorRole === 'RECEPTION' ? filterForReception(p) : p.toJSON(),
-    );
+    // حساب عدد الزيارات وتاريخ آخر زيارة لكل مريض في الصفحة الحالية
+    const patientIds = patients.map((p) => p.id);
+    const appointmentStats = await Appointment.aggregate([
+      { $match: { patientId: { $in: patientIds }, status: { $ne: 'CANCELLED' } } },
+      {
+        $group: {
+          _id: '$patientId',
+          visitCount: { $sum: 1 },
+          lastVisitDate: { $max: '$clinicDate' },
+        },
+      },
+    ]);
+
+    const statsMap = new Map<string, { visitCount: number; lastVisitDate: string | null }>();
+    appointmentStats.forEach((s) => {
+      statsMap.set(s._id, {
+        visitCount: s.visitCount,
+        lastVisitDate: s.lastVisitDate,
+      });
+    });
+
+    const formatted = patients.map((p) => {
+      const base = actorRole === 'RECEPTION' ? filterForReception(p) : p.toJSON();
+      const stats = statsMap.get(p.id) || { visitCount: 0, lastVisitDate: null };
+      return {
+        ...base,
+        visitCount: stats.visitCount,
+        lastVisitDate: stats.lastVisitDate,
+      };
+    });
 
     return buildPaginatedResult(formatted, total, page, pageSize);
   }
@@ -361,6 +412,44 @@ export class PatientsService {
       .sort({ createdAt: -1 })
       .limit(5);
 
+    // 4. تجميع المرفقات والملاحظات من الكشوفات والزيارات
+    const attachments = allAppts.flatMap((a) => a.attachments || []);
+
+    const visits = await Visit.find({ patientId }).sort({ createdAt: -1 });
+    const notes: Array<{
+      id: string;
+      content: string;
+      date: string;
+      authorRole: string;
+      authorName: string;
+    }> = [];
+
+    for (const v of visits) {
+      if (v.notes) {
+        notes.push({
+          id: v.id,
+          content: v.notes,
+          date: v.createdAt.toISOString(),
+          authorRole: 'DOCTOR',
+          authorName: 'د. إسلام',
+        });
+      }
+    }
+
+    for (const appt of allAppts) {
+      if (appt.notes) {
+        notes.push({
+          id: appt.id,
+          content: appt.notes,
+          date: appt.createdAt ? appt.createdAt.toISOString() : appt.clinicDate,
+          authorRole: 'RECEPTION',
+          authorName: 'الاستقبال',
+        });
+      }
+    }
+
+    notes.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
     return {
       patient: {
         id: patient.id,
@@ -370,6 +459,8 @@ export class PatientsService {
         age,
         dateOfBirth: patient.dateOfBirth ? patient.dateOfBirth.toISOString() : null,
         address: patient.address || null,
+        chronicConditions: patient.chronicConditions || [],
+        createdAt: patient.createdAt ? patient.createdAt.toISOString() : null,
       },
       lastVisit: lastVisitDetails,
       financialSummary: {
@@ -380,6 +471,48 @@ export class PatientsService {
         recentPayments: recentPayments.map((p) => p.toJSON()),
       },
       previousAppointments: populatedAppointments,
+      attachments,
+      notes,
+      visitCount: allAppts.length,
     };
+  }
+
+  static async deletePatient(id: string, actor: { id: string; role: string }, ip = '') {
+    const patient = await Patient.findOne({ _id: id, deletedAt: null });
+    if (!patient) throw new NotFoundError('Patient not found');
+
+    patient.deletedAt = new Date();
+    await patient.save();
+
+    await logAudit({
+      userId: actor.id,
+      action: 'DELETE',
+      entityType: 'Patient',
+      entityId: patient.id,
+      before: { fullName: patient.fullName, phone: patient.phone },
+      ip,
+    });
+
+    return { success: true, message: 'تم حذف ملف المريض بنجاح' };
+  }
+
+  static async archivePatient(id: string, actor: { id: string; role: string }, ip = '') {
+    const patient = await Patient.findOne({ _id: id, deletedAt: null });
+    if (!patient) throw new NotFoundError('Patient not found');
+
+    patient.isArchived = true;
+    patient.archivedAt = new Date();
+    await patient.save();
+
+    await logAudit({
+      userId: actor.id,
+      action: 'UPDATE',
+      entityType: 'Patient',
+      entityId: patient.id,
+      after: { isArchived: true, archivedAt: patient.archivedAt },
+      ip,
+    });
+
+    return { success: true, message: 'تم أرشفة ملف المريض بنجاح' };
   }
 }
