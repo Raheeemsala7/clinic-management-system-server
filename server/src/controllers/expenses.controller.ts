@@ -39,6 +39,17 @@ export class ExpensesController {
     sendSuccess(res, expense, { message: 'Expense rejected successfully' });
   });
 
+  getBudgetStatus = asyncHandler(async (req: Request, res: Response) => {
+    const budget = await ExpensesService.getMonthlyBudgetStatus(req.query.date as string | undefined);
+    sendSuccess(res, budget);
+  });
+
+  updateBudgetLimit = asyncHandler(async (req: Request, res: Response) => {
+    const ip = req.ip || req.socket.remoteAddress || '';
+    const budget = await ExpensesService.updateMonthlyBudgetLimit(req.body.limit, req.user!.id, ip);
+    sendSuccess(res, budget, { message: 'Monthly budget limit updated successfully' });
+  });
+
   getCategories = asyncHandler(async (_req: Request, res: Response) => {
     const categories = await ExpensesService.getCategories();
     sendSuccess(res, categories);

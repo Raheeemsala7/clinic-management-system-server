@@ -4,6 +4,9 @@ import { authMiddleware, requireRoles } from '../middleware/auth';
 
 const router = Router();
 
+router.get('/expenses/budget', authMiddleware, requireRoles('ADMIN', 'RECEPTION'), expensesController.getBudgetStatus);
+router.put('/expenses/budget', authMiddleware, requireRoles('ADMIN'), expensesController.updateBudgetLimit);
+
 router.post('/expenses', authMiddleware, requireRoles('ADMIN', 'RECEPTION'), expensesController.createExpense);
 router.get('/expenses', authMiddleware, requireRoles('ADMIN', 'RECEPTION'), expensesController.listExpenses);
 router.post('/expenses/:id/approve', authMiddleware, requireRoles('ADMIN'), expensesController.approveExpense);
