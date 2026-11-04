@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { ArrowRight, Plus, Edit2, Trash2 } from 'lucide-react';
 import { PatientDetails, Patient } from '../types/patient';
 import { PatientHeroBanner } from './patient-hero-banner';
@@ -23,9 +23,12 @@ type TabType = 'overview' | 'visits' | 'payments' | 'attachments' | 'notes';
 
 export function PatientProfileView({ details }: PatientProfileViewProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const [activeTab, setActiveTab] = useState<TabType>('visits');
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
+
+  const backUrl = pathname?.includes('view-patients') ? '/dashboard/view-patients' : '/dashboard/patients';
 
   const patient = details.patient;
   const patientAsItem: Patient = {
@@ -82,7 +85,7 @@ export function PatientProfileView({ details }: PatientProfileViewProps) {
 
         {/* زر العودة للمرضى على اليمين */}
         <Link
-          href="/dashboard/patients"
+          href={backUrl}
           className="h-10 px-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs shadow-2xs transition-all inline-flex items-center gap-2 self-start sm:self-auto cursor-pointer"
         >
           <span>العودة للمرضى</span>

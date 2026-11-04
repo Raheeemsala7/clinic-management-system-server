@@ -7,6 +7,7 @@ import { CalendarHeaderControls } from './calendar-header-controls';
 import { CalendarSummaryCards } from './calendar-summary-cards';
 import { CalendarDayTimelineView } from './calendar-day-timeline-view';
 import { CalendarWeekGridView } from './calendar-week-grid-view';
+import { CalendarMonthGridView } from './calendar-month-grid-view';
 
 interface AppointmentsCalendarViewProps {
   data: AppointmentsCalendarData;
@@ -79,7 +80,18 @@ export function AppointmentsCalendarView({
     const currentAnchor = new Date((data.weekRange?.startDate || currentDate) + 'T12:00:00Z');
     currentAnchor.setUTCDate(currentAnchor.getUTCDate() + daysOffset);
     const newDateStr = currentAnchor.toISOString().split('T')[0];
-    updateUrlParams({ date: newDateStr });
+    updateUrlParams({ date: newDateStr, view: 'week' });
+  };
+
+  const handleShiftMonth = (monthsOffset: number) => {
+    const currentAnchor = new Date(currentDate + 'T12:00:00Z');
+    currentAnchor.setUTCMonth(currentAnchor.getUTCMonth() + monthsOffset);
+    const newDateStr = currentAnchor.toISOString().split('T')[0];
+    updateUrlParams({ date: newDateStr, view: 'month' });
+  };
+
+  const handleSelectDay = (dateStr: string) => {
+    updateUrlParams({ date: dateStr, view: 'list' });
   };
 
   return (
@@ -97,7 +109,10 @@ export function AppointmentsCalendarView({
         isDoctorView={data.isDoctorView}
         weekStartDate={data.weekRange?.startDate}
         weekEndDate={data.weekRange?.endDate}
+        monthName={data.monthRange?.monthName}
+        monthYear={data.monthRange?.year}
         onShiftWeek={handleShiftWeek}
+        onShiftMonth={handleShiftMonth}
       />
 
       {/* 2. في وضع القائمة: نعرض بطاقات الإحصائيات الأربعة (KPIs) */}
@@ -105,7 +120,7 @@ export function AppointmentsCalendarView({
         <CalendarSummaryCards summary={data.summary} />
       )}
 
-      {/* 3. عرض المواعيد بحسب النمط المختار (قائمة الفترات أو شبكة التقويم الأسبوعية) */}
+      {/* 3. عرض المواعيد بحسب النمط المختار (قائمة الفترات / أسبوع / شهر) */}
       {currentView === 'list' ? (
         <CalendarDayTimelineView
           slots={data.daySlots || []}
@@ -113,12 +128,20 @@ export function AppointmentsCalendarView({
           selectedDoctorId={currentDoctorId}
           isDoctorView={data.isDoctorView}
         />
-      ) : (
+      ) : currentView === 'week' ? (
         <CalendarWeekGridView
           days={data.weekRange?.days || []}
           appointments={data.weekAppointments || []}
           selectedDoctorId={currentDoctorId}
           isDoctorView={data.isDoctorView}
+        />
+      ) : (
+        <CalendarMonthGridView
+          days={data.monthRange?.days || []}
+          appointments={data.monthAppointments || []}
+          selectedDoctorId={currentDoctorId}
+          isDoctorView={data.isDoctorView}
+          onSelectDay={handleSelectDay}
         />
       )}
     </div>

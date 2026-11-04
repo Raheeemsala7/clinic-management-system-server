@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { Edit2, Trash2, FileText } from 'lucide-react';
 import { Patient } from '../types/patient';
 import { DeletePatientModal } from './delete-patient-modal';
@@ -12,14 +13,20 @@ interface TablePatientsRowActionsProps {
 }
 
 export function TablePatientsRowActions({ patient }: TablePatientsRowActionsProps) {
+  const pathname = usePathname();
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
+
+  // تحديد رابط ملف المريض بحسب ما إذا كان المستخدم طبيباً في view-patients أو موظف استقبال في patients
+  const profileUrl = pathname?.includes('view-patients')
+    ? `/dashboard/view-patients/${patient.id}`
+    : `/dashboard/patients/${patient.id}`;
 
   return (
     <div className="flex items-center justify-end gap-1.5 flex-nowrap">
       {/* 1. زر عرض الملف */}
       <Link
-        href={`/dashboard/patients/${patient.id}`}
+        href={profileUrl}
         className="h-8 px-3 rounded-lg bg-[#0040D8] hover:bg-blue-700 active:scale-95 text-white font-bold text-xs shadow-2xs transition-all flex items-center gap-1 cursor-pointer whitespace-nowrap"
       >
         <span>عرض الملف</span>

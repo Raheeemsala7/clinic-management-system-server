@@ -510,6 +510,96 @@ export class AppointmentsService {
       })
     );
 
+    // 4. حساب نطاق شبكة الشهر بالكامل (Month Range & Days for Month View)
+    const year = targetD.getUTCFullYear();
+    const month = targetD.getUTCMonth(); // 0..11
+    const ARABIC_MONTH_NAMES = [
+      'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
+      'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
+    ];
+    const monthName = ARABIC_MONTH_NAMES[month];
+
+    const firstDayOfMonth = new Date(Date.UTC(year, month, 1, 12, 0, 0));
+    const lastDayOfMonth = new Date(Date.UTC(year, month + 1, 0, 12, 0, 0));
+
+    // تحديد أول سبت في شبكة الشهر (Saturday-based week)
+    const firstDayWeekIndex = firstDayOfMonth.getUTCDay(); // 0(Sun)..6(Sat)
+    const diffToFirstSaturday = firstDayWeekIndex === 6 ? 0 : firstDayWeekIndex + 1;
+    const monthGridStart = new Date(firstDayOfMonth);
+    monthGridStart.setUTCDate(firstDayOfMonth.getUTCDate() - diffToFirstSaturday);
+
+    // تحديد آخر جمعة في شبكة الشهر
+    const lastDayWeekIndex = lastDayOfMonth.getUTCDay(); // 0(Sun)..6(Sat)
+    const diffToLastFriday = lastDayWeekIndex === 5 ? 0 : (5 - lastDayWeekIndex + 7) % 7;
+    const monthGridEnd = new Date(lastDayOfMonth);
+    monthGridEnd.setUTCDate(lastDayOfMonth.getUTCDate() + diffToLastFriday);
+
+    const monthDays: Array<{
+      date: string;
+      dayNumber: number;
+      dayName: string;
+      isCurrentMonth: boolean;
+      isToday: boolean;
+      isOffDay: boolean;
+      appointmentsCount: number;
+    }> = [];
+
+    const cur = new Date(monthGridStart);
+    while (cur <= monthGridEnd) {
+      const isoStr = cur.toISOString().split('T')[0];
+      const curDayOfWeek = cur.getUTCDay();
+      const isOffDay = curDayOfWeek === 5; // الجمعة إجازة
+      const isCurMonth = cur.getUTCMonth() === month;
+
+      monthDays.push({
+        date: isoStr,
+        dayNumber: cur.getUTCDate(),
+        dayName: ARABIC_WEEK_DAYS[curDayOfWeek === 6 ? 0 : curDayOfWeek + 1],
+        isCurrentMonth: isCurMonth,
+        isToday: isoStr === today,
+        isOffDay,
+        appointmentsCount: 0,
+      });
+      cur.setUTCDate(cur.getUTCDate() + 1);
+    }
+
+    const monthStartDate = monthDays[0].date;
+    const monthEndDate = monthDays[monthDays.length - 1].date;
+
+    const monthFilter: any = {
+      clinicDate: { $gte: monthStartDate, $lte: monthEndDate },
+      status: { $ne: 'CANCELLED' },
+    };
+    if (doctorId) monthFilter.doctorId = doctorId;
+
+    const rawMonthAppts = await Appointment.find(monthFilter).sort({ clinicDate: 1, startTime: 1 });
+    const countByDate = new Map<string, number>();
+    rawMonthAppts.forEach((a) => {
+      countByDate.set(a.clinicDate, (countByDate.get(a.clinicDate) || 0) + 1);
+    });
+    monthDays.forEach((d) => {
+      d.appointmentsCount = countByDate.get(d.date) || 0;
+    });
+
+    const monthAppointments = await Promise.all(
+      rawMonthAppts.map(async (a) => {
+        const p = await Patient.findById(a.patientId).select('fullName phone');
+        const apptDocName = await getDocName(a.doctorId);
+        return {
+          id: a.id,
+          clinicDate: a.clinicDate,
+          startTime: a.startTime || '09:00',
+          endTime: a.endTime || '',
+          patientName: p?.fullName || 'مريض',
+          doctorId: a.doctorId,
+          doctorName: apptDocName,
+          type: a.type,
+          status: a.status,
+          queueNumber: a.queueNumber,
+        };
+      })
+    );
+
     return {
       date,
       doctorId: doctorId || '',
@@ -524,6 +614,15 @@ export class AppointmentsService {
         days: weekDays,
       },
       weekAppointments,
+      monthRange: {
+        year,
+        month: month + 1,
+        monthName,
+        startDate: monthStartDate,
+        endDate: monthEndDate,
+        days: monthDays,
+      },
+      monthAppointments,
     };
   }
 

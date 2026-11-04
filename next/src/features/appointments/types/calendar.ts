@@ -56,6 +56,25 @@ export interface WeekAppointmentItem {
   doctorName: string;
 }
 
+export interface MonthDayItem {
+  date: string;
+  dayNumber: number;
+  dayName: string;
+  isCurrentMonth: boolean;
+  isToday: boolean;
+  isOffDay: boolean;
+  appointmentsCount: number;
+}
+
+export interface MonthRangeData {
+  year: number;
+  month: number;
+  monthName: string;
+  startDate: string;
+  endDate: string;
+  days: MonthDayItem[];
+}
+
 export interface AppointmentsCalendarData {
   date: string;
   doctorId: string;
@@ -70,6 +89,8 @@ export interface AppointmentsCalendarData {
     days: WeekDayItem[];
   };
   weekAppointments: WeekAppointmentItem[];
+  monthRange?: MonthRangeData;
+  monthAppointments?: WeekAppointmentItem[];
 }
 
-export type CalendarViewMode = 'list' | 'week';
+export type CalendarViewMode = 'list' | 'week' | 'month';

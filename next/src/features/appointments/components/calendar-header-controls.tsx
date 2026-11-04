@@ -25,7 +25,10 @@ interface CalendarHeaderControlsProps {
   isDoctorView?: boolean;
   weekStartDate?: string;
   weekEndDate?: string;
+  monthName?: string;
+  monthYear?: number;
   onShiftWeek?: (days: number) => void;
+  onShiftMonth?: (months: number) => void;
 }
 
 function getTodayIso(): string {
@@ -48,7 +51,10 @@ export function CalendarHeaderControls({
   isDoctorView,
   weekStartDate,
   weekEndDate,
+  monthName,
+  monthYear,
   onShiftWeek,
+  onShiftMonth,
 }: CalendarHeaderControlsProps) {
   const dateInputRef = useRef<HTMLInputElement>(null);
 
@@ -77,12 +83,14 @@ export function CalendarHeaderControls({
     }
   };
 
+  const isCalendarMode = viewMode === 'week' || viewMode === 'month';
+
   return (
     <div
       className="flex flex-col xl:flex-row xl:items-center justify-between gap-3.5 select-none"
       dir="rtl"
     >
-      {/* الجانب الأيمن: زر اليوم + منتقي التاريخ + (تبويبات النطاق إن كان تقويم) + قائمة الأطباء */}
+      {/* الجانب الأيمن: زر اليوم + منتقي التاريخ + (تبويبات النطاق يوم/أسبوع/شهر) + قائمة الأطباء */}
       <div className="flex items-center gap-2.5 flex-wrap">
         {/* زر اليوم */}
         <button
@@ -93,8 +101,36 @@ export function CalendarHeaderControls({
           اليوم
         </button>
 
-        {/* منتقي وملاح التاريخ */}
-        {viewMode === 'week' ? (
+        {/* منتقي وملاح التاريخ بحسب النمط (شهر / أسبوع / يوم) */}
+        {viewMode === 'month' ? (
+          /* وضع الشهر: ملاح الشهر */
+          <div className="h-10 px-2.5 rounded-xl border border-slate-200 bg-white shadow-2xs flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => onShiftMonth?.(-1)}
+              title="الشهر السابق"
+              className="w-7 h-7 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-500 cursor-pointer transition-colors"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+
+            <div className="flex items-center gap-2 px-1 text-xs font-black text-[#0A164E]">
+              <span>
+                {monthName || 'نوفمبر'} {monthYear || 2026}
+              </span>
+              <CalendarIcon className="w-4 h-4 text-blue-600" />
+            </div>
+
+            <button
+              type="button"
+              onClick={() => onShiftMonth?.(1)}
+              title="الشهر التالي"
+              className="w-7 h-7 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-500 cursor-pointer transition-colors"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+          </div>
+        ) : viewMode === 'week' ? (
           /* وضع الأسبوع: ملاح الأسبوع */
           <div className="h-10 px-2.5 rounded-xl border border-slate-200 bg-white shadow-2xs flex items-center gap-2">
             <button
@@ -160,32 +196,42 @@ export function CalendarHeaderControls({
           </div>
         )}
 
-        {/* في وضع التقويم: أزرار التبديل (يوم / أسبوع / شهر) مطابقة للصورة 2 */}
-        {viewMode === 'week' && (
+        {/* في وضع التقويم (أسبوع أو شهر): أزرار التبديل (يوم / أسبوع / شهر) */}
+        {isCalendarMode && (
           <div className="h-10 p-1 rounded-xl bg-slate-100 border border-slate-200/60 flex items-center gap-1 text-xs font-bold">
             <button
               type="button"
               onClick={() => onViewModeChange('list')}
-              className="h-8 px-3 rounded-lg text-slate-600 hover:text-slate-900 cursor-pointer"
+              className="h-8 px-3 rounded-lg text-slate-600 hover:text-slate-900 cursor-pointer transition-all"
             >
               يوم
             </button>
             <button
               type="button"
-              className="h-8 px-3 rounded-lg bg-[#0A164E] text-white shadow-xs font-black cursor-pointer"
+              onClick={() => onViewModeChange('week')}
+              className={`h-8 px-3 rounded-lg cursor-pointer transition-all ${
+                viewMode === 'week'
+                  ? 'bg-[#0A164E] text-white shadow-xs font-black'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
             >
               أسبوع
             </button>
             <button
               type="button"
-              className="h-8 px-3 rounded-lg text-slate-600 hover:text-slate-900 cursor-pointer"
+              onClick={() => onViewModeChange('month')}
+              className={`h-8 px-3 rounded-lg cursor-pointer transition-all ${
+                viewMode === 'month'
+                  ? 'bg-[#0A164E] text-white shadow-xs font-black'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
             >
               شهر
             </button>
           </div>
         )}
 
-        {/* عرض الطبيب: إذا كان الطبيب مسجل دخول نعرض شارة خاصة به، وإذا كان الاستقبال نوفر اختيار الطبيب أو جميع الأطباء */}
+        {/* اختيار الطبيب أو عرض شارة الطبيب الخاصة */}
         {isDoctorView ? (
           <div className="h-10 px-3.5 rounded-xl border border-blue-200 bg-blue-50/60 text-xs font-bold text-[#0A164E] shadow-2xs flex items-center gap-2">
             <Stethoscope className="w-4 h-4 text-[#0040D8]" />
@@ -233,7 +279,7 @@ export function CalendarHeaderControls({
             type="button"
             onClick={() => onViewModeChange('week')}
             className={`h-8 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-              viewMode === 'week'
+              isCalendarMode
                 ? 'bg-[#0A164E] text-white shadow-xs font-black'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
@@ -243,7 +289,7 @@ export function CalendarHeaderControls({
           </button>
         </div>
 
-        {/* زر حجز موعد جديد (يظهر لموظف الاستقبال والمدير) */}
+        {/* زر حجز موعد جديد (للاستقبال والمدير) */}
         {!isDoctorView && (
           <Link
             href={`/dashboard/appointments/new?date=${currentDate}${
