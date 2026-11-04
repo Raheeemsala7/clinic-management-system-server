@@ -64,3 +64,4 @@ export function CalendarSummaryCards({ summary }: CalendarSummaryCardsProps) {
     </div>
   );
 }
+

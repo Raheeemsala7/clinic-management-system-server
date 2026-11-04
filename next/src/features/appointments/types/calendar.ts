@@ -69,3 +69,4 @@ export interface AppointmentsCalendarData {
 }
 
 export type CalendarViewMode = 'list' | 'week';
+
