@@ -316,7 +316,21 @@
         "admit": "Admit",
         "postpone": "Postpone",
         "cancel": "Cancel",
-        "patientPlaceholder": "[Patient Name]"
+        "patientPlaceholder": "[Patient Name]",
+        "financialStatus": "Financial Status",
+        "doctor": "Doctor",
+        "paidInFull": "Paid in Full",
+        "remaining": "Remaining",
+        "exempt": "Fee Exempt",
+        "unpaid": "Unpaid",
+        "paidOfTotal": "Paid {paid} of {total} EGP",
+        "currency": "EGP",
+        "payRemaining": "Collect Remaining",
+        "emptyTitle": "No patients in today's queue",
+        "emptySubtitle": "No patients registered in the queue yet. You can book a new appointment.",
+        "errorTitle": "Failed to load queue",
+        "errorMessage": "An error occurred while fetching queue data. Please try again.",
+        "retry": "Retry"
       }
     }
   }

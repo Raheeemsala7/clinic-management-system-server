@@ -316,7 +316,21 @@
         "admit": "إدخال",
         "postpone": "تأجيل",
         "cancel": "إلغاء",
-        "patientPlaceholder": "[اسم المريض]"
+        "patientPlaceholder": "[اسم المريض]",
+        "financialStatus": "الموقف المالي",
+        "doctor": "الطبيب المعالج",
+        "paidInFull": "مدفوع بالكامل",
+        "remaining": "متبقي",
+        "exempt": "معفى من الرسوم",
+        "unpaid": "غير مدفوع",
+        "paidOfTotal": "سُدد {paid} من {total} ج.م",
+        "currency": "ج.م",
+        "payRemaining": "تحصيل المتبقي",
+        "emptyTitle": "لا يوجد مرضى في قائمة الانتظار اليوم",
+        "emptySubtitle": "لم يتم تسجيل أي مريض في قائمة الانتظار حتى الآن، يمكنك إضافة حجز جديد.",
+        "errorTitle": "تعذر تحميل قائمة الانتظار",
+        "errorMessage": "حدث خطأ أثناء جلب بيانات الانتظار من الخادم. يرجى إعادة المحاولة.",
+        "retry": "إعادة المحاولة"
       }
     }
   }
