@@ -46,15 +46,12 @@ export class PaymentsService {
     return payment.toJSON();
   }
 
-  static async listPayments(query: any, actorRole: string) {
+  static async listPayments(query: any, _actorRole?: string) {
     const { date, page: pageQuery, pageSize: pageSizeQuery } = query;
     const today = getTodayClinicDate();
 
-    if (actorRole === 'RECEPTION' && date && date !== today) {
-      throw new ForbiddenError("Reception can only view today's payments");
-    }
-
-    const effectiveDate = actorRole === 'RECEPTION' ? today : (date as string | undefined);
+    // Allow filtering by date (today or previous dates)
+    const effectiveDate = (date as string | undefined) || today;
 
     const { skip, take, page, pageSize } = parsePagination({
       page: pageQuery,
@@ -62,19 +59,65 @@ export class PaymentsService {
     });
 
     let paymentFilter: any = {};
-    if (effectiveDate) {
-      const appointments = await Appointment.find({ clinicDate: effectiveDate }).select('_id');
-      const apptIds = appointments.map((a) => a.id);
-      paymentFilter = { appointmentId: { $in: apptIds } };
+    let apptsOnDate: any[] = [];
+
+    if (effectiveDate && effectiveDate !== 'all') {
+      const startOfDay = new Date(`${effectiveDate}T00:00:00.000Z`);
+      const endOfDay = new Date(`${effectiveDate}T23:59:59.999Z`);
+
+      apptsOnDate = await Appointment.find({ clinicDate: effectiveDate }).select(
+        '_id totalAmount paidAmount remainingAmount paymentStatus isExempt',
+      );
+      const apptIds = apptsOnDate.map((a) => a.id);
+
+      paymentFilter = {
+        $or: [
+          { appointmentId: { $in: apptIds } },
+          { createdAt: { $gte: startOfDay, $lte: endOfDay } },
+        ],
+      };
     }
 
-    const [payments, total] = await Promise.all([
+    const [payments, total, allRecordedPayments] = await Promise.all([
       Payment.find(paymentFilter)
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(take),
       Payment.countDocuments(paymentFilter),
+      Payment.find({ ...paymentFilter, status: 'RECORDED' }).select('amount paymentType appointmentId'),
     ]);
+
+    // Calculate KPI summary for this date
+    const totalRemaining = apptsOnDate
+      .filter((a) => !a.isExempt)
+      .reduce((sum, a) => sum + Math.max(0, Number(a.remainingAmount || 0)), 0);
+
+    const totalCollected = allRecordedPayments.reduce(
+      (sum, p) => sum + Math.max(0, Number(p.amount || 0)),
+      0,
+    );
+
+    const totalDeposits = allRecordedPayments
+      .filter((p) => p.paymentType === 'DEPOSIT')
+      .reduce((sum, p) => sum + Math.max(0, Number(p.amount || 0)), 0);
+
+    const depositCount = allRecordedPayments.filter((p) => p.paymentType === 'DEPOSIT').length;
+    const paidCount = allRecordedPayments.filter(
+      (p) => p.paymentType === 'FULL' || p.paymentType === 'REMAINING',
+    ).length;
+    const remainingDueCount = apptsOnDate.filter((a) => !a.isExempt && a.remainingAmount > 0).length;
+
+    const summary = {
+      totalCollected,
+      totalDeposits,
+      totalRemaining,
+      counts: {
+        all: total,
+        paid: paidCount,
+        deposit: depositCount,
+        remaining: remainingDueCount,
+      },
+    };
 
     const { Patient, User } = await import('../models');
     const populated = await Promise.all(
@@ -116,7 +159,10 @@ export class PaymentsService {
       }),
     );
 
-    return buildPaginatedResult(populated, total, page, pageSize);
+    return {
+      ...buildPaginatedResult(populated, total, page, pageSize),
+      summary,
+    };
   }
 
   static async voidPayment(id: string, reason?: string, actorId = '', ip = '') {

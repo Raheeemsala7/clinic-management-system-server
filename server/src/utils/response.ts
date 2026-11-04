@@ -5,6 +5,7 @@ export type MetadataData = {
   limit: string;
   total: string;
   totalPages: string;
+  summary?: any;
 };
 
 export type SuccessResponse<T> = {
@@ -123,6 +124,10 @@ export function sendPaginated<T>(
     total: String(paginated.meta.total),
     totalPages: String(paginated.meta.totalPages),
   };
+
+  if ((paginated as any).summary) {
+    metadata.summary = (paginated as any).summary;
+  }
 
   sendSuccess(res, paginated.data, {
     code: options?.code ?? 200,
