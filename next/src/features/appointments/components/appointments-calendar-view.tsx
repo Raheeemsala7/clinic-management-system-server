@@ -31,7 +31,9 @@ export function AppointmentsCalendarView({
   const currentDate =
     searchParams?.get('date') || initialDate || data.date || new Date().toISOString().split('T')[0];
   const currentDoctorId =
-    searchParams?.get('doctorId') || initialDoctorId || data.doctor?.id || '';
+    searchParams?.get('doctorId') !== null
+      ? (searchParams?.get('doctorId') || '')
+      : (initialDoctorId || data.doctorId || '');
 
   // تحديث مسار الـ URL بسلاسة
   const updateUrlParams = (updates: {
@@ -92,6 +94,7 @@ export function AppointmentsCalendarView({
         onDoctorChange={handleDoctorChange}
         doctors={data.allDoctors || []}
         doctorName={data.doctor?.name}
+        isDoctorView={data.isDoctorView}
         weekStartDate={data.weekRange?.startDate}
         weekEndDate={data.weekRange?.endDate}
         onShiftWeek={handleShiftWeek}
@@ -108,15 +111,16 @@ export function AppointmentsCalendarView({
           slots={data.daySlots || []}
           selectedDate={currentDate}
           selectedDoctorId={currentDoctorId}
+          isDoctorView={data.isDoctorView}
         />
       ) : (
         <CalendarWeekGridView
           days={data.weekRange?.days || []}
           appointments={data.weekAppointments || []}
           selectedDoctorId={currentDoctorId}
+          isDoctorView={data.isDoctorView}
         />
       )}
     </div>
   );
 }
-

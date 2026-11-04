@@ -9,6 +9,7 @@ import {
   ListFilter,
   Plus,
   ChevronDown,
+  Stethoscope,
 } from 'lucide-react';
 import { CalendarViewMode } from '../types/calendar';
 
@@ -21,6 +22,7 @@ interface CalendarHeaderControlsProps {
   onDoctorChange: (doctorId: string) => void;
   doctors: Array<{ id: string; name: string }>;
   doctorName?: string;
+  isDoctorView?: boolean;
   weekStartDate?: string;
   weekEndDate?: string;
   onShiftWeek?: (days: number) => void;
@@ -43,6 +45,7 @@ export function CalendarHeaderControls({
   onDoctorChange,
   doctors,
   doctorName,
+  isDoctorView,
   weekStartDate,
   weekEndDate,
   onShiftWeek,
@@ -182,25 +185,31 @@ export function CalendarHeaderControls({
           </div>
         )}
 
-        {/* القائمة المنسدلة لاختيار الطبيب */}
-        <div className="relative">
-          <select
-            value={selectedDoctorId}
-            onChange={(e) => onDoctorChange(e.target.value)}
-            className="h-10 pr-4 pl-9 rounded-xl border border-slate-200 bg-white text-xs font-bold text-[#0A164E] shadow-2xs appearance-none focus:outline-none focus:border-[#0040D8] cursor-pointer"
-          >
-            {doctors && doctors.length > 0 ? (
-              doctors.map((doc) => (
-                <option key={doc.id} value={doc.id}>
-                  {doc.name}
-                </option>
-              ))
-            ) : (
-              <option value="">{doctorName || 'د. إسلام عبدالله كريمة'}</option>
-            )}
-          </select>
-          <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-        </div>
+        {/* عرض الطبيب: إذا كان الطبيب مسجل دخول نعرض شارة خاصة به، وإذا كان الاستقبال نوفر اختيار الطبيب أو جميع الأطباء */}
+        {isDoctorView ? (
+          <div className="h-10 px-3.5 rounded-xl border border-blue-200 bg-blue-50/60 text-xs font-bold text-[#0A164E] shadow-2xs flex items-center gap-2">
+            <Stethoscope className="w-4 h-4 text-[#0040D8]" />
+            <span>{doctorName || 'جدول مواعيدي الخاصة'}</span>
+          </div>
+        ) : (
+          <div className="relative">
+            <select
+              value={selectedDoctorId || ''}
+              onChange={(e) => onDoctorChange(e.target.value)}
+              className="h-10 pr-4 pl-9 rounded-xl border border-slate-200 bg-white text-xs font-bold text-[#0A164E] shadow-2xs appearance-none focus:outline-none focus:border-[#0040D8] cursor-pointer"
+            >
+              <option value="">جميع الأطباء (كل المواعيد)</option>
+              {doctors && doctors.length > 0
+                ? doctors.map((doc) => (
+                    <option key={doc.id} value={doc.id}>
+                      {doc.name}
+                    </option>
+                  ))
+                : null}
+            </select>
+            <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+          </div>
+        )}
       </div>
 
       {/* الجانب الأيسر: التبديل بين طريقة القائمة والتقويم + زر حجز موعد جديد */}
@@ -234,16 +243,18 @@ export function CalendarHeaderControls({
           </button>
         </div>
 
-        {/* زر حجز موعد جديد */}
-        <Link
-          href={`/dashboard/appointments/new?date=${currentDate}${
-            selectedDoctorId ? `&doctorId=${selectedDoctorId}` : ''
-          }`}
-          className="h-10 px-4 rounded-xl bg-[#0040D8] hover:bg-blue-700 active:scale-95 text-white font-bold text-xs shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
-        >
-          <Plus className="w-4 h-4 stroke-[3]" />
-          <span>حجز موعد جديد</span>
-        </Link>
+        {/* زر حجز موعد جديد (يظهر لموظف الاستقبال والمدير) */}
+        {!isDoctorView && (
+          <Link
+            href={`/dashboard/appointments/new?date=${currentDate}${
+              selectedDoctorId ? `&doctorId=${selectedDoctorId}` : ''
+            }`}
+            className="h-10 px-4 rounded-xl bg-[#0040D8] hover:bg-blue-700 active:scale-95 text-white font-bold text-xs shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
+          >
+            <Plus className="w-4 h-4 stroke-[3]" />
+            <span>حجز موعد جديد</span>
+          </Link>
+        )}
       </div>
     </div>
   );

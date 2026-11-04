@@ -10,6 +10,7 @@ interface CalendarWeekGridViewProps {
   days: WeekDayItem[];
   appointments: WeekAppointmentItem[];
   selectedDoctorId?: string;
+  isDoctorView?: boolean;
 }
 
 const HOURS = [
@@ -27,6 +28,7 @@ export function CalendarWeekGridView({
   days,
   appointments,
   selectedDoctorId,
+  isDoctorView,
 }: CalendarWeekGridViewProps) {
   const router = useRouter();
 
@@ -40,6 +42,21 @@ export function CalendarWeekGridView({
     });
   };
 
+  const getTypeLabel = (type?: string) => {
+    switch (type) {
+      case 'FOLLOW_UP':
+        return 'إعادة';
+      case 'LAB_TESTS_IMAGING':
+        return 'تحليل وأشعة';
+      case 'TEST_RESULTS_REVIEW':
+        return 'متابعة';
+      case 'CONSULTATION':
+        return 'استشارة';
+      default:
+        return 'كشف';
+    }
+  };
+
   return (
     <div className="space-y-4 select-none" dir="rtl">
       {/* 1. الشريط الفرعي التوضيحي ودليل الألوان (Legend) مع الإشارة للخط الأحمر مطابقة للصورة 2 */}
@@ -47,7 +64,11 @@ export function CalendarWeekGridView({
         {/* ملاحظة النقر */}
         <div className="text-slate-500 font-bold flex items-center gap-1.5">
           <Clock className="w-4 h-4 text-slate-400" />
-          <span>اضغط على أي فترة فارغة لحجز موعد جديد</span>
+          <span>
+            {isDoctorView
+              ? 'جدول مواعيدك الأسبوعية — اضغط على أي موعد لعرض تفاصيل المريض'
+              : 'اضغط على أي فترة فارغة لحجز موعد جديد'}
+          </span>
         </div>
 
         {/* دليل الألوان (Legend) */}
@@ -115,7 +136,7 @@ export function CalendarWeekGridView({
             {/* صفوف الساعات */}
             <div className="divide-y divide-slate-100">
               {HOURS.map((hour) => (
-                <div key={hour} className="grid grid-cols-8 min-h-[75px] group">
+                <div key={hour} className="grid grid-cols-8 min-h-[85px] group">
                   {/* خلايا الأيام لهذا الوقت */}
                   {days.map((day) => {
                     const cellAppts = getApptsForCell(day.date, hour);
@@ -127,10 +148,12 @@ export function CalendarWeekGridView({
                         className={`p-1.5 border-l border-slate-100 relative transition-colors ${
                           isOff
                             ? 'bg-slate-50/50 cursor-not-allowed'
+                            : isDoctorView
+                            ? 'hover:bg-slate-50/60'
                             : 'hover:bg-blue-50/30 cursor-pointer'
                         }`}
                         onClick={() => {
-                          if (!isOff && cellAppts.length === 0) {
+                          if (!isDoctorView && !isOff && cellAppts.length === 0) {
                             router.push(
                               `/dashboard/appointments/new?date=${day.date}&time=${hour}${
                                 selectedDoctorId ? `&doctorId=${selectedDoctorId}` : ''
@@ -145,7 +168,7 @@ export function CalendarWeekGridView({
                         )}
 
                         {/* بطاقات المواعيد المحجوزة في هذه الخلية */}
-                        <div className="space-y-1">
+                        <div className="space-y-1.5">
                           {cellAppts.map((appt) => {
                             const isCompleted = appt.status === 'COMPLETED';
                             const isWaiting = appt.status === 'WAITING';
@@ -156,31 +179,35 @@ export function CalendarWeekGridView({
                               ? 'bg-[#FEF08A] border-[#FDE047] text-amber-950'
                               : 'bg-[#DBEAFE] border-[#BFDBFE] text-blue-950';
 
-                            const typeLabel =
-                              appt.type === 'FOLLOW_UP'
-                                ? 'إعادة'
-                                : appt.type === 'LAB_TESTS_IMAGING'
-                                ? 'تحليل'
-                                : appt.type === 'TEST_RESULTS_REVIEW'
-                                ? 'متابعة'
-                                : 'كشف';
-
                             return (
                               <Link
                                 key={appt.id}
-                                href={`/dashboard/appointments?date=${day.date}`}
+                                href={`/dashboard/appointments?date=${day.date}${
+                                  selectedDoctorId ? `&doctorId=${selectedDoctorId}` : ''
+                                }`}
                                 onClick={(e) => e.stopPropagation()}
                                 className={`block p-2 rounded-xl border text-[11px] font-bold shadow-2xs hover:shadow-xs transition-all ${cardStyle}`}
                               >
+                                {/* السطر الأول: الوقت ونوع الكشف */}
                                 <div className="flex items-center justify-between font-mono text-[10px]">
-                                  <span>{appt.startTime}</span>
-                                  <span className="text-[10px] font-sans px-1 rounded bg-white/70">
-                                    {typeLabel}
+                                  <span className="font-bold">{appt.startTime}</span>
+                                  <span className="text-[10px] font-sans px-1.5 py-0.5 rounded-md bg-white/80 font-black shadow-2xs">
+                                    {getTypeLabel(appt.type)}
                                   </span>
                                 </div>
-                                <div className="mt-1 font-black truncate">
+
+                                {/* السطر الثاني: اسم المريض */}
+                                <div className="mt-1 font-black truncate text-xs">
                                   {appt.patientName}
                                 </div>
+
+                                {/* السطر الثالث: اسم الطبيب (للريسبشن أو لتوضيح الطبيب المعالج) */}
+                                {appt.doctorName && (
+                                  <div className="mt-1 text-[10px] opacity-85 truncate flex items-center gap-1 font-bold border-t border-black/5 pt-1">
+                                    <span className="text-[11px]">👨‍⚕️</span>
+                                    <span>{appt.doctorName}</span>
+                                  </div>
+                                )}
                               </Link>
                             );
                           })}

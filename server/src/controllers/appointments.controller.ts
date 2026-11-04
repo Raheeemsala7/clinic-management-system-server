@@ -31,7 +31,7 @@ export class AppointmentsController {
   });
 
   getCalendar = asyncHandler(async (req: Request, res: Response) => {
-    const result = await AppointmentsService.getCalendarView(req.query);
+    const result = await AppointmentsService.getCalendarView(req.query, req.user);
     sendSuccess(res, result);
   });
 

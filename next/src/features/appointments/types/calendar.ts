@@ -12,6 +12,7 @@ export interface DaySlotAppointment {
   patientId: string;
   patientName: string;
   patientPhone: string;
+  doctorId?: string;
   doctorName: string;
   type: string;
   status: string;
@@ -31,6 +32,7 @@ export interface DaySlotItem {
   isBooked: boolean;
   isAvailable: boolean;
   appointment?: DaySlotAppointment | null;
+  appointments?: DaySlotAppointment[];
 }
 
 export interface WeekDayItem {
@@ -50,12 +52,14 @@ export interface WeekAppointmentItem {
   type: string;
   status: string;
   queueNumber?: number;
+  doctorId?: string;
   doctorName: string;
 }
 
 export interface AppointmentsCalendarData {
   date: string;
   doctorId: string;
+  isDoctorView?: boolean;
   doctor?: { id: string; name: string } | null;
   allDoctors: Array<{ id: string; name: string }>;
   summary: CalendarSummary;
@@ -69,4 +73,3 @@ export interface AppointmentsCalendarData {
 }
 
 export type CalendarViewMode = 'list' | 'week';
-

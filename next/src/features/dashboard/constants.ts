@@ -34,7 +34,7 @@ export const DOCTOR_NAV_ITEMS: DashboardNavItem[] = [
   { id: 'todayCheckup', title: 'شاشة كشف اليوم', href: '/dashboard', icon: Stethoscope, isActive: true },
   { id: 'calendar', title: 'التقويم والمواعيد', href: '/dashboard/calendar', icon: Calendar },
   { id: 'weeklyHours', title: 'أوقات العمل الأسبوعية', href: '/dashboard/schedule', icon: Clock },
-  { id: 'patients', title: 'المرضى', href: '/dashboard/patients', icon: Users },
+  { id: 'patients', title: 'المرضى', href: '/dashboard/view-patients', icon: Users },
 ];
 
 export const RECEPTIONIST_NAV_ITEMS: DashboardNavItem[] = [

@@ -306,18 +306,51 @@ export class AppointmentsService {
     return buildPaginatedResult(populated, total, page, pageSize);
   }
 
-  static async getCalendarView(query: any) {
+  static async getCalendarView(query: any, actor?: any) {
     const today = getTodayClinicDate();
     const date = query.date || today;
+    const isDoctor = actor?.role === 'DOCTOR';
     let doctorId = query.doctorId;
 
-    // جلب قائمة الأطباء المتاحين في العيادة
-    const allDoctors = await User.find({ role: 'DOCTOR', deletedAt: null, isActive: true }).select('id name');
-    if (!doctorId && allDoctors.length > 0) {
-      doctorId = allDoctors[0].id;
+    let allDoctors: Array<{ id: string; name: string }> = [];
+    let currentDoctor: { id: string; name: string } | null = null;
+
+    if (isDoctor) {
+      // الطبيب يرى دائماً وأبداً مواعيده هو فقط
+      doctorId = actor.id;
+      const docUser = await User.findById(actor.id).select('id name');
+      if (docUser) {
+        currentDoctor = { id: docUser.id, name: docUser.name };
+        allDoctors = [currentDoctor];
+      }
+    } else {
+      // موظف الاستقبال أو المدير: جلب جميع الأطباء المتاحين في العيادة
+      const doctorsFromDb = await User.find({ role: 'DOCTOR', deletedAt: null, isActive: true }).select('id name');
+      allDoctors = doctorsFromDb.map((d) => ({ id: d.id, name: d.name }));
+
+      if (doctorId && doctorId !== 'ALL' && doctorId.trim() !== '') {
+        currentDoctor = allDoctors.find((d) => d.id === doctorId) || null;
+      } else {
+        // إذا لم يُحدد طبيب معين: الاستقبال يرى كافة المواعيد للعيادة كاملة
+        doctorId = '';
+        currentDoctor = null;
+      }
     }
 
-    const currentDoctor = allDoctors.find((d) => d.id === doctorId) || allDoctors[0];
+    const doctorMap = new Map<string, string>();
+    allDoctors.forEach((d) => doctorMap.set(d.id, d.name));
+
+    // دالة مساعدة لجلب اسم الطبيب بدقة
+    const getDocName = async (docId?: string) => {
+      if (!docId) return 'طبيب العيادة';
+      if (doctorMap.has(docId)) return doctorMap.get(docId)!;
+      const found = await User.findById(docId).select('name');
+      if (found?.name) {
+        doctorMap.set(docId, found.name);
+        return found.name;
+      }
+      return 'طبيب العيادة';
+    };
 
     // 1. حساب الإحصائيات الأربع (KPI Cards) لليوم المحدد
     const dayFilter: any = { clinicDate: date, status: { $ne: 'CANCELLED' } };
@@ -352,6 +385,7 @@ export class AppointmentsService {
         const remaining = Boolean(appt.isExempt) ? 0 : Math.max(0, appt.remainingAmount || 0);
         const isPaid = Boolean(appt.isExempt) || appt.paymentStatus === 'PAID' || (appt.totalAmount > 0 && remaining === 0);
         const hasRem = !appt.isExempt && remaining > 0;
+        const apptDoctorName = await getDocName(appt.doctorId);
 
         return {
           id: appt.id,
@@ -360,7 +394,8 @@ export class AppointmentsService {
           patientId: appt.patientId,
           patientName: patient?.fullName || 'غير مسجل',
           patientPhone: patient?.phone || '',
-          doctorName: currentDoctor?.name || 'د. إسلام',
+          doctorId: appt.doctorId,
+          doctorName: apptDoctorName,
           type: appt.type,
           status: appt.status,
           startTime: appt.startTime || '',
@@ -386,19 +421,24 @@ export class AppointmentsService {
     });
     const sortedSlotTimes = Array.from(allSlotTimeSet).sort();
 
-    const apptsByStartTime = new Map<string, typeof populatedDayAppts[0]>();
+    const apptsByStartTime = new Map<string, typeof populatedDayAppts>();
     populatedDayAppts.forEach((a) => {
-      if (a.startTime) apptsByStartTime.set(a.startTime, a);
+      if (a.startTime) {
+        const list = apptsByStartTime.get(a.startTime) || [];
+        list.push(a);
+        apptsByStartTime.set(a.startTime, list);
+      }
     });
 
     const daySlots = sortedSlotTimes.map((time) => {
-      const booked = apptsByStartTime.get(time);
-      if (booked) {
+      const appts = apptsByStartTime.get(time);
+      if (appts && appts.length > 0) {
         return {
           time,
           isBooked: true,
           isAvailable: false,
-          appointment: booked,
+          appointment: appts[0],
+          appointments: appts,
         };
       }
       return {
@@ -406,6 +446,7 @@ export class AppointmentsService {
         isBooked: false,
         isAvailable: true,
         appointment: null,
+        appointments: [],
       };
     });
 
@@ -449,27 +490,30 @@ export class AppointmentsService {
     };
     if (doctorId) weekFilter.doctorId = doctorId;
 
-    const rawWeekAppts = await Appointment.find(weekFilter).sort({ startTime: 1 });
+    const rawWeekAppts = await Appointment.find(weekFilter).sort({ startTime: 1, clinicDate: 1 });
     const weekAppointments = await Promise.all(
       rawWeekAppts.map(async (a) => {
         const p = await Patient.findById(a.patientId).select('fullName phone');
+        const apptDocName = await getDocName(a.doctorId);
         return {
           id: a.id,
           clinicDate: a.clinicDate,
           startTime: a.startTime || '09:00',
           endTime: a.endTime || '',
           patientName: p?.fullName || 'مريض',
+          doctorId: a.doctorId,
+          doctorName: apptDocName,
           type: a.type,
           status: a.status,
           queueNumber: a.queueNumber,
-          doctorName: currentDoctor?.name || 'د. إسلام',
         };
       })
     );
 
     return {
       date,
-      doctorId,
+      doctorId: doctorId || '',
+      isDoctorView: isDoctor,
       doctor: currentDoctor ? { id: currentDoctor.id, name: currentDoctor.name } : null,
       allDoctors: allDoctors.map((d) => ({ id: d.id, name: d.name })),
       summary,
