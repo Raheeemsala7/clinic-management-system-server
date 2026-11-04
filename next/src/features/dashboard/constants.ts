@@ -39,7 +39,7 @@ export const DOCTOR_NAV_ITEMS: DashboardNavItem[] = [
 
 export const RECEPTIONIST_NAV_ITEMS: DashboardNavItem[] = [
   { id: 'queue', title: 'قائمة الانتظار', href: '/dashboard', icon: ListOrdered, isActive: true },
-  { id: 'calendar', title: 'التقويم والمواعيد', href: '/dashboard/calendar', icon: Calendar },
+  { id: 'calendar', title: 'التقويم والمواعيد', href: '/dashboard/appointments', icon: Calendar },
   { id: 'newBooking', title: 'حجز جديد', href: '/dashboard/appointments/new', icon: CalendarPlus },
   { id: 'patients', title: 'المرضى', href: '/dashboard/patients', icon: Users },
   { id: 'payments', title: 'المدفوعات', href: '/dashboard/payments', icon: CreditCard },

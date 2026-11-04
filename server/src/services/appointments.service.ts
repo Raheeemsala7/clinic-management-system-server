@@ -306,6 +306,183 @@ export class AppointmentsService {
     return buildPaginatedResult(populated, total, page, pageSize);
   }
 
+  static async getCalendarView(query: any) {
+    const today = getTodayClinicDate();
+    const date = query.date || today;
+    let doctorId = query.doctorId;
+
+    // جلب قائمة الأطباء المتاحين في العيادة
+    const allDoctors = await User.find({ role: 'DOCTOR', deletedAt: null, isActive: true }).select('id name');
+    if (!doctorId && allDoctors.length > 0) {
+      doctorId = allDoctors[0].id;
+    }
+
+    const currentDoctor = allDoctors.find((d) => d.id === doctorId) || allDoctors[0];
+
+    // 1. حساب الإحصائيات الأربع (KPI Cards) لليوم المحدد
+    const dayFilter: any = { clinicDate: date, status: { $ne: 'CANCELLED' } };
+    if (doctorId) dayFilter.doctorId = doctorId;
+
+    const dayAppointments = await Appointment.find(dayFilter).sort({ startTime: 1, queueOrder: 1 });
+
+    let totalPaid = 0;
+    let totalRemaining = 0;
+    let totalExempt = 0;
+
+    for (const a of dayAppointments) {
+      if (a.isExempt) {
+        totalExempt++;
+      } else {
+        totalPaid += a.paidAmount || 0;
+        totalRemaining += Math.max(0, a.remainingAmount || 0);
+      }
+    }
+
+    const summary = {
+      totalToday: dayAppointments.length,
+      totalPaid,
+      totalRemaining,
+      totalExempt,
+    };
+
+    // 2. تجميع الفترات الزمنية لليوم (Day Slots for List View)
+    const populatedDayAppts = await Promise.all(
+      dayAppointments.map(async (appt) => {
+        const patient = await Patient.findById(appt.patientId).select('id fullName phone');
+        const remaining = Boolean(appt.isExempt) ? 0 : Math.max(0, appt.remainingAmount || 0);
+        const isPaid = Boolean(appt.isExempt) || appt.paymentStatus === 'PAID' || (appt.totalAmount > 0 && remaining === 0);
+        const hasRem = !appt.isExempt && remaining > 0;
+
+        return {
+          id: appt.id,
+          queueNumber: appt.queueNumber,
+          queueOrder: appt.queueOrder,
+          patientId: appt.patientId,
+          patientName: patient?.fullName || 'غير مسجل',
+          patientPhone: patient?.phone || '',
+          doctorName: currentDoctor?.name || 'د. إسلام',
+          type: appt.type,
+          status: appt.status,
+          startTime: appt.startTime || '',
+          endTime: appt.endTime || '',
+          totalAmount: appt.totalAmount || 0,
+          paidAmount: appt.paidAmount || 0,
+          remainingAmount: remaining,
+          isFullyPaid: isPaid,
+          hasRemaining: hasRem,
+          isExempt: Boolean(appt.isExempt),
+          notes: appt.notes || '',
+        };
+      })
+    );
+
+    const standardSlotTimes = [
+      '09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00'
+    ];
+
+    const allSlotTimeSet = new Set(standardSlotTimes);
+    populatedDayAppts.forEach((a) => {
+      if (a.startTime) allSlotTimeSet.add(a.startTime);
+    });
+    const sortedSlotTimes = Array.from(allSlotTimeSet).sort();
+
+    const apptsByStartTime = new Map<string, typeof populatedDayAppts[0]>();
+    populatedDayAppts.forEach((a) => {
+      if (a.startTime) apptsByStartTime.set(a.startTime, a);
+    });
+
+    const daySlots = sortedSlotTimes.map((time) => {
+      const booked = apptsByStartTime.get(time);
+      if (booked) {
+        return {
+          time,
+          isBooked: true,
+          isAvailable: false,
+          appointment: booked,
+        };
+      }
+      return {
+        time,
+        isBooked: false,
+        isAvailable: true,
+        appointment: null,
+      };
+    });
+
+    // 3. حساب نطاق الأسبوع (Week Range & Days for Calendar View)
+    const targetD = new Date(date + 'T12:00:00Z');
+    const dayOfWeek = targetD.getUTCDay();
+    const diffToSaturday = dayOfWeek === 6 ? 0 : dayOfWeek + 1;
+    const saturdayDate = new Date(targetD);
+    saturdayDate.setUTCDate(targetD.getUTCDate() - diffToSaturday);
+
+    const ARABIC_WEEK_DAYS = ['السبت', 'الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'];
+    const weekDays: Array<{
+      date: string;
+      dayName: string;
+      dayNumber: number;
+      isToday: boolean;
+      isOffDay: boolean;
+    }> = [];
+
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(saturdayDate);
+      d.setUTCDate(saturdayDate.getUTCDate() + i);
+      const isoStr = d.toISOString().split('T')[0];
+      const isOffDay = i === 6; // الجمعة إجازة أسبوعية
+
+      weekDays.push({
+        date: isoStr,
+        dayName: ARABIC_WEEK_DAYS[i],
+        dayNumber: d.getUTCDate(),
+        isToday: isoStr === today,
+        isOffDay,
+      });
+    }
+
+    const startDate = weekDays[0].date;
+    const endDate = weekDays[6].date;
+
+    const weekFilter: any = {
+      clinicDate: { $gte: startDate, $lte: endDate },
+      status: { $ne: 'CANCELLED' },
+    };
+    if (doctorId) weekFilter.doctorId = doctorId;
+
+    const rawWeekAppts = await Appointment.find(weekFilter).sort({ startTime: 1 });
+    const weekAppointments = await Promise.all(
+      rawWeekAppts.map(async (a) => {
+        const p = await Patient.findById(a.patientId).select('fullName phone');
+        return {
+          id: a.id,
+          clinicDate: a.clinicDate,
+          startTime: a.startTime || '09:00',
+          endTime: a.endTime || '',
+          patientName: p?.fullName || 'مريض',
+          type: a.type,
+          status: a.status,
+          queueNumber: a.queueNumber,
+          doctorName: currentDoctor?.name || 'د. إسلام',
+        };
+      })
+    );
+
+    return {
+      date,
+      doctorId,
+      doctor: currentDoctor ? { id: currentDoctor.id, name: currentDoctor.name } : null,
+      allDoctors: allDoctors.map((d) => ({ id: d.id, name: d.name })),
+      summary,
+      daySlots,
+      weekRange: {
+        startDate,
+        endDate,
+        days: weekDays,
+      },
+      weekAppointments,
+    };
+  }
+
   static async payRemaining(
     appointmentId: string,
     dto: { amount?: number; method?: 'CASH' | 'CARD' | 'WALLET'; notes?: string },

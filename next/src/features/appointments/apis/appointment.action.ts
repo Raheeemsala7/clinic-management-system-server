@@ -13,13 +13,19 @@ export async function revalidateAppointmentsCache() {
   try {
     updateTag('today-queue');
     updateTag('appointments');
+    updateTag('appointments-calendar');
+    updateTag('slots');
   } catch {}
   try {
     revalidateTag('today-queue', { expire: 0 });
     revalidateTag('appointments', { expire: 0 });
+    revalidateTag('appointments-calendar', { expire: 0 });
+    revalidateTag('slots', { expire: 0 });
   } catch {}
   try {
     revalidatePath('/dashboard', 'page');
+    revalidatePath('/dashboard/appointments', 'page');
+    revalidatePath('/dashboard/calendar', 'page');
   } catch {}
 }
 

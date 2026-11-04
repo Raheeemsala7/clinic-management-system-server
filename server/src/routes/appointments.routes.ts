@@ -7,6 +7,7 @@ router.use(authMiddleware);
 
 router.post('/', appointmentsController.createAppointment);
 router.get('/', appointmentsController.listAppointments);
+router.get('/calendar', appointmentsController.getCalendar);
 router.get('/:id', appointmentsController.getAppointmentById);
 router.put('/:id', appointmentsController.updateAppointment);
 

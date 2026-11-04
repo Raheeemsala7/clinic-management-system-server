@@ -30,6 +30,11 @@ export class AppointmentsController {
     sendPaginated(res, result);
   });
 
+  getCalendar = asyncHandler(async (req: Request, res: Response) => {
+    const result = await AppointmentsService.getCalendarView(req.query);
+    sendSuccess(res, result);
+  });
+
   getAppointmentById = asyncHandler(async (req: Request, res: Response) => {
     const result = await AppointmentsService.getAppointmentById(req.params.id);
     sendSuccess(res, result);
