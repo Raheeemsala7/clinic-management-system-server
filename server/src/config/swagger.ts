@@ -1499,10 +1499,15 @@ export const swaggerSpec = {
     '/api/v1/queue/today': {
       get: {
         tags: ['Queue'],
-        summary: 'عرض قائمة الانتظار وصالة الكشف لليوم الحالي مرتبة حسب الدور',
+        summary: 'عرض قائمة الانتظار وصالة الكشف لليوم الحالي لكافة أطباء العيادة (أو لطبيب محدد)',
         security: [{ BearerAuth: [] }],
         parameters: [
-          { name: 'doctorId', in: 'query', schema: { type: 'string' }, description: 'معرف الطبيب (اختياري)' },
+          {
+            name: 'doctorId',
+            in: 'query',
+            schema: { type: 'string' },
+            description: 'معرف الطبيب (اختياري - في حال عدم تمريره يتم جلب طابور جميع أطباء العيادة دفعة واحدة لموظف الاستقبال)',
+          },
         ],
         responses: {
           200: {

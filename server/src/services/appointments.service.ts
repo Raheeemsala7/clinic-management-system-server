@@ -287,8 +287,14 @@ export class AppointmentsService {
           Visit.findOne({ appointmentId: appt.id }).select('id status'),
         ]);
 
+        const remaining = Boolean(appt.isExempt) ? 0 : Math.max(0, appt.remainingAmount || 0);
+        const isPaid = Boolean(appt.isExempt) || appt.paymentStatus === 'PAID' || (appt.totalAmount > 0 && remaining === 0);
+        const hasRem = !appt.isExempt && remaining > 0;
+
         return {
           ...appt.toJSON(),
+          isFullyPaid: isPaid,
+          hasRemaining: hasRem,
           patient: patient ? patient.toJSON() : null,
           doctor: doctor ? doctor.toJSON() : null,
           visit: visit ? visit.toJSON() : null,

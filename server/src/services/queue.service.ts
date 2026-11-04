@@ -4,25 +4,18 @@ import { BadRequestError, ValidationError } from '../utils/errors';
 
 export class QueueService {
   static async getTodayQueue(doctorId?: string) {
-    let targetDoctorId = doctorId;
-    if (!targetDoctorId) {
-      const activeDoctor = await User.findOne({ role: 'DOCTOR', isActive: true, deletedAt: null });
-      if (activeDoctor) {
-        targetDoctorId = activeDoctor.id;
-      }
-    }
-
     const today = getTodayClinicDate();
 
     const filter: any = {
       clinicDate: today,
       status: { $in: ['WAITING', 'IN_PROGRESS', 'BOOKED'] },
     };
-    if (targetDoctorId) {
-      filter.doctorId = targetDoctorId;
+    // إذا تم تمرير معرف طبيب محدد، يتم الفلترة عليه، وإذا لم يُرسل يتم جلب طابور جميع أطباء العيادة
+    if (doctorId) {
+      filter.doctorId = doctorId;
     }
 
-    const appointments = await Appointment.find(filter).sort({ queueOrder: 1 });
+    const appointments = await Appointment.find(filter).sort({ queueOrder: 1, arrivedAt: 1, createdAt: 1 });
 
     const now = Date.now();
     return Promise.all(
@@ -36,6 +29,10 @@ export class QueueService {
         const waitingMinutes = appt.arrivedAt
           ? Math.floor((now - new Date(appt.arrivedAt).getTime()) / 60000)
           : null;
+
+        const remaining = Boolean(appt.isExempt) ? 0 : Math.max(0, appt.remainingAmount || 0);
+        const isPaid = Boolean(appt.isExempt) || appt.paymentStatus === 'PAID' || (appt.totalAmount > 0 && remaining === 0);
+        const hasRem = !appt.isExempt && remaining > 0;
 
         return {
           id: appt.id,
@@ -57,11 +54,13 @@ export class QueueService {
           doctorName: doctor?.name || '',
           visitId: visit?.id || null,
           waitingMinutes,
-          totalAmount: appt.totalAmount,
-          paidAmount: appt.paidAmount,
-          remainingAmount: appt.remainingAmount,
-          paymentStatus: appt.paymentStatus,
-          isExempt: appt.isExempt,
+          totalAmount: appt.totalAmount || 0,
+          paidAmount: appt.paidAmount || 0,
+          remainingAmount: remaining,
+          paymentStatus: appt.paymentStatus || 'UNPAID',
+          isFullyPaid: isPaid,
+          hasRemaining: hasRem,
+          isExempt: Boolean(appt.isExempt),
         };
       }),
     );
