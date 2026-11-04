@@ -9,6 +9,7 @@ const DEFAULT_SETTINGS: Record<string, string> = {
   workingHoursText: 'Sat-Thu 9:00 AM - 5:00 PM',
   defaultConsultationFee: '0',
   currencyCode: 'EGP',
+  receptionMonthlyExpenseLimit: '1000',
 };
 
 export class SettingsService {

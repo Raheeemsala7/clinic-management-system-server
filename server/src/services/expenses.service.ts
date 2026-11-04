@@ -1,10 +1,109 @@
-import { Expense, ExpenseCategory } from '../models';
+import { Expense, ExpenseCategory, Setting, User } from '../models';
 import { getTodayClinicDate } from '../utils/clinic-date';
 import { parsePagination, buildPaginatedResult } from '../utils/pagination';
 import { NotFoundError, ConflictError, BadRequestError, ValidationError } from '../utils/errors';
 import { logAudit } from '../utils/audit';
 
 export class ExpensesService {
+  /**
+   * حساب ملخص الميزانية وسقف المصروفات الشهري للاستقبال
+   */
+  static async getMonthlyBudgetStatus(date?: Date | string) {
+    const targetDate = date ? new Date(date) : new Date();
+    const year = targetDate.getFullYear();
+    const month = targetDate.getMonth();
+
+    const startOfMonth = new Date(Date.UTC(year, month, 1, 0, 0, 0, 0));
+    const endOfMonth = new Date(Date.UTC(year, month + 1, 0, 23, 59, 59, 999));
+
+    const settingDoc = await Setting.findById('receptionMonthlyExpenseLimit');
+    const monthlyLimit = settingDoc ? Number(settingDoc.value) || 1000 : 1000;
+
+    const [approvedAgg, pendingAgg] = await Promise.all([
+      Expense.aggregate([
+        {
+          $match: {
+            status: 'APPROVED',
+            spentAt: { $gte: startOfMonth, $lte: endOfMonth },
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            total: { $sum: '$amount' },
+            count: { $sum: 1 },
+          },
+        },
+      ]),
+      Expense.aggregate([
+        {
+          $match: {
+            status: 'PENDING',
+            spentAt: { $gte: startOfMonth, $lte: endOfMonth },
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            total: { $sum: '$amount' },
+            count: { $sum: 1 },
+          },
+        },
+      ]),
+    ]);
+
+    const totalApprovedSpent = approvedAgg[0]?.total || 0;
+    const approvedCount = approvedAgg[0]?.count || 0;
+
+    const totalPendingSpent = pendingAgg[0]?.total || 0;
+    const pendingCount = pendingAgg[0]?.count || 0;
+
+    const remainingBudget = Math.max(0, monthlyLimit - totalApprovedSpent);
+    const usagePercentage =
+      monthlyLimit > 0 ? Math.min(100, Math.round((totalApprovedSpent / monthlyLimit) * 100)) : 100;
+
+    return {
+      monthlyLimit,
+      totalApprovedSpent,
+      approvedCount,
+      totalPendingSpent,
+      pendingCount,
+      remainingBudget,
+      usagePercentage,
+      isExceeded: totalApprovedSpent >= monthlyLimit,
+      month: `${year}-${String(month + 1).padStart(2, '0')}`,
+      startOfMonth,
+      endOfMonth,
+    };
+  }
+
+  /**
+   * تعديل الحد الأقصى للمصروفات الشهرية التلقائية من جانب المدير
+   */
+  static async updateMonthlyBudgetLimit(limit: number, actorId: string, ip = '') {
+    if (limit === undefined || limit === null || isNaN(limit) || Number(limit) < 0) {
+      throw new BadRequestError('قيمة سقف المصروفات غير صالحة');
+    }
+
+    const numLimit = Number(limit);
+    await Setting.findByIdAndUpdate(
+      'receptionMonthlyExpenseLimit',
+      { _id: 'receptionMonthlyExpenseLimit', value: String(numLimit) },
+      { upsert: true, returnDocument: 'after' },
+    );
+
+    await logAudit({
+      userId: actorId,
+      action: 'UPDATE',
+      entityType: 'Setting',
+      entityId: 'receptionMonthlyExpenseLimit',
+      after: { receptionMonthlyExpenseLimit: numLimit },
+      ip,
+    });
+
+    return this.getMonthlyBudgetStatus();
+  }
+
   static async createExpense(dto: any, actor: { id: string; role: string }, ip = '') {
     const { categoryId, amount, description, spentAt } = dto;
 
@@ -20,18 +119,35 @@ export class ExpensesService {
     const category = await ExpenseCategory.findOne({ _id: categoryId, isActive: true });
     if (!category) throw new NotFoundError('Expense category not found');
 
-    const status = actor.role === 'ADMIN' ? 'APPROVED' : 'PENDING';
     const now = new Date();
+    const expenseAmount = Number(amount);
+
+    let status: 'APPROVED' | 'PENDING' = 'PENDING';
+    let isAutoApproved = false;
+
+    if (actor.role === 'ADMIN') {
+      status = 'APPROVED';
+    } else if (actor.role === 'RECEPTION') {
+      const budget = await this.getMonthlyBudgetStatus(spentAt);
+      if (budget.totalApprovedSpent + expenseAmount <= budget.monthlyLimit) {
+        // تحت التكلفة المحددة شهرياً -> يعتمد تلقائياً دون انتظار موافقة الإدارة
+        status = 'APPROVED';
+        isAutoApproved = true;
+      } else {
+        // فوق التكلفة المحددة شهرياً -> ينتظر موافقة الإدارة
+        status = 'PENDING';
+      }
+    }
 
     const expense = await Expense.create({
       categoryId,
-      amount: Number(amount),
+      amount: expenseAmount,
       description,
       spentAt: new Date(spentAt),
       recordedById: actor.id,
       status,
       ...(status === 'APPROVED' && {
-        reviewedById: actor.id,
+        reviewedById: actor.role === 'ADMIN' ? actor.id : undefined,
         reviewedAt: now,
       }),
     });
@@ -41,18 +157,24 @@ export class ExpensesService {
       action: 'CREATE',
       entityType: 'Expense',
       entityId: expense.id,
-      after: { amount: expense.amount, status: expense.status },
+      after: { amount: expense.amount, status: expense.status, isAutoApproved },
       ip,
     });
+
+    const populatedRecorder = await User.findById(actor.id).select('id name role');
 
     return {
       ...expense.toJSON(),
       category: { id: category.id, name: category.name },
+      recordedBy: populatedRecorder
+        ? { id: populatedRecorder.id, name: populatedRecorder.name, role: populatedRecorder.role }
+        : null,
+      isAutoApproved,
     };
   }
 
   static async listExpenses(query: any, actor: { id: string; role: string }) {
-    const { from, to, status, page: pageQuery, pageSize: pageSizeQuery } = query;
+    const { from, to, status, page: pageQuery, pageSize: pageSizeQuery, categoryId, recordedById } = query;
     const { skip, take, page, pageSize } = parsePagination({
       page: pageQuery,
       pageSize: pageSizeQuery,
@@ -61,15 +183,18 @@ export class ExpensesService {
     let filter: any = {};
 
     if (actor.role === 'RECEPTION') {
-      const today = getTodayClinicDate();
-      const startOfDay = new Date(`${today}T00:00:00.000Z`);
-      const endOfDay = new Date(`${today}T23:59:59.999Z`);
-      filter = {
-        recordedById: actor.id,
-        createdAt: { $gte: startOfDay, $lte: endOfDay },
-      };
+      filter.recordedById = actor.id;
+      if (status) filter.status = status;
+      if (categoryId) filter.categoryId = categoryId;
+      if (from || to) {
+        filter.spentAt = {};
+        if (from) filter.spentAt.$gte = new Date(from as string);
+        if (to) filter.spentAt.$lte = new Date(to as string);
+      }
     } else {
       if (status) filter.status = status;
+      if (categoryId) filter.categoryId = categoryId;
+      if (recordedById) filter.recordedById = recordedById;
       if (from || to) {
         filter.spentAt = {};
         if (from) filter.spentAt.$gte = new Date(from as string);
@@ -87,10 +212,16 @@ export class ExpensesService {
 
     const populated = await Promise.all(
       expenses.map(async (e) => {
-        const cat = await ExpenseCategory.findById(e.categoryId).select('id name');
+        const [cat, recorder, reviewer] = await Promise.all([
+          ExpenseCategory.findById(e.categoryId).select('id name'),
+          User.findById(e.recordedById).select('id name role username'),
+          e.reviewedById ? User.findById(e.reviewedById).select('id name role username') : null,
+        ]);
         return {
           ...e.toJSON(),
           category: cat ? { id: cat.id, name: cat.name } : { name: 'Unknown' },
+          recordedBy: recorder ? { id: recorder.id, name: recorder.name, role: recorder.role } : null,
+          reviewedBy: reviewer ? { id: reviewer.id, name: reviewer.name, role: reviewer.role } : null,
         };
       }),
     );

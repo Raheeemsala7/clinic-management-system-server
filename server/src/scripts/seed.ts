@@ -80,6 +80,7 @@ async function seed() {
     workingHoursText: 'السبت - الخميس: ٩ صباحاً - ٩ مساءً',
     defaultConsultationFee: '250',
     currencyCode: 'EGP',
+    receptionMonthlyExpenseLimit: '1000',
   };
 
   for (const [key, value] of Object.entries(settingsToSeed)) {
