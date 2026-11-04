@@ -45,9 +45,10 @@ export function PaymentsView() {
 
     const recorded = rawPayments.filter((p) => p.status === 'RECORDED');
     const totalCollected = recorded.reduce((sum, p) => sum + Number(p.amount || 0), 0);
-    const totalDeposits = recorded
-      .filter((p) => p.paymentType === 'DEPOSIT')
-      .reduce((sum, p) => sum + Number(p.amount || 0), 0);
+    const activeDeposits = recorded.filter(
+      (p) => p.paymentType === 'DEPOSIT' && (p.appointment?.remainingAmount ?? 0) > 0
+    );
+    const totalDeposits = activeDeposits.reduce((sum, p) => sum + Number(p.amount || 0), 0);
 
     // حساب المتبقي من المواعيد الفريدة
     const apptMap = new Map<string, number>();
@@ -59,9 +60,9 @@ export function PaymentsView() {
 
     const totalRemaining = Array.from(apptMap.values()).reduce((sum, rem) => sum + rem, 0);
     const remainingCount = Array.from(apptMap.values()).filter((rem) => rem > 0).length;
-    const depositCount = recorded.filter((p) => p.paymentType === 'DEPOSIT').length;
+    const depositCount = activeDeposits.length;
     const paidCount = recorded.filter(
-      (p) => p.paymentType === 'FULL' || p.paymentType === 'REMAINING'
+      (p) => p.paymentType === 'FULL' || p.paymentType === 'REMAINING' || (p.appointment?.remainingAmount === 0)
     ).length;
 
     return {
@@ -82,10 +83,14 @@ export function PaymentsView() {
     return rawPayments.filter((p) => {
       // فلتر التبويب (Tab)
       if (currentTab === 'paid') {
-        const isPaid = p.paymentType === 'FULL' || p.paymentType === 'REMAINING';
+        const isPaid =
+          p.paymentType === 'FULL' ||
+          p.paymentType === 'REMAINING' ||
+          p.appointment?.remainingAmount === 0;
         if (!isPaid) return false;
       } else if (currentTab === 'deposit') {
-        if (p.paymentType !== 'DEPOSIT') return false;
+        const hasRemaining = (p.appointment?.remainingAmount ?? 0) > 0;
+        if (p.paymentType !== 'DEPOSIT' || !hasRemaining) return false;
       } else if (currentTab === 'remaining') {
         const remaining = p.appointment?.remainingAmount ?? 0;
         if (remaining <= 0 || p.appointment?.isExempt) return false;

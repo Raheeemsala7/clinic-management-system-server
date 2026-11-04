@@ -334,21 +334,38 @@ export class AppointmentsService {
     await appt.save();
 
     const { Payment } = await import('../models');
-    const payment = await Payment.create({
-      appointmentId: appt.id,
-      patientId: appt.patientId,
-      amount: payAmount,
-      method: dto.method || 'CASH',
-      kind: appt.type,
-      paymentType: 'REMAINING',
-      notes:
+    const existingPayment = await Payment.findOne({ appointmentId: appt.id, status: 'RECORDED' });
+    let payment;
+    if (existingPayment) {
+      existingPayment.amount = payAmount;
+      existingPayment.paymentType = 'REMAINING';
+      existingPayment.method = dto.method || existingPayment.method || 'CASH';
+      existingPayment.notes =
         dto.notes ||
         (appt.remainingAmount === 0
           ? 'سداد كامل للمبلغ المتبقي'
-          : `سداد دفعة متبقية - باقي ${appt.remainingAmount} ج.م`),
-      receivedById: actor.id,
-      status: 'RECORDED',
-    });
+          : `سداد دفعة متبقية - باقي ${appt.remainingAmount} ج.م`);
+      existingPayment.receivedById = actor.id;
+      await existingPayment.save();
+      await Payment.deleteMany({ appointmentId: appt.id, _id: { $ne: existingPayment._id } });
+      payment = existingPayment;
+    } else {
+      payment = await Payment.create({
+        appointmentId: appt.id,
+        patientId: appt.patientId,
+        amount: payAmount,
+        method: dto.method || 'CASH',
+        kind: appt.type,
+        paymentType: 'REMAINING',
+        notes:
+          dto.notes ||
+          (appt.remainingAmount === 0
+            ? 'سداد كامل للمبلغ المتبقي'
+            : `سداد دفعة متبقية - باقي ${appt.remainingAmount} ج.م`),
+        receivedById: actor.id,
+        status: 'RECORDED',
+      });
+    }
 
     await logAudit({
       userId: actor.id,
@@ -525,17 +542,29 @@ export class AppointmentsService {
         appt.paymentStatus = appt.remainingAmount === 0 ? 'PAID' : 'PARTIAL';
 
         const { Payment } = await import('../models');
-        await Payment.create({
-          appointmentId: appt.id,
-          patientId: appt.patientId,
-          amount: payAmount,
-          method: dto.method || 'CASH',
-          kind: appt.type === 'CONSULTATION' ? 'EXAMINATION' : appt.type,
-          paymentType: 'REMAINING',
-          notes: dto.notes || 'سداد باقي قيمة الكشف عند الخروج',
-          receivedById: actor.id,
-          status: 'RECORDED',
-        });
+        // إذا كان هناك دفعة سابقة (عربون)، نقوم بتحديثها لتصبح دفعة واحدة بالمبلغ المتبقي فقط لعدم التكرار
+        const existingPayment = await Payment.findOne({ appointmentId: appt.id, status: 'RECORDED' });
+        if (existingPayment) {
+          existingPayment.amount = payAmount;
+          existingPayment.paymentType = 'REMAINING';
+          existingPayment.method = dto.method || existingPayment.method || 'CASH';
+          existingPayment.notes = dto.notes || 'سداد باقي قيمة الكشف عند الخروج';
+          existingPayment.receivedById = actor.id;
+          await existingPayment.save();
+          await Payment.deleteMany({ appointmentId: appt.id, _id: { $ne: existingPayment._id } });
+        } else {
+          await Payment.create({
+            appointmentId: appt.id,
+            patientId: appt.patientId,
+            amount: payAmount,
+            method: dto.method || 'CASH',
+            kind: appt.type === 'CONSULTATION' ? 'EXAMINATION' : appt.type,
+            paymentType: 'REMAINING',
+            notes: dto.notes || 'سداد باقي قيمة الكشف عند الخروج',
+            receivedById: actor.id,
+            status: 'RECORDED',
+          });
+        }
       }
     }
 

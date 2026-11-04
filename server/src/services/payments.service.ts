@@ -97,11 +97,20 @@ export class PaymentsService {
       0,
     );
 
-    const totalDeposits = allRecordedPayments
-      .filter((p) => p.paymentType === 'DEPOSIT')
-      .reduce((sum, p) => sum + Math.max(0, Number(p.amount || 0)), 0);
+    const apptsWithRemaining = new Set(
+      apptsOnDate.filter((a) => !a.isExempt && a.remainingAmount > 0).map((a) => a.id),
+    );
 
-    const depositCount = allRecordedPayments.filter((p) => p.paymentType === 'DEPOSIT').length;
+    const activeDeposits = allRecordedPayments.filter(
+      (p) => p.paymentType === 'DEPOSIT' && (apptsOnDate.length === 0 || apptsWithRemaining.has(p.appointmentId)),
+    );
+
+    const totalDeposits = activeDeposits.reduce(
+      (sum, p) => sum + Math.max(0, Number(p.amount || 0)),
+      0,
+    );
+
+    const depositCount = activeDeposits.length;
     const paidCount = allRecordedPayments.filter(
       (p) => p.paymentType === 'FULL' || p.paymentType === 'REMAINING',
     ).length;

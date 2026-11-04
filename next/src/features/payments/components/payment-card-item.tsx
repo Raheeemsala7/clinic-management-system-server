@@ -23,7 +23,7 @@ export function PaymentCardItem({
   const totalFee = appointment?.totalAmount ?? payment.amount;
   const remainingAmount = Math.max(0, Number(appointment?.remainingAmount || 0));
   const hasRemaining = !appointment?.isExempt && remainingAmount > 0;
-  const isDeposit = payment.paymentType === 'DEPOSIT' || (hasRemaining && payment.paymentType !== 'REMAINING');
+  const isDeposit = (payment.paymentType === 'DEPOSIT' && hasRemaining) || (hasRemaining && payment.paymentType !== 'REMAINING');
   const isRemainingSettlement = payment.paymentType === 'REMAINING';
 
   const formatMoney = (val: number) => {
