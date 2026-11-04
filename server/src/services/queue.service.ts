@@ -1,29 +1,36 @@
-import { Appointment, DoctorStatus, Patient, Visit } from '../models';
+import { Appointment, DoctorStatus, Patient, Visit, User } from '../models';
 import { getTodayClinicDate } from '../utils/clinic-date';
 import { BadRequestError, ValidationError } from '../utils/errors';
 
 export class QueueService {
   static async getTodayQueue(doctorId?: string) {
-    if (!doctorId) {
-      throw new ValidationError('Validation failed', [
-        { path: 'doctorId', message: 'doctorId is required' },
-      ]);
+    let targetDoctorId = doctorId;
+    if (!targetDoctorId) {
+      const activeDoctor = await User.findOne({ role: 'DOCTOR', isActive: true, deletedAt: null });
+      if (activeDoctor) {
+        targetDoctorId = activeDoctor.id;
+      }
     }
 
     const today = getTodayClinicDate();
 
-    const appointments = await Appointment.find({
-      doctorId,
+    const filter: any = {
       clinicDate: today,
       status: { $in: ['WAITING', 'IN_PROGRESS', 'BOOKED'] },
-    }).sort({ queueOrder: 1 });
+    };
+    if (targetDoctorId) {
+      filter.doctorId = targetDoctorId;
+    }
+
+    const appointments = await Appointment.find(filter).sort({ queueOrder: 1 });
 
     const now = Date.now();
     return Promise.all(
       appointments.map(async (appt) => {
-        const [patient, visit] = await Promise.all([
-          Patient.findById(appt.patientId).select('id fullName'),
-          Visit.findOne({ appointmentId: appt.id }).select('id'),
+        const [patient, doctor, visit] = await Promise.all([
+          Patient.findById(appt.patientId).select('id fullName phone gender age dateOfBirth'),
+          User.findById(appt.doctorId).select('id name'),
+          Visit.findOne({ appointmentId: appt.id }).select('id status'),
         ]);
 
         const waitingMinutes = appt.arrivedAt
@@ -37,34 +44,57 @@ export class QueueService {
           status: appt.status,
           source: appt.source,
           type: appt.type,
+          startTime: appt.startTime,
+          scheduledAt: appt.scheduledAt,
+          arrivedAt: appt.arrivedAt,
           postponedCount: appt.postponedCount || 0,
           patientId: appt.patientId,
           patientName: patient?.fullName || 'Unknown',
+          patientPhone: patient?.phone || '',
+          patientGender: patient?.gender,
+          patientAge: patient?.age,
+          doctorId: appt.doctorId,
+          doctorName: doctor?.name || '',
           visitId: visit?.id || null,
           waitingMinutes,
+          totalAmount: appt.totalAmount,
+          paidAmount: appt.paidAmount,
+          remainingAmount: appt.remainingAmount,
+          paymentStatus: appt.paymentStatus,
+          isExempt: appt.isExempt,
         };
       }),
     );
   }
 
   static async getDoctorStatus(doctorId?: string) {
-    if (!doctorId) {
-      throw new ValidationError('Validation failed', [
-        { path: 'doctorId', message: 'doctorId is required' },
-      ]);
+    let targetDoctorId = doctorId;
+    if (!targetDoctorId) {
+      const activeDoctor = await User.findOne({ role: 'DOCTOR', isActive: true, deletedAt: null });
+      if (activeDoctor) {
+        targetDoctorId = activeDoctor.id;
+      }
     }
 
-    const docStatus = await DoctorStatus.findById(doctorId);
+    if (!targetDoctorId) {
+      return {
+        doctorId: '',
+        status: 'AVAILABLE',
+        updatedAt: new Date().toISOString(),
+      };
+    }
+
+    const docStatus = await DoctorStatus.findById(targetDoctorId);
     if (!docStatus) {
       return {
-        doctorId,
+        doctorId: targetDoctorId,
         status: 'AVAILABLE',
         updatedAt: new Date().toISOString(),
       };
     }
 
     return {
-      doctorId,
+      doctorId: targetDoctorId,
       status: docStatus.status,
       updatedAt: docStatus.updatedAt ? docStatus.updatedAt.toISOString() : new Date().toISOString(),
     };

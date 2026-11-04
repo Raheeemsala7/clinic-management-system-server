@@ -5,13 +5,17 @@ import { sendSuccess } from '../utils/response';
 
 export class QueueController {
   getTodayQueue = asyncHandler(async (req: Request, res: Response) => {
-    const doctorId = (req.query.doctorId as string) || req.user?.id;
+    const doctorId =
+      (req.query.doctorId as string) ||
+      (req.user?.role === 'DOCTOR' ? req.user.id : undefined);
     const queue = await QueueService.getTodayQueue(doctorId);
     sendSuccess(res, queue);
   });
 
   getDoctorStatus = asyncHandler(async (req: Request, res: Response) => {
-    const doctorId = (req.query.doctorId as string) || req.user?.id;
+    const doctorId =
+      (req.query.doctorId as string) ||
+      (req.user?.role === 'DOCTOR' ? req.user.id : undefined);
     const status = await QueueService.getDoctorStatus(doctorId);
     sendSuccess(res, status);
   });
