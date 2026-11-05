@@ -20,6 +20,7 @@ interface ExpensesViewProps {
 }
 
 export function ExpensesView({ isAdmin }: ExpensesViewProps) {
+  const t = useTranslations('Expenses');
   const [currentTab, setCurrentTab] = useState<ExpenseFilterTab>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
@@ -102,10 +103,10 @@ export function ExpensesView({ isAdmin }: ExpensesViewProps) {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="text-start">
           <h2 className="text-2xl sm:text-3xl font-black text-[#0A164E] tracking-tight">
-            سجل وإدارة المصروفات
+            {t('title')}
           </h2>
           <p className="text-xs sm:text-sm text-slate-400 mt-1">
-            تسجيل مشتريات العيادة، متابعة السقف المالي الشهري، ومراجعة اعتمادات المصروفات
+            {t('subtitle')}
           </p>
         </div>
 
@@ -126,7 +127,7 @@ export function ExpensesView({ isAdmin }: ExpensesViewProps) {
             className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-[#0040D8] hover:bg-blue-700 active:scale-95 text-white font-bold text-sm shadow-md transition-all cursor-pointer"
           >
             <Plus className="w-4 h-4 stroke-[3]" />
-            <span>تسجيل مصروف جديد</span>
+            <span>{t('newExpenseBtn')}</span>
           </button>
         </div>
       </div>

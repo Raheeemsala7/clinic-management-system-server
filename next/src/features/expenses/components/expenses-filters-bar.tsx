@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useMemo } from 'react';
-import { Search, Tag, Calendar, ChevronRight, ChevronLeft, RotateCcw } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import { Search, Tag, Calendar, ChevronRight, ChevronLeft } from 'lucide-react';
 import { ExpenseFilterTab, ExpenseCategory } from '../types/expenses';
 
 interface ExpensesFiltersBarProps {
@@ -34,11 +35,13 @@ export function ExpensesFiltersBar({
   categories,
   counts,
 }: ExpensesFiltersBarProps) {
+  const t = useTranslations('Expenses');
+
   const tabs: { id: ExpenseFilterTab; label: string; count: number }[] = [
-    { id: 'all', label: 'الكل', count: counts.all },
-    { id: 'approved', label: 'معتمد', count: counts.approved },
-    { id: 'pending', label: 'بانتظار الموافقة', count: counts.pending },
-    { id: 'rejected', label: 'مرفوض', count: counts.rejected },
+    { id: 'all', label: t('all'), count: counts.all },
+    { id: 'approved', label: t('approved'), count: counts.approved },
+    { id: 'pending', label: t('pending'), count: counts.pending },
+    { id: 'rejected', label: t('rejected'), count: counts.rejected },
   ];
 
   const currentMonthStr = useMemo(() => {
@@ -47,7 +50,7 @@ export function ExpensesFiltersBar({
   }, []);
 
   const formattedMonthLabel = useMemo(() => {
-    if (!selectedMonth) return 'جميع الشهور';
+    if (!selectedMonth) return t('viewAll');
     try {
       const [y, m] = selectedMonth.split('-').map(Number);
       const d = new Date(Date.UTC(y, m - 1, 1));
@@ -55,7 +58,7 @@ export function ExpensesFiltersBar({
     } catch {
       return selectedMonth;
     }
-  }, [selectedMonth]);
+  }, [selectedMonth, t]);
 
   const handlePrevMonth = () => {
     const base = selectedMonth || currentMonthStr;
@@ -112,7 +115,7 @@ export function ExpensesFiltersBar({
             <button
               type="button"
               onClick={handleNextMonth}
-              title="الشهر التالي"
+              title="Next Month"
               className="p-1.5 hover:bg-slate-100 rounded-xl text-slate-600 transition-colors cursor-pointer"
             >
               <ChevronRight className="w-3.5 h-3.5" />
@@ -125,7 +128,6 @@ export function ExpensesFiltersBar({
                 value={selectedMonth}
                 onChange={(e) => onMonthChange(e.target.value)}
                 className="text-xs font-bold text-[#0A164E] bg-transparent focus:outline-none cursor-pointer font-sans"
-                title="اختر الشهر"
               />
               <span className="text-[11px] font-bold text-slate-500 mr-2 hidden sm:inline whitespace-nowrap">
                 ({formattedMonthLabel})
@@ -135,7 +137,7 @@ export function ExpensesFiltersBar({
             <button
               type="button"
               onClick={handlePrevMonth}
-              title="الشهر السابق"
+              title="Previous Month"
               className="p-1.5 hover:bg-slate-100 rounded-xl text-slate-600 transition-colors cursor-pointer"
             >
               <ChevronLeft className="w-3.5 h-3.5" />
@@ -149,16 +151,15 @@ export function ExpensesFiltersBar({
               onClick={() => onMonthChange(currentMonthStr)}
               className="px-2.5 py-2 rounded-2xl text-[11px] font-bold text-[#0040D8] bg-blue-50 hover:bg-blue-100 border border-blue-200 transition-all cursor-pointer whitespace-nowrap"
             >
-              الشهر الحالي
+              {t('currentMonth')}
             </button>
           ) : (
             <button
               type="button"
               onClick={() => onMonthChange('')}
               className="px-2.5 py-2 rounded-2xl text-[11px] font-bold text-slate-600 bg-white hover:bg-slate-50 border border-slate-200 transition-all cursor-pointer whitespace-nowrap"
-              title="عرض مصروفات جميع الأشهر"
             >
-              عرض الكل
+              {t('viewAll')}
             </button>
           )}
         </div>
@@ -173,7 +174,7 @@ export function ExpensesFiltersBar({
             onChange={(e) => onCategoryChange(e.target.value)}
             className="w-full pl-3 pr-8 py-2.5 rounded-2xl border border-slate-200 bg-white text-xs font-bold text-slate-700 focus:outline-none focus:border-[#0040D8] cursor-pointer appearance-none shadow-2xs"
           >
-            <option value="">جميع التصنيفات</option>
+            <option value="">{t('allCategories')}</option>
             {categories.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
@@ -189,7 +190,7 @@ export function ExpensesFiltersBar({
             type="text"
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="ابحث في بيان المصروف، اسم المسجل، أو التصنيف..."
+            placeholder={t('searchPlaceholder')}
             className="w-full pl-3 pr-9 py-2.5 rounded-2xl border border-slate-200 bg-white text-xs font-medium text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-[#0040D8] shadow-2xs"
           />
           <Search className="w-3.5 h-3.5 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
