@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
+import { useTranslations } from 'next-intl';
 import { usePaymentsQuery } from '../hooks/payments.hook';
 import { PaymentFilterTab, PaymentItem, PaymentsSummary } from '../types/payments';
 import { PaymentsSummaryCards } from './payments-summary-cards';
@@ -22,6 +23,7 @@ function getTodayIsoDate(): string {
 }
 
 export function PaymentsView() {
+  const t = useTranslations('Payments');
   const [selectedDate, setSelectedDate] = useState<string>(getTodayIsoDate);
   const [currentTab, setCurrentTab] = useState<PaymentFilterTab>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -239,10 +241,10 @@ export function PaymentsView() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h2 className="text-xl sm:text-2xl font-black text-[#0A164E] tracking-tight">
-            سجل المدفوعات والتحصيل اليومي
+            {t('title')}
           </h2>
           <p className="text-xs sm:text-sm text-slate-400 mt-1">
-            تفاصيل المبالغ المحصلة، العربون، والمبالغ المتبقية لكل مريض ({selectedDate})
+            {t('subtitle')} ({selectedDate})
           </p>
         </div>
 
@@ -251,13 +253,13 @@ export function PaymentsView() {
           type="button"
           onClick={() => refetch()}
           disabled={isFetching}
-          title="تحديث البيانات من الخادم"
+          title={t('refresh')}
           className="h-10 px-3.5 rounded-2xl border border-slate-200 bg-white text-xs font-bold text-slate-700 hover:border-slate-300 hover:bg-slate-50 transition-all flex items-center gap-1.5 self-start sm:self-auto cursor-pointer shadow-2xs"
         >
           <RefreshCw
             className={`w-3.5 h-3.5 text-blue-600 ${isFetching ? 'animate-spin' : ''}`}
           />
-          <span>تحديث</span>
+          <span>{t('refresh')}</span>
         </button>
       </div>
 

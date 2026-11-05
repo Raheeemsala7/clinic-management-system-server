@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useTranslations } from 'next-intl';
 import { PaymentFilterTab, PaymentsSummaryCounts } from '../types/payments';
 import { Search, Calendar, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -26,11 +27,13 @@ export function PaymentsFiltersBar({
   onDateChange,
   onExport,
 }: PaymentsFiltersBarProps) {
+  const t = useTranslations('Payments');
+
   const tabs: Array<{ id: PaymentFilterTab; label: string; count: number }> = [
-    { id: 'all', label: 'الكل', count: counts.all },
-    { id: 'paid', label: 'تم السداد', count: counts.paid },
-    { id: 'deposit', label: 'عربون / جزئي', count: counts.deposit },
-    { id: 'remaining', label: 'متبقي للتحصيل', count: counts.remaining },
+    { id: 'all', label: t('all'), count: counts.all },
+    { id: 'paid', label: t('paid'), count: counts.paid },
+    { id: 'deposit', label: t('deposit'), count: counts.deposit },
+    { id: 'remaining', label: t('remaining'), count: counts.remaining },
   ];
 
   return (
@@ -73,7 +76,7 @@ export function PaymentsFiltersBar({
             type="text"
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="ابحث باسم المريض أو الهاتف..."
+            placeholder={t('searchPlaceholder')}
             className="w-full h-10 pr-9 pl-3.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-[#0A164E] placeholder:text-slate-400 placeholder:font-normal focus:outline-none focus:border-[#1D4ED8] focus:ring-4 focus:ring-blue-600/10 transition-all"
           />
           <Search className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -94,14 +97,13 @@ export function PaymentsFiltersBar({
         <button
           type="button"
           onClick={onExport}
-          title="تصدير كشف المدفوعات"
+          title={t('export')}
           className="h-10 px-3.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-700 hover:border-slate-300 hover:bg-slate-50 transition-all cursor-pointer flex items-center gap-1.5 shrink-0 shadow-2xs"
         >
           <Download className="w-3.5 h-3.5 text-slate-500" />
-          <span>تصدير</span>
+          <span>{t('export')}</span>
         </button>
       </div>
     </div>
   );
 }
-
