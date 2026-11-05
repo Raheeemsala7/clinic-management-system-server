@@ -14,11 +14,11 @@ export async function GET(req: NextRequest) {
 
   try {
     const { searchParams } = new URL(req.url);
-    const date = searchParams.get('date') || '';
+    const month = searchParams.get('month') || searchParams.get('date') || '';
 
     const apiUrl = process.env.API_URL || 'http://localhost:4000/api/v1';
     const url = new URL(`${apiUrl}/expenses/budget`);
-    if (date) url.searchParams.set('date', date);
+    if (month) url.searchParams.set('month', month);
 
     const res = await fetch(url.toString(), {
       method: 'GET',

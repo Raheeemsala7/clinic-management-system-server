@@ -18,6 +18,7 @@ export async function GET(req: NextRequest) {
     const from = searchParams.get('from') || '';
     const to = searchParams.get('to') || '';
     const categoryId = searchParams.get('categoryId') || '';
+    const month = searchParams.get('month') || '';
     const page = searchParams.get('page') || '1';
     const pageSize = searchParams.get('pageSize') || '50';
 
@@ -27,6 +28,7 @@ export async function GET(req: NextRequest) {
     if (from) url.searchParams.set('from', from);
     if (to) url.searchParams.set('to', to);
     if (categoryId) url.searchParams.set('categoryId', categoryId);
+    if (month) url.searchParams.set('month', month);
     url.searchParams.set('page', page);
     url.searchParams.set('pageSize', pageSize);
 

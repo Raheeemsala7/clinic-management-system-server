@@ -40,7 +40,9 @@ export class ExpensesController {
   });
 
   getBudgetStatus = asyncHandler(async (req: Request, res: Response) => {
-    const budget = await ExpensesService.getMonthlyBudgetStatus(req.query.date as string | undefined);
+    const budget = await ExpensesService.getMonthlyBudgetStatus(
+      (req.query.month || req.query.date) as string | undefined
+    );
     sendSuccess(res, budget);
   });
 

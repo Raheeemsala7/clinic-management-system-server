@@ -1,4 +1,4 @@
-import { ExpenseItem, ExpenseBudgetStatus, ExpenseCategory } from '../types/expenses';
+import { ExpenseItem, ExpenseBudgetStatus, ExpenseCategory, ExpenseFilters } from '../types/expenses';
 
 export interface ExpensesListResponse {
   data: ExpenseItem[];
@@ -10,17 +10,13 @@ export interface ExpensesListResponse {
   };
 }
 
-export async function fetchExpensesService(filters?: {
-  status?: string;
-  from?: string;
-  to?: string;
-  categoryId?: string;
-}): Promise<ExpensesListResponse> {
+export async function fetchExpensesService(filters?: ExpenseFilters): Promise<ExpensesListResponse> {
   const searchParams = new URLSearchParams();
   if (filters?.status && filters.status !== 'all') searchParams.set('status', filters.status);
   if (filters?.from) searchParams.set('from', filters.from);
   if (filters?.to) searchParams.set('to', filters.to);
   if (filters?.categoryId) searchParams.set('categoryId', filters.categoryId);
+  if (filters?.month) searchParams.set('month', filters.month);
 
   const queryStr = searchParams.toString() ? `?${searchParams.toString()}` : '';
   const res = await fetch(`/api/expenses${queryStr}`, { method: 'GET' });
@@ -40,8 +36,8 @@ export async function fetchExpensesService(filters?: {
   };
 }
 
-export async function fetchExpenseBudgetService(date?: string): Promise<ExpenseBudgetStatus> {
-  const queryStr = date ? `?date=${encodeURIComponent(date)}` : '';
+export async function fetchExpenseBudgetService(month?: string): Promise<ExpenseBudgetStatus> {
+  const queryStr = month ? `?month=${encodeURIComponent(month)}` : '';
   const res = await fetch(`/api/expenses/budget${queryStr}`, { method: 'GET' });
 
   if (!res.ok) {

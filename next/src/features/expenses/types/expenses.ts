@@ -51,6 +51,14 @@ export interface ExpenseBudgetStatus {
 
 export type ExpenseFilterTab = 'all' | 'approved' | 'pending' | 'rejected';
 
+export interface ExpenseFilters {
+  status?: string;
+  from?: string;
+  to?: string;
+  categoryId?: string;
+  month?: string;
+}
+
 export interface CreateExpensePayload {
   categoryId: string;
   amount: number;

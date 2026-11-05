@@ -22,12 +22,16 @@ export function ExpensesView({ isAdmin }: ExpensesViewProps) {
   const [currentTab, setCurrentTab] = useState<ExpenseFilterTab>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedMonth, setSelectedMonth] = useState<string>(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  });
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedExpenseForReject, setSelectedExpenseForReject] = useState<ExpenseItem | null>(null);
 
   // استعلامات React Query
-  const { data: budget, refetch: refetchBudget } = useExpenseBudgetQuery();
+  const { data: budget, refetch: refetchBudget } = useExpenseBudgetQuery(selectedMonth || undefined);
   const { data: categories = [] } = useExpenseCategoriesQuery();
   const {
     data: expensesResponse,
@@ -35,7 +39,10 @@ export function ExpensesView({ isAdmin }: ExpensesViewProps) {
     isFetching,
     error,
     refetch: refetchExpenses,
-  } = useExpensesQuery();
+  } = useExpensesQuery({
+    month: selectedMonth || undefined,
+    categoryId: selectedCategory || undefined,
+  });
 
   const rawExpenses = expensesResponse?.data || [];
 
@@ -126,7 +133,7 @@ export function ExpensesView({ isAdmin }: ExpensesViewProps) {
       {/* 2. بطاقة سقف وميزانية المصروفات الشهرية */}
       <ExpensesBudgetCard budget={budget} isAdmin={isAdmin} />
 
-      {/* 3. شريط التبويبات والبحث */}
+      {/* 3. شريط التبويبات والبحث وفلتر الشهر */}
       <ExpensesFiltersBar
         currentTab={currentTab}
         onTabChange={setCurrentTab}
@@ -134,6 +141,8 @@ export function ExpensesView({ isAdmin }: ExpensesViewProps) {
         onSearchChange={setSearchQuery}
         selectedCategory={selectedCategory}
         onCategoryChange={setSelectedCategory}
+        selectedMonth={selectedMonth}
+        onMonthChange={setSelectedMonth}
         categories={categories}
         counts={counts}
       />

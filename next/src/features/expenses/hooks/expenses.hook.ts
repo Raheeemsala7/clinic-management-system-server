@@ -15,24 +15,19 @@ import {
   updateExpenseBudgetLimitAction,
   createExpenseCategoryAction,
 } from '../apis/expenses.action';
-import { CreateExpensePayload } from '../types/expenses';
+import { CreateExpensePayload, ExpenseFilters } from '../types/expenses';
 
 export const expenseKeys = {
   all: ['expenses'] as const,
   lists: (filters?: any) => [...expenseKeys.all, 'list', filters] as const,
-  budget: (date?: string) => [...expenseKeys.all, 'budget', date || 'current'] as const,
+  budget: (month?: string) => [...expenseKeys.all, 'budget', month || 'current'] as const,
   categories: () => [...expenseKeys.all, 'categories'] as const,
 };
 
 /**
  * هوك جلب سجل المصروفات مع الفلاتر
  */
-export function useExpensesQuery(filters?: {
-  status?: string;
-  from?: string;
-  to?: string;
-  categoryId?: string;
-}) {
+export function useExpensesQuery(filters?: ExpenseFilters) {
   return useQuery({
     queryKey: expenseKeys.lists(filters),
     queryFn: () => fetchExpensesService(filters),
@@ -43,10 +38,10 @@ export function useExpensesQuery(filters?: {
 /**
  * هوك جلب ملخص وسقف المصروفات الشهري
  */
-export function useExpenseBudgetQuery(date?: string) {
+export function useExpenseBudgetQuery(month?: string) {
   return useQuery({
-    queryKey: expenseKeys.budget(date),
-    queryFn: () => fetchExpenseBudgetService(date),
+    queryKey: expenseKeys.budget(month),
+    queryFn: () => fetchExpenseBudgetService(month),
     staleTime: 1000 * 30,
   });
 }

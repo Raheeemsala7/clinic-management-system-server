@@ -9,9 +9,24 @@ export class ExpensesService {
    * حساب ملخص الميزانية وسقف المصروفات الشهري للاستقبال
    */
   static async getMonthlyBudgetStatus(date?: Date | string) {
-    const targetDate = date ? new Date(date) : new Date();
-    const year = targetDate.getFullYear();
-    const month = targetDate.getMonth();
+    let year: number;
+    let month: number;
+
+    if (date) {
+      if (typeof date === 'string' && /^\d{4}-\d{2}$/.test(date)) {
+        const [yStr, mStr] = date.split('-');
+        year = parseInt(yStr, 10);
+        month = parseInt(mStr, 10) - 1;
+      } else {
+        const targetDate = new Date(date);
+        year = targetDate.getFullYear();
+        month = targetDate.getMonth();
+      }
+    } else {
+      const now = new Date();
+      year = now.getFullYear();
+      month = now.getMonth();
+    }
 
     const startOfMonth = new Date(Date.UTC(year, month, 1, 0, 0, 0, 0));
     const endOfMonth = new Date(Date.UTC(year, month + 1, 0, 23, 59, 59, 999));
@@ -174,7 +189,7 @@ export class ExpensesService {
   }
 
   static async listExpenses(query: any, actor: { id: string; role: string }) {
-    const { from, to, status, page: pageQuery, pageSize: pageSizeQuery, categoryId, recordedById } = query;
+    const { from, to, status, page: pageQuery, pageSize: pageSizeQuery, categoryId, recordedById, month } = query;
     const { skip, take, page, pageSize } = parsePagination({
       page: pageQuery,
       pageSize: pageSizeQuery,
@@ -184,22 +199,24 @@ export class ExpensesService {
 
     if (actor.role === 'RECEPTION') {
       filter.recordedById = actor.id;
-      if (status) filter.status = status;
-      if (categoryId) filter.categoryId = categoryId;
-      if (from || to) {
-        filter.spentAt = {};
-        if (from) filter.spentAt.$gte = new Date(from as string);
-        if (to) filter.spentAt.$lte = new Date(to as string);
-      }
-    } else {
-      if (status) filter.status = status;
-      if (categoryId) filter.categoryId = categoryId;
-      if (recordedById) filter.recordedById = recordedById;
-      if (from || to) {
-        filter.spentAt = {};
-        if (from) filter.spentAt.$gte = new Date(from as string);
-        if (to) filter.spentAt.$lte = new Date(to as string);
-      }
+    } else if (recordedById) {
+      filter.recordedById = recordedById;
+    }
+
+    if (status && status !== 'all') filter.status = status;
+    if (categoryId) filter.categoryId = categoryId;
+
+    if (from || to) {
+      filter.spentAt = {};
+      if (from) filter.spentAt.$gte = new Date(from as string);
+      if (to) filter.spentAt.$lte = new Date(to as string);
+    } else if (month && typeof month === 'string' && /^\d{4}-\d{2}$/.test(month)) {
+      const [yStr, mStr] = month.split('-');
+      const y = parseInt(yStr, 10);
+      const m = parseInt(mStr, 10);
+      const startOfMonth = new Date(Date.UTC(y, m - 1, 1, 0, 0, 0, 0));
+      const endOfMonth = new Date(Date.UTC(y, m, 0, 23, 59, 59, 999));
+      filter.spentAt = { $gte: startOfMonth, $lte: endOfMonth };
     }
 
     const [expenses, total] = await Promise.all([

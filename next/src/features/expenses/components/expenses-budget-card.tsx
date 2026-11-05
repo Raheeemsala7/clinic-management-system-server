@@ -80,7 +80,7 @@ export function ExpensesBudgetCard({ budget, isAdmin }: ExpensesBudgetCardProps)
                   نسبة الاستهلاك: <span className="font-mono text-[#0A164E]">{usagePercentage}%</span>
                 </span>
                 <span className="text-slate-400">
-                  الشهر الحالي: <span className="font-mono text-slate-600">{budget?.month || 'الحالي'}</span>
+                  شهر الميزانية: <span className="font-mono text-slate-700">{budget?.month || 'الحالي'}</span>
                 </span>
               </div>
               <div className="w-full h-3 rounded-full bg-slate-100 overflow-hidden p-0.5">

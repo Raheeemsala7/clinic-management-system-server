@@ -1,16 +1,17 @@
 import { HEADERS } from "@/shared/constant/api.constant";
 import { RESPONSES } from "@/shared/constant/api.responses";
 import { getNextAuthToken } from "@/shared/lib/utils/auth.util";
-import { ExpenseItem, ExpenseBudgetStatus, ExpenseCategory } from "../types/expenses";
+import { ExpenseItem, ExpenseBudgetStatus, ExpenseCategory, ExpenseFilters } from "../types/expenses";
 
-export async function getExpenseBudgetApi(): Promise<ApiResponse<ExpenseBudgetStatus>> {
+export async function getExpenseBudgetApi(month?: string): Promise<ApiResponse<ExpenseBudgetStatus>> {
   const token = await getNextAuthToken();
   if (!token?.accessToken) {
     return RESPONSES.unauthorized;
   }
 
+  const queryParams = month ? `?month=${encodeURIComponent(month)}` : '';
   try {
-    const res = await fetch(`${process.env.API_URL}/expenses/budget`, {
+    const res = await fetch(`${process.env.API_URL}/expenses/budget${queryParams}`, {
       method: 'GET',
       headers: {
         ...HEADERS.JsonBody,
@@ -32,12 +33,7 @@ export async function getExpenseBudgetApi(): Promise<ApiResponse<ExpenseBudgetSt
   }
 }
 
-export async function getExpensesApi(query?: {
-  status?: string;
-  from?: string;
-  to?: string;
-  categoryId?: string;
-}): Promise<ApiResponse<ExpenseItem[]>> {
+export async function getExpensesApi(query?: ExpenseFilters): Promise<ApiResponse<ExpenseItem[]>> {
   const token = await getNextAuthToken();
   if (!token?.accessToken) {
     return RESPONSES.unauthorized;
@@ -48,6 +44,7 @@ export async function getExpensesApi(query?: {
   if (query?.from) searchParams.set('from', query.from);
   if (query?.to) searchParams.set('to', query.to);
   if (query?.categoryId) searchParams.set('categoryId', query.categoryId);
+  if (query?.month) searchParams.set('month', query.month);
 
   const queryString = searchParams.toString() ? `?${searchParams.toString()}` : '';
 
