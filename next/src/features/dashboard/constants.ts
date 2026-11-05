@@ -18,12 +18,12 @@ import { DashboardNavItem, UserRole } from './types';
 
 export const ADMIN_NAV_ITEMS: DashboardNavItem[] = [
   { id: 'dashboard', title: 'لوحة التحكم', href: '/dashboard', icon: LayoutDashboard, isActive: true },
-  { id: 'appointments', title: 'المواعيد', href: '/dashboard/appointments', icon: Calendar },
+  { id: 'appointments', title: 'المواعيد', href: '/dashboard/all-appointments', icon: Calendar },
   { id: 'newBooking', title: 'حجز جديد', href: '/dashboard/bookings/new', icon: CalendarPlus },
-  { id: 'patients', title: 'المرضى', href: '/dashboard/patients', icon: Users },
-  { id: 'payments', title: 'المدفوعات', href: '/dashboard/payments', icon: CreditCard },
-  { id: 'expenses', title: 'المصروفات', href: '/dashboard/expenses', icon: Receipt },
-  { id: 'closing', title: 'الإغلاق اليومي', href: '/dashboard/closing', icon: Lock },
+  { id: 'patients', title: 'المرضى', href: '/dashboard/all-patients', icon: Users },
+  { id: 'payments', title: 'المدفوعات', href: '/dashboard/payments-all', icon: CreditCard },
+  { id: 'expenses', title: 'المصروفات', href: '/dashboard/admin-expenses', icon: Receipt },
+  { id: 'closing', title: 'الإغلاق اليومي', href: '/dashboard/admin-closing', icon: Lock },
   { id: 'reports', title: 'التقارير', href: '/dashboard/reports', icon: BarChart3 },
   { id: 'users', title: 'المستخدمون', href: '/dashboard/users', icon: UserCog },
   { id: 'audit', title: 'سجل العمليات', href: '/dashboard/audit', icon: History },

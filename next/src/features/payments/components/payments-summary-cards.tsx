@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useTranslations } from 'next-intl';
 import { PaymentsSummary } from '../types/payments';
 
 interface PaymentsSummaryCardsProps {
@@ -9,6 +10,8 @@ interface PaymentsSummaryCardsProps {
 }
 
 export function PaymentsSummaryCards({ summary }: PaymentsSummaryCardsProps) {
+  const t = useTranslations('Payments');
+
   const formatMoney = (val: number) => {
     return Number(val || 0).toLocaleString('en-US', {
       minimumFractionDigits: 2,
@@ -22,7 +25,7 @@ export function PaymentsSummaryCards({ summary }: PaymentsSummaryCardsProps) {
       <div className="bg-[#0A164E] text-white rounded-3xl p-5 sm:p-6 shadow-sm border border-slate-800/20 relative overflow-hidden flex flex-col justify-between min-h-[120px] transition-all hover:shadow-md">
         <div className="flex items-center justify-between gap-2">
           <span className="text-xs sm:text-sm font-bold text-slate-200">
-            إجمالي التحصيل اليوم
+            {t('dailyCollection')}
           </span>
           <div className="w-8 h-8 rounded-full bg-[#EAB308] flex items-center justify-center shrink-0 shadow-xs">
             <span className="w-2.5 h-2.5 rounded-full bg-white" />
@@ -34,7 +37,7 @@ export function PaymentsSummaryCards({ summary }: PaymentsSummaryCardsProps) {
             {formatMoney(summary.totalCollected)}
           </span>
           <span className="text-xs sm:text-sm font-black text-slate-300">
-            ج.م
+            {t('currency')}
           </span>
         </div>
       </div>
@@ -43,7 +46,7 @@ export function PaymentsSummaryCards({ summary }: PaymentsSummaryCardsProps) {
       <div className="bg-[#FEFCE8] text-[#0A164E] rounded-3xl p-5 sm:p-6 shadow-xs border border-[#FEF08A] relative overflow-hidden flex flex-col justify-between min-h-[120px] transition-all hover:shadow-md">
         <div className="flex items-center justify-between gap-2">
           <span className="text-xs sm:text-sm font-bold text-slate-700">
-            عربون وحجوزات جزئية
+            {t('depositAndPartial')}
           </span>
           <div className="w-8 h-8 rounded-full bg-[#EAB308] flex items-center justify-center shrink-0 shadow-xs">
             <span className="w-2.5 h-2.5 rounded-full bg-white" />
@@ -55,7 +58,7 @@ export function PaymentsSummaryCards({ summary }: PaymentsSummaryCardsProps) {
             {formatMoney(summary.totalDeposits)}
           </span>
           <span className="text-xs sm:text-sm font-black text-slate-600">
-            ج.م
+            {t('currency')}
           </span>
         </div>
       </div>
@@ -64,7 +67,7 @@ export function PaymentsSummaryCards({ summary }: PaymentsSummaryCardsProps) {
       <div className="bg-[#F0F7FF] text-[#0A164E] rounded-3xl p-5 sm:p-6 shadow-xs border border-blue-100 relative overflow-hidden flex flex-col justify-between min-h-[120px] transition-all hover:shadow-md">
         <div className="flex items-center justify-between gap-2">
           <span className="text-xs sm:text-sm font-bold text-slate-700">
-            مبالغ متبقية للتحصيل
+            {t('remainingToCollect')}
           </span>
           <div className="w-8 h-8 rounded-full bg-[#1D4ED8] flex items-center justify-center shrink-0 shadow-xs">
             <span className="w-2.5 h-2.5 rounded-full bg-white" />
@@ -76,11 +79,10 @@ export function PaymentsSummaryCards({ summary }: PaymentsSummaryCardsProps) {
             {formatMoney(summary.totalRemaining)}
           </span>
           <span className="text-xs sm:text-sm font-black text-slate-600">
-            ج.م
+            {t('currency')}
           </span>
         </div>
       </div>
     </div>
   );
 }
-

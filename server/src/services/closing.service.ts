@@ -8,50 +8,93 @@ export class ClosingService {
     const appointments = await Appointment.find({ clinicDate: date }).select('_id');
     const apptIds = appointments.map((a) => a.id);
 
-    const cashPayments = await Payment.aggregate([
-      {
-        $match: {
-          appointmentId: { $in: apptIds },
-          method: 'CASH',
-          status: 'RECORDED',
-        },
-      },
-      {
-        $group: {
-          _id: null,
-          total: { $sum: '$amount' },
-        },
-      },
-    ]);
-
-    const totalCashPayments = cashPayments[0]?.total || 0;
-
     const startOfDay = new Date(`${date}T00:00:00.000Z`);
     const endOfDay = new Date(`${date}T23:59:59.999Z`);
 
-    const approvedExpenses = await Expense.aggregate([
-      {
-        $match: {
-          status: 'APPROVED',
-          spentAt: { $gte: startOfDay, $lte: endOfDay },
+    const [cashAgg, approvedExpAgg, pendingExpAgg, existingClosing] = await Promise.all([
+      Payment.aggregate([
+        {
+          $match: {
+            $or: [
+              { appointmentId: { $in: apptIds } },
+              { createdAt: { $gte: startOfDay, $lte: endOfDay } },
+            ],
+            method: 'CASH',
+            status: 'RECORDED',
+          },
         },
-      },
-      {
-        $group: {
-          _id: null,
-          total: { $sum: '$amount' },
+        {
+          $group: {
+            _id: null,
+            total: { $sum: '$amount' },
+            count: { $sum: 1 },
+          },
         },
-      },
+      ]),
+      Expense.aggregate([
+        {
+          $match: {
+            status: 'APPROVED',
+            spentAt: { $gte: startOfDay, $lte: endOfDay },
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            total: { $sum: '$amount' },
+            count: { $sum: 1 },
+          },
+        },
+      ]),
+      Expense.aggregate([
+        {
+          $match: {
+            status: 'PENDING',
+            spentAt: { $gte: startOfDay, $lte: endOfDay },
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            total: { $sum: '$amount' },
+            count: { $sum: 1 },
+          },
+        },
+      ]),
+      DailyClosing.findOne({ clinicDate: date }),
     ]);
 
-    const totalApprovedExpenses = approvedExpenses[0]?.total || 0;
+    const totalCashPayments = cashAgg[0]?.total || 0;
+    const paymentsCount = cashAgg[0]?.count || 0;
+
+    const totalApprovedExpenses = approvedExpAgg[0]?.total || 0;
+    const approvedExpensesCount = approvedExpAgg[0]?.count || 0;
+
+    const totalPendingExpenses = pendingExpAgg[0]?.total || 0;
+    const pendingExpensesCount = pendingExpAgg[0]?.count || 0;
+
     const expectedCash = totalCashPayments - totalApprovedExpenses;
+
+    const closedBy = existingClosing?.closedById
+      ? await User.findById(existingClosing.closedById).select('id name username')
+      : null;
 
     return {
       clinicDate: date,
-      totalCashPayments: String(totalCashPayments),
-      totalApprovedExpenses: String(totalApprovedExpenses),
-      expectedCash: String(expectedCash),
+      paymentsCount,
+      totalCashPayments,
+      totalApprovedExpenses,
+      approvedExpensesCount,
+      totalPendingExpenses,
+      pendingExpensesCount,
+      expectedCash,
+      isClosed: Boolean(existingClosing && !existingClosing.reopenedAt),
+      closing: existingClosing
+        ? {
+            ...existingClosing.toJSON(),
+            closedBy: closedBy ? closedBy.toJSON() : null,
+          }
+        : null,
     };
   }
 
@@ -132,9 +175,13 @@ export class ClosingService {
     });
 
     return {
-      expectedCash: String(expected),
-      actualCash: String(actual),
-      difference: String(difference),
+      id: closing.id,
+      clinicDate: today,
+      expectedCash: expected,
+      actualCash: actual,
+      difference,
+      notes: closing.notes,
+      closedAt: closing.closedAt,
     };
   }
 
