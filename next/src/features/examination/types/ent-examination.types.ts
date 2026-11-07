@@ -14,6 +14,7 @@ export interface EntEarExam {
   rt: EntEarSide;
   lt: EntEarSide;
   weber?: 'Centralized' | 'Lateralized Rt' | 'Lateralized Lt' | string;
+  drawing?: string; // Base64 transparent drawing layer by the doctor
   vestibular: {
     rombergTest?: string;
     dexahallpike?: string;
@@ -41,10 +42,12 @@ export interface EntNoseExam {
   rt: EntNoseSide;
   lt: EntNoseSide;
   deformity?: string;
+  drawing?: string; // Base64 transparent drawing layer by the doctor
 }
 
 export interface EntOropharynxExam {
   mallampati?: 'Class I' | 'Class II' | 'Class III' | 'Class IV' | string;
+  drawing?: string; // Base64 drawing layer
   tonsils?: string;
   adenoid?: string;
   softPalate?: string;
@@ -64,6 +67,7 @@ export interface EntLarynxExam {
   submandibular?: string;
   indirectLaryngoscope?: string;
   others?: string;
+  drawing?: string; // Base64 transparent drawing layer by the doctor
 }
 
 export interface EntInvestigations {
