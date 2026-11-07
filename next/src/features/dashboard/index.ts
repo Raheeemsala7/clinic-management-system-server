@@ -9,3 +9,4 @@ export * from './components/admin-dashboard-view';
 export * from './components/doctor-dashboard-view';
 export * from './components/receptionist-dashboard-view';
 
+export * from './components/doctor-dashboard-skeleton';

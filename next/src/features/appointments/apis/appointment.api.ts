@@ -7,7 +7,7 @@ export interface TodayQueueItem {
   id: string;
   queueNumber: number;
   queueOrder: number;
-  status: 'WAITING' | 'IN_PROGRESS' | 'BOOKED' | 'PENDING_CHECKOUT';
+  status: 'WAITING' | 'IN_PROGRESS' | 'BOOKED' | 'PENDING_CHECKOUT' | 'COMPLETED';
   source: 'SCHEDULED' | 'WALK_IN';
   type: string;
   startTime?: string;
@@ -53,6 +53,7 @@ export async function getTodayWaitingAppointmentsApi(doctorId?: string): Promise
     });
 
     const data: ApiResponse<TodayQueueItem[]> = await res.json();
+    console.log("URL : " , `${process.env.API_URL}/queue/today${queryParams}`);
     console.log(data);
     
 

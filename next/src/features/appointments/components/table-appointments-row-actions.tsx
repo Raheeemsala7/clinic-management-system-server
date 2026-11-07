@@ -14,7 +14,7 @@ import { CheckoutPaymentModal } from './checkout-payment-modal';
 interface TableAppointmentsRowActionsProps {
   appointmentId: string;
   patientName: string;
-  status: 'WAITING' | 'IN_PROGRESS' | 'BOOKED' | 'PENDING_CHECKOUT';
+  status: 'WAITING' | 'IN_PROGRESS' | 'BOOKED' | 'PENDING_CHECKOUT' | 'COMPLETED';
   hasRemaining: boolean;
   remainingAmount: number;
   totalAmount: number;
