@@ -5,6 +5,7 @@ import { getDoctorsList, getDoctorAvailableSlots } from "../services/doctors.ser
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { CreateAppointmentPayload } from "../types/booking";
+import { TodayQueueItem } from "../apis/appointment.api";
 import {
   createQuickPatientAction,
   admitAppointmentAction,
@@ -12,6 +13,7 @@ import {
   checkoutAppointmentAction,
   postponeAppointmentAction,
   cancelAppointmentAction,
+  updateDoctorStatusAction,
 } from "../apis/appointment.action";
 import { signOut } from "next-auth/react";
 import { toast } from "sonner";
@@ -33,6 +35,12 @@ export const queueKeys = {
     all: ["queue"] as const,
     today: (doctorId?: string) =>
         [...queueKeys.all, "today", doctorId || "all"] as const,
+};
+
+export const doctorStatusKeys = {
+    all: ["doctor-status"] as const,
+    detail: (doctorId?: string) =>
+        [...doctorStatusKeys.all, doctorId || "current"] as const,
 };
 
 export const appointmentKeys = {
@@ -288,6 +296,82 @@ export function useCancelAppointmentMutation() {
         },
         onError: (err) => {
             toast.error(err.message);
+        },
+    });
+}
+
+
+/**
+ * هوك React Query لجلب طابور الانتظار اليومي الحي
+ */
+export function useTodayQueueQuery(initialData?: TodayQueueItem[], doctorId?: string) {
+    return useQuery({
+        queryKey: queueKeys.today(doctorId),
+        queryFn: async (): Promise<TodayQueueItem[]> => {
+            const qp = doctorId ? `?doctorId=${encodeURIComponent(doctorId)}` : '';
+            const res = await fetch(`/api/queue/today${qp}`, {
+                headers: { 'Content-Type': 'application/json' },
+            });
+            if (!res.ok) {
+                throw new Error('فشل جلب قائمة الانتظار');
+            }
+            const data = await res.json();
+            return (data.payload || data.data || []) as TodayQueueItem[];
+        },
+        initialData,
+        refetchInterval: 10_000,
+        staleTime: 5_000,
+    });
+}
+
+/**
+ * هوك React Query لجلب حالة الطبيب الحالية
+ */
+export function useDoctorStatusQuery(doctorId?: string) {
+    return useQuery({
+        queryKey: doctorStatusKeys.detail(doctorId),
+        queryFn: async (): Promise<{ doctorId: string; status: 'AVAILABLE' | 'BREAK'; updatedAt?: string }> => {
+            const qp = doctorId ? `?doctorId=${encodeURIComponent(doctorId)}` : '';
+            const res = await fetch(`/api/doctor-status${qp}`, {
+                headers: { 'Content-Type': 'application/json' },
+            });
+            if (!res.ok) {
+                throw new Error('فشل جلب حالة الطبيب');
+            }
+            const data = await res.json();
+            return data.payload || data.data || { status: 'AVAILABLE' };
+        },
+        staleTime: 10_000,
+        refetchInterval: 15_000,
+    });
+}
+
+/**
+ * هوك React Query لتحديث حالة الطبيب (متاح / في استراحة)
+ */
+export function useUpdateDoctorStatusMutation() {
+    const queryClient = useQueryClient();
+    const router = useRouter();
+
+    return useMutation({
+        mutationFn: async (status: 'AVAILABLE' | 'BREAK') => {
+            const res = await updateDoctorStatusAction(status);
+            if (res.code === 401) {
+                await signOut({ callbackUrl: '/auth/login?expired=true' });
+                throw new Error('انتهت صلاحية الجلسة');
+            }
+            if (!res.status) {
+                throw new Error(res.message || 'فشل تحديث حالة الطبيب');
+            }
+            return res;
+        },
+        onSuccess: (_, status) => {
+            queryClient.invalidateQueries({ queryKey: doctorStatusKeys.all });
+            toast.success(status === 'AVAILABLE' ? 'تم ضبط الحالة: متاح' : 'تم ضبط الحالة: في استراحة');
+            router.refresh();
+        },
+        onError: (err: any) => {
+            toast.error(err.message || 'حدث خطأ أثناء تحديث حالة الطبيب');
         },
     });
 }
