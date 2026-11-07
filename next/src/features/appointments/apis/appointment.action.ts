@@ -195,3 +195,30 @@ export async function cancelAppointmentAction(id: string): Promise<ApiResponse<a
     return { status: false, code: 500, message: 'فشل إلغاء الموعد' };
   }
 }
+
+/**
+ * تحديث حالة الطبيب (متاح / في استراحة)
+ * المسار: PUT /api/v1/doctor-status
+ */
+export async function updateDoctorStatusAction(status: 'AVAILABLE' | 'BREAK'): Promise<ApiResponse<any>> {
+  const token = await getNextAuthToken();
+  if (!token?.accessToken) return RESPONSES.unauthorized;
+
+  try {
+    const res = await fetch(`${process.env.API_URL}/doctor-status`, {
+      method: 'PUT',
+      headers: {
+        ...HEADERS.JsonBody,
+        ...HEADERS.authorize(token.accessToken),
+      },
+      body: JSON.stringify({ status }),
+    });
+    const data = await res.json();
+    if (data.status) {
+      await revalidateAppointmentsCache();
+    }
+    return data;
+  } catch (error) {
+    return { status: false, code: 500, message: 'فشل تحديث حالة الطبيب' };
+  }
+}
