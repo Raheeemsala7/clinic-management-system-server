@@ -38,7 +38,7 @@ export interface TodayQueueItem {
 export async function getTodayWaitingAppointmentsApi(doctorId?: string): Promise<ApiResponse<TodayQueueItem[]>> {
   const token = await getNextAuthToken();
   if (!token?.accessToken) {
-    return RESPONSES.unauthorized
+    redirect('/auth/login?expired=true');
   }
 
   const queryParams = doctorId ? `?doctorId=${encodeURIComponent(doctorId)}` : '';
@@ -55,12 +55,17 @@ export async function getTodayWaitingAppointmentsApi(doctorId?: string): Promise
       },
     });
 
+    if (res.status === 401) {
+      redirect('/auth/login?expired=true');
+    }
+
     const data: ApiResponse<TodayQueueItem[]> = await res.json();
     console.log("URL : " , `${process.env.API_URL}/queue/today${queryParams}`);
     console.log(data);
-    
 
-    if (!data.status) {
+    if (data.code === 401) {
+      redirect('/auth/login?expired=true');
+    }
       return {
         status: false,
         code: data.code || 500,

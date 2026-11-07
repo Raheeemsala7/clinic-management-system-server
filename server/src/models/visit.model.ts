@@ -12,6 +12,7 @@ export interface IVisit extends Document {
   notes?: string;
   instructions?: string;
   followUpDate?: Date;
+  entExamination?: Record<string, any>;
   status: 'OPEN' | 'CLOSED';
   closedAt?: Date;
   version: number;
@@ -30,6 +31,7 @@ const VisitSchema = new Schema(
     notes: { type: String },
     instructions: { type: String },
     followUpDate: { type: Date },
+    entExamination: { type: Schema.Types.Mixed, default: {} },
     status: { type: String, enum: ['OPEN', 'CLOSED'], default: 'OPEN' },
     closedAt: { type: Date },
     version: { type: Number, default: 1 },

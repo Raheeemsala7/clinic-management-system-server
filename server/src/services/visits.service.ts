@@ -30,7 +30,7 @@ export class VisitsService {
   }
 
   static async autosaveVisit(id: string, dto: any, actorId: string, ip = '') {
-    const { version, complaint, diagnosis, notes, instructions, followUpDate } = dto;
+    const { version, complaint, diagnosis, notes, instructions, followUpDate, entExamination } = dto;
 
     const visit = await Visit.findById(id);
     if (!visit) throw new NotFoundError('Visit not found');
@@ -52,6 +52,7 @@ export class VisitsService {
     if (diagnosis !== undefined) visit.diagnosis = diagnosis;
     if (notes !== undefined) visit.notes = notes;
     if (instructions !== undefined) visit.instructions = instructions;
+    if (entExamination !== undefined) visit.entExamination = entExamination;
     if (followUpDate !== undefined) {
       visit.followUpDate = followUpDate ? new Date(followUpDate) : undefined;
     }

@@ -709,11 +709,19 @@ export class AppointmentsService {
     const appt = await Appointment.findById(id);
     if (!appt) throw new NotFoundError('Appointment not found');
 
-    const [patient, doctor, visit] = await Promise.all([
-      Patient.findById(appt.patientId).select('id fullName phone gender dateOfBirth'),
+    const [patient, doctor] = await Promise.all([
+      Patient.findById(appt.patientId).select('id fullName phone gender dateOfBirth age address'),
       User.findById(appt.doctorId).select('id name'),
-      Visit.findOne({ appointmentId: appt.id }),
     ]);
+
+    let visit = await Visit.findOne({ appointmentId: appt.id });
+    if (!visit && ['WAITING', 'IN_PROGRESS', 'BOOKED', 'PENDING_CHECKOUT'].includes(appt.status)) {
+      visit = await Visit.create({
+        appointmentId: appt.id,
+        patientId: appt.patientId,
+        doctorId: appt.doctorId,
+      });
+    }
 
     return {
       ...appt.toJSON(),
