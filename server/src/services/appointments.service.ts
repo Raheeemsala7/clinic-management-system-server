@@ -128,7 +128,7 @@ export class AppointmentsService {
     const lastOrder = await Appointment.findOne({ doctorId, clinicDate }).sort({ queueOrder: -1 });
     const queueOrder = (lastOrder?.queueOrder || 0) + 1;
 
-    const initialStatus = source === 'WALK_IN' ? 'WAITING' : 'BOOKED';
+    const initialStatus = (source === 'WALK_IN' || clinicDate === today) ? 'WAITING' : 'BOOKED';
     const now = new Date();
 
     // Financial calculations: If exempt, fee is 0, paid is 0, status is EXEMPT
@@ -199,7 +199,7 @@ export class AppointmentsService {
       endTime: endTime || null,
       queueNumber,
       queueOrder,
-      arrivedAt: source === 'WALK_IN' ? now : null,
+      arrivedAt: (source === 'WALK_IN' || clinicDate === today) ? now : null,
       totalAmount,
       paidAmount,
       remainingAmount,

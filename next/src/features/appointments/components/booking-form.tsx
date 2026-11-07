@@ -39,7 +39,7 @@ export function BookingForm() {
       chronicNotes: '',
       appointmentType: 'CONSULTATION',
       doctorId: '',
-      appointmentDate: '2026-11-02',
+      appointmentDate: new Date().toISOString().slice(0, 10),
       appointmentTime: '',
       source: 'WALK_IN',
       examinationFee: 300,

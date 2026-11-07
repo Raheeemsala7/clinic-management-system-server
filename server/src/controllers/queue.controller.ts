@@ -5,10 +5,21 @@ import { sendSuccess } from '../utils/response';
 
 export class QueueController {
   getTodayQueue = asyncHandler(async (req: Request, res: Response) => {
-    const doctorId =
-      (req.query.doctorId as string) ||
-      (req.user?.role === 'DOCTOR' ? req.user.id : undefined);
-    const queue = await QueueService.getTodayQueue(doctorId);
+    const rawDoctorId = req.query.doctorId as string;
+    const isDoctor = req.user?.role === 'DOCTOR';
+    const doctorId = (rawDoctorId && rawDoctorId !== 'all') ? rawDoctorId : (isDoctor ? req.user!.id : undefined);
+
+    let queue = await QueueService.getTodayQueue(doctorId);
+
+    // إذا كان الطبيب مسجل ولم يجد أي حالات مخصصة له، ولكن هناك حالات بالعيادة غير مسندة أو مسجلة
+    // نعيد طابور العيادة كاملاً حتى لا يختفي المريض إذا سجله الاستقبال بدون تحديد الطبيب أو بتحديد طبيب بديل
+    if (doctorId && isDoctor && queue.length === 0) {
+      const allClinicQueue = await QueueService.getTodayQueue();
+      if (allClinicQueue.length > 0) {
+        queue = allClinicQueue;
+      }
+    }
+
     sendSuccess(res, queue);
   });
 

@@ -23,6 +23,9 @@ export interface TodayQueueItem {
   doctorName: string;
   visitId?: string | null;
   waitingMinutes: number | null;
+  waitingSince?: string | null;
+  clinicDate?: string;
+  isPastAppointment?: boolean;
   totalAmount: number;
   paidAmount: number;
   remainingAmount: number;
