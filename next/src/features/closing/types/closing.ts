@@ -33,3 +33,4 @@ export interface CloseDayPayload {
   actualCash: number;
   notes?: string;
 }
+

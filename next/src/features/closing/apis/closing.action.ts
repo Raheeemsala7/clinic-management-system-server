@@ -70,3 +70,4 @@ export async function reopenDayAction(id: string): Promise<ApiResponse<DailyClos
     };
   }
 }
+

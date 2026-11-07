@@ -31,3 +31,4 @@ export default function AdminAllPatientsPage({ searchParams }: AllPatientsPagePr
     </div>
   );
 }
+

@@ -25,3 +25,4 @@ export async function fetchClosingStatusService(date?: string): Promise<DailyClo
   const preview: ClosingPreview = json?.payload || json?.data;
   return preview?.closing || null;
 }
+

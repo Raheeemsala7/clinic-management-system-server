@@ -89,3 +89,4 @@ export async function closeDayApi(payload: CloseDayPayload): Promise<ApiResponse
     };
   }
 }
+
