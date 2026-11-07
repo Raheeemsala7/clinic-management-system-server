@@ -130,3 +130,4 @@ export interface EntExaminationData {
   secondVisitNotes?: string;
   thirdVisitNotes?: string;
 }
+

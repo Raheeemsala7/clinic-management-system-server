@@ -99,7 +99,12 @@ export async function saveAppointmentExaminationAction(
     }
 
     await revalidateAppointmentsCache();
-    return { status: true, code: 200, message: 'تم حفظ بيانات الكشف والروشتة بنجاح' };
+    return {
+      status: true,
+      code: 200,
+      message: 'تم حفظ بيانات الكشف والروشتة بنجاح',
+      payload: patchData.payload || null,
+    };
   } catch (error) {
     console.error('saveAppointmentExaminationAction error:', error);
     return { status: false, code: 500, message: 'فشل حفظ بيانات الكشف' };

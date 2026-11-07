@@ -195,3 +195,4 @@ export function PrescriptionTable({ items, onChange, onPrint }: PrescriptionTabl
     </div>
   );
 }
+

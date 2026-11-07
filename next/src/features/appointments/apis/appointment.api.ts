@@ -66,11 +66,13 @@ export async function getTodayWaitingAppointmentsApi(doctorId?: string): Promise
     if (data.code === 401) {
       redirect('/auth/login?expired=true');
     }
+
+    if (!data.status) {
       return {
         status: false,
         code: data.code || 500,
         message: data.message || 'حدث خطأ أثناء جلب قائمة الانتظار',
-      } 
+      };
     }
 
     return data;

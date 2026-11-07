@@ -395,6 +395,14 @@ export const DoctorDashboardView = ({ initialQueue = [] }: DoctorDashboardViewPr
 
                         {/* الحالة والأزرار السريعة */}
                         <div className="flex flex-col items-end gap-1.5 shrink-0">
+                          <Link
+                            href={`/dashboard/examination/${patient.id}`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="px-2.5 py-1 rounded-lg bg-blue-50 text-[#0040D8] hover:bg-blue-100 text-[11px] font-bold transition-all shadow-2xs whitespace-nowrap"
+                          >
+                            كشف وروشتة 📋
+                          </Link>
+
                           {/* زر الإدخال السريع إذا كان في الانتظار */}
                           {(patient.status === 'WAITING' || patient.status === 'BOOKED') && (
                             <button
@@ -544,15 +552,23 @@ export const DoctorDashboardView = ({ initialQueue = [] }: DoctorDashboardViewPr
                 </div>
               </div>
 
-              {/* زر إنهاء الكشف وتسليم للاستقبال */}
-              <div className="mt-8 pt-4 border-t border-slate-100">
+              {/* أزرار الإجراءات: فحص المريض وكتابة الروشتة + إنهاء الكشف */}
+              <div className="mt-8 pt-4 border-t border-slate-100 space-y-2.5">
+                <Link
+                  href={`/dashboard/examination/${inProgressPatient.id}`}
+                  className="w-full py-3.5 px-6 rounded-2xl bg-[#0040D8] hover:bg-blue-700 active:scale-[0.99] text-white font-black text-sm shadow-md transition-all flex items-center justify-center gap-2.5 cursor-pointer"
+                >
+                  <Stethoscope className="w-5 h-5 stroke-[2.2]" />
+                  <span>فحص المريض وكتابة الكشف والروشتة (Rx) 🩺</span>
+                </Link>
+
                 <button
                   type="button"
                   disabled={finishExamMutation.isPending}
                   onClick={() => finishExamMutation.mutate(inProgressPatient.id)}
-                  className="w-full py-4 px-6 rounded-2xl bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-black text-base shadow-lg shadow-emerald-600/20 transition-all flex items-center justify-center gap-3 cursor-pointer disabled:opacity-60"
+                  className="w-full py-3 px-6 rounded-2xl bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-bold text-sm shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
                 >
-                  <CheckCircle2 className="w-6 h-6 stroke-[2.2]" />
+                  <CheckCircle2 className="w-5 h-5 stroke-[2.2]" />
                   <span>
                     {finishExamMutation.isPending
                       ? t('finishing')
@@ -615,21 +631,31 @@ export const DoctorDashboardView = ({ initialQueue = [] }: DoctorDashboardViewPr
                 </div>
               )}
 
-              {/* زر الإدخال للمريض التالي */}
+              {/* أزرار الإجراءات للمريض القادم: إدخال أو كشف مباشر */}
               {activeExamPatient && (
-                <button
-                  type="button"
-                  disabled={admitMutation.isPending}
-                  onClick={() => admitMutation.mutate(activeExamPatient.id)}
-                  className="inline-flex items-center gap-2.5 px-8 py-3.5 rounded-2xl bg-[#0040D8] hover:bg-blue-700 active:scale-95 text-white font-black text-sm shadow-md transition-all cursor-pointer disabled:opacity-60"
-                >
-                  <LogIn className="w-4 h-4 stroke-[2.5]" />
-                  <span>
-                    {admitMutation.isPending
-                      ? t('admitting')
-                      : t('admitNext')}
-                  </span>
-                </button>
+                <div className="flex items-center gap-3 flex-wrap justify-center">
+                  <button
+                    type="button"
+                    disabled={admitMutation.isPending}
+                    onClick={() => admitMutation.mutate(activeExamPatient.id)}
+                    className="inline-flex items-center gap-2.5 px-6 py-3.5 rounded-2xl bg-[#0040D8] hover:bg-blue-700 active:scale-95 text-white font-black text-sm shadow-md transition-all cursor-pointer disabled:opacity-60"
+                  >
+                    <LogIn className="w-4 h-4 stroke-[2.5]" />
+                    <span>
+                      {admitMutation.isPending
+                        ? t('admitting')
+                        : t('admitNext')}
+                    </span>
+                  </button>
+
+                  <Link
+                    href={`/dashboard/examination/${activeExamPatient.id}`}
+                    className="inline-flex items-center gap-2 px-5 py-3.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm transition-all cursor-pointer shadow-2xs"
+                  >
+                    <Stethoscope className="w-4 h-4 text-[#0040D8]" />
+                    <span>فتح الكشف والروشتة 🩺</span>
+                  </Link>
+                </div>
               )}
             </div>
           ) : (
