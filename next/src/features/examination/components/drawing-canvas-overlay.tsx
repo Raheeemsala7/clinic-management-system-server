@@ -196,9 +196,9 @@ export function DrawingCanvasOverlay({
         </span>
       )}
 
-      {/* الحاوية النسبية: الخلفية التشريحية وتحتها كانفاس الرسم التفاعلي */}
+      {/* الحاوية: الخلفية التشريحية وتحتها كانفاس الرسم التفاعلي مطابقة للأصل الورقي */}
       <div
-        className="relative group border border-slate-300 rounded-xl overflow-hidden bg-white shadow-2xs print:border-none print:shadow-none"
+        className="relative group border border-transparent hover:border-blue-200/60 rounded-2xl overflow-hidden bg-transparent transition-all print:border-none print:shadow-none"
         style={{ width: `${width}px`, height: `${height}px` }}
       >
         {/* الطبقة 1: الرسم التشريحي الأساسي (SVG) */}
@@ -232,7 +232,10 @@ export function DrawingCanvasOverlay({
 
       {/* شريط أدوات الرسم (يُخفى تماماً عند الطباعة) */}
       {!readOnly && (
-        <div className="flex items-center justify-between gap-1 mt-1.5 p-1 bg-slate-50 border border-slate-200 rounded-xl w-full max-w-[240px] text-[10px] print:hidden shadow-2xs">
+        <div
+          className="flex items-center justify-between gap-1 mt-1.5 p-1 bg-slate-50 border border-slate-200 rounded-xl w-full text-[10px] print:hidden shadow-2xs"
+          style={{ maxWidth: `${width}px` }}
+        >
           {/* اختيار القلم والممحاة */}
           <div className="flex items-center gap-0.5">
             <button

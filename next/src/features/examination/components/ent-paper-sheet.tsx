@@ -311,21 +311,18 @@ export function EntPaperSheet({
         {/* خط فاصل منقط */}
         <div className="border-b border-dotted border-black my-2" />
 
-        {/* عنوان فحص الأذن (Ear) في المنتصف */}
-        <div className="text-center font-bold text-[16px] underline">
-          Ear
-        </div>
-
-        {/* Examination : (فحص الأذن المفصل) */}
+        {/* Examination : & فحص الأذن (Ear) المكبّر والمطابق للصورة المرفقة */}
         <div className="space-y-1">
-          <span className="font-bold text-[13px] underline block">Examination :</span>
+          <div className="flex items-center justify-between">
+            <span className="font-bold text-[13px] underline block">Examination :</span>
+          </div>
 
-          <div className="grid grid-cols-12 gap-3 items-start">
+          <div className="grid grid-cols-12 gap-2 items-start">
             {/* القائمة اليسرى (Rt Ear) */}
-            <div className="col-span-4 space-y-1 text-[12px]">
+            <div className="col-span-3 space-y-1 text-[12px] pt-4">
               {earItems.map((it) => (
                 <div key={it.id} className="flex items-baseline gap-1">
-                  <span className="font-bold shrink-0">- {it.label}:</span>
+                  <span className="font-bold shrink-0 text-[11px]">- {it.label}:</span>
                   <input
                     type="text"
                     value={(examData.ear.rt as any)?.[it.id] || ''}
@@ -336,8 +333,8 @@ export function EntPaperSheet({
               ))}
             </div>
 
-            {/* في المنتصف: رسم الأذن التشريحي واختبار ويبر مع إمكانية الرسم بالقلم */}
-            <div className="col-span-4 flex flex-col items-center justify-center pt-1">
+            {/* في المنتصف: رسم الأذن التشريحي المكبّر واختبار ويبر مع إمكانية الرسم بالقلم */}
+            <div className="col-span-6 flex flex-col items-center justify-center">
               <EarAnatomyDiagram
                 selectedWeber={examData.ear.weber}
                 onSelectWeber={(val) =>
@@ -358,10 +355,10 @@ export function EntPaperSheet({
             </div>
 
             {/* القائمة اليمنى (Lt Ear) */}
-            <div className="col-span-4 space-y-1 text-[12px]">
+            <div className="col-span-3 space-y-1 text-[12px] pt-4">
               {earItems.map((it) => (
                 <div key={it.id} className="flex items-baseline gap-1">
-                  <span className="font-bold shrink-0">- {it.label}:</span>
+                  <span className="font-bold shrink-0 text-[11px]">- {it.label}:</span>
                   <input
                     type="text"
                     value={(examData.ear.lt as any)?.[it.id] || ''}
