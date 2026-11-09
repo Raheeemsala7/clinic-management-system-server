@@ -33,16 +33,16 @@ export function EarAnatomyDiagram({
       <DrawingCanvasOverlay
         initialDrawing={drawing}
         onSaveDrawing={onSaveDrawing}
-        width={460}
-        height={240}
+        width={560}
+        height={280}
         readOnly={readOnly}
       >
-        <div className="flex items-start justify-between w-full h-full px-2 text-black font-serif pt-1">
-          {/* Right Ear (الأذن اليمنى) - مطابقة 100% للصورة المرفقة */}
+        <div className="flex items-start justify-between w-full h-full px-3 text-black font-serif pt-1">
+          {/* Right Ear (الأذن اليمنى) - مكبّرة ومطابقة 100% للصورة المرفقة */}
           <div className="flex flex-col items-center">
-            <span className="text-lg font-black font-serif mb-1 tracking-tight">Rt</span>
+            <span className="text-xl font-black font-serif mb-1 tracking-tight">Rt</span>
             <svg
-              className="w-32 h-46 text-black drop-shadow-2xs"
+              className="w-38 h-56 text-black drop-shadow-2xs"
               viewBox="0 0 110 150"
               fill="none"
               stroke="currentColor"
@@ -53,7 +53,7 @@ export function EarAnatomyDiagram({
                 cy="78"
                 rx="46"
                 ry="64"
-                strokeWidth="3.2"
+                strokeWidth="3.4"
                 stroke="currentColor"
                 fill="none"
               />
@@ -61,13 +61,13 @@ export function EarAnatomyDiagram({
               {/* الثنيات المطرية الأمامية والخلفية (Anterior & Posterior Malleolar Folds) */}
               <path
                 d="M 11 68 C 22 70, 36 60, 52 50"
-                strokeWidth="2.4"
+                strokeWidth="2.5"
                 stroke="currentColor"
                 fill="none"
               />
               <path
                 d="M 99 74 C 84 68, 72 58, 62 50"
-                strokeWidth="2.4"
+                strokeWidth="2.5"
                 stroke="currentColor"
                 fill="none"
               />
@@ -75,7 +75,7 @@ export function EarAnatomyDiagram({
               {/* مقبض عظمة المطرقة وسرة الطبلة (Manubrium of Malleus & Umbo) */}
               <path
                 d="M 52 46 L 50 104 C 50 112, 59 112, 59 104 L 62 46 Z"
-                strokeWidth="2.4"
+                strokeWidth="2.5"
                 stroke="currentColor"
                 fill="none"
               />
@@ -83,9 +83,9 @@ export function EarAnatomyDiagram({
           </div>
 
           {/* Weber in Center - في المنتصف بين الأذنين */}
-          <div className="flex flex-col items-center pt-2">
+          <div className="flex flex-col items-center pt-4">
             <svg
-              className="w-28 h-16 text-black"
+              className="w-32 h-18 text-black"
               viewBox="0 0 110 65"
               fill="none"
               stroke="currentColor"
@@ -112,17 +112,17 @@ export function EarAnatomyDiagram({
               </text>
             </svg>
             {selectedWeber && (
-              <span className="text-[10px] font-bold mt-1 text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200 print:text-black print:bg-transparent print:border-none">
+              <span className="text-[11px] font-bold mt-1 text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200 print:text-black print:bg-transparent print:border-none">
                 {selectedWeber}
               </span>
             )}
           </div>
 
-          {/* Left Ear (الأذن اليسرى) - مطابقة 100% للصورة المرفقة */}
+          {/* Left Ear (الأذن اليسرى) - مكبّرة ومطابقة 100% للصورة المرفقة */}
           <div className="flex flex-col items-center">
-            <span className="text-lg font-black font-serif mb-1 tracking-tight">Lt</span>
+            <span className="text-xl font-black font-serif mb-1 tracking-tight">Lt</span>
             <svg
-              className="w-32 h-46 text-black drop-shadow-2xs"
+              className="w-38 h-56 text-black drop-shadow-2xs"
               viewBox="0 0 110 150"
               fill="none"
               stroke="currentColor"
@@ -133,7 +133,7 @@ export function EarAnatomyDiagram({
                 cy="78"
                 rx="46"
                 ry="64"
-                strokeWidth="3.2"
+                strokeWidth="3.4"
                 stroke="currentColor"
                 fill="none"
               />
@@ -141,13 +141,13 @@ export function EarAnatomyDiagram({
               {/* الثنية المطرية الأمامية وبها نتوء وكسرة الزاوية مطابقة للصورة */}
               <path
                 d="M 11 76 C 20 78, 25 84, 30 84 C 36 84, 40 72, 44 72 C 48 72, 51 58, 54 52"
-                strokeWidth="2.4"
+                strokeWidth="2.5"
                 stroke="currentColor"
                 fill="none"
               />
               <path
                 d="M 99 64 C 84 62, 72 56, 65 52"
-                strokeWidth="2.4"
+                strokeWidth="2.5"
                 stroke="currentColor"
                 fill="none"
               />
@@ -155,7 +155,7 @@ export function EarAnatomyDiagram({
               {/* مقبض عظمة المطرقة مائل لليمين باتجاه الساعة الخامسة مطابق تماماً للصورة */}
               <path
                 d="M 54 48 L 65 106 C 68 114, 76 112, 74 104 L 65 48 Z"
-                strokeWidth="2.4"
+                strokeWidth="2.5"
                 stroke="currentColor"
                 fill="none"
               />
@@ -210,13 +210,13 @@ export function NoseAnatomyDiagram({
       <DrawingCanvasOverlay
         initialDrawing={drawing}
         onSaveDrawing={onSaveDrawing}
-        width={240}
-        height={180}
+        width={320}
+        height={220}
         readOnly={readOnly}
       >
         <div className="relative w-full h-full flex items-center justify-center text-black font-serif">
           <svg
-            className="w-36 h-36 text-black"
+            className="w-44 h-44 text-black"
             viewBox="0 0 100 100"
             fill="none"
             stroke="currentColor"
@@ -230,18 +230,18 @@ export function NoseAnatomyDiagram({
               y1="10"
               x2="50"
               y2="90"
-              strokeWidth="2.2"
+              strokeWidth="2.4"
               strokeDasharray="4 2"
             />
             {/* Right Turbinates */}
-            <circle cx="36" cy="45" r="9" strokeWidth="1.8" strokeDasharray="3 2" />
-            <circle cx="30" cy="72" r="12" strokeWidth="1.8" strokeDasharray="3 2" />
+            <circle cx="36" cy="45" r="9.5" strokeWidth="2" strokeDasharray="3 2" />
+            <circle cx="30" cy="72" r="13" strokeWidth="2" strokeDasharray="3 2" />
             {/* Left Turbinates */}
-            <circle cx="64" cy="45" r="9" strokeWidth="1.8" strokeDasharray="3 2" />
-            <circle cx="70" cy="72" r="12" strokeWidth="1.8" strokeDasharray="3 2" />
+            <circle cx="64" cy="45" r="9.5" strokeWidth="2" strokeDasharray="3 2" />
+            <circle cx="70" cy="72" r="13" strokeWidth="2" strokeDasharray="3 2" />
           </svg>
-          <span className="absolute top-3 left-4 text-sm font-black">Rt</span>
-          <span className="absolute top-3 right-4 text-sm font-black">Lt</span>
+          <span className="absolute top-3 left-4 text-base font-black">Rt</span>
+          <span className="absolute top-3 right-4 text-base font-black">Lt</span>
         </div>
       </DrawingCanvasOverlay>
     </div>
@@ -326,26 +326,26 @@ export function LarynxVocalCordDiagram({
       <DrawingCanvasOverlay
         initialDrawing={drawing}
         onSaveDrawing={onSaveDrawing}
-        width={220}
-        height={180}
+        width={280}
+        height={220}
         readOnly={readOnly}
       >
         <svg
-          className="w-28 h-28 text-black"
+          className="w-36 h-36 text-black"
           viewBox="0 0 80 80"
           fill="none"
           stroke="currentColor"
           strokeWidth="2"
         >
           {/* Laryngeal ring outline */}
-          <circle cx="40" cy="40" r="34" strokeWidth="2.8" />
+          <circle cx="40" cy="40" r="34" strokeWidth="3" />
           {/* Vocal cords V-shape */}
-          <path d="M 40 18 L 24 58 M 40 18 L 56 58" strokeWidth="2.8" />
+          <path d="M 40 18 L 24 58 M 40 18 L 56 58" strokeWidth="3" />
           {/* Arytenoids */}
           <circle cx="24" cy="58" r="4.5" fill="currentColor" />
           <circle cx="56" cy="58" r="4.5" fill="currentColor" />
           {/* Posterior commissure */}
-          <line x1="24" y1="58" x2="56" y2="58" strokeWidth="2" strokeDasharray="3 2" />
+          <line x1="24" y1="58" x2="56" y2="58" strokeWidth="2.2" strokeDasharray="3 2" />
         </svg>
       </DrawingCanvasOverlay>
     </div>

@@ -19,7 +19,7 @@ import { DashboardNavItem, UserRole } from './types';
 export const ADMIN_NAV_ITEMS: DashboardNavItem[] = [
   { id: 'dashboard', title: 'لوحة التحكم', href: '/dashboard', icon: LayoutDashboard, isActive: true },
   { id: 'appointments', title: 'المواعيد', href: '/dashboard/all-appointments', icon: Calendar },
-  { id: 'newBooking', title: 'حجز جديد', href: '/dashboard/bookings/new', icon: CalendarPlus },
+  { id: 'newBooking', title: 'حجز جديد', href: '/dashboard/admin-booking', icon: CalendarPlus },
   { id: 'patients', title: 'المرضى', href: '/dashboard/all-patients', icon: Users },
   { id: 'payments', title: 'المدفوعات', href: '/dashboard/payments-all', icon: CreditCard },
   { id: 'expenses', title: 'المصروفات', href: '/dashboard/admin-expenses', icon: Receipt },

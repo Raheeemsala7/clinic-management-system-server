@@ -124,12 +124,37 @@ export function EntPaperSheet({
   return (
     <div
       dir="ltr"
-      className="w-full text-black font-serif select-text space-y-8 print:space-y-0"
+      className="w-full text-black font-serif select-text space-y-8 print:space-y-0 print:p-0 print:m-0"
     >
+      <style jsx global>{`
+        @media print {
+          @page {
+            size: A4 portrait;
+            margin: 6mm 6mm 6mm 6mm;
+          }
+          html, body {
+            overflow: visible !important;
+            height: auto !important;
+            min-height: auto !important;
+            background: white !important;
+          }
+          .sheet-page-1 {
+            page-break-after: always !important;
+            break-after: page !important;
+            display: block !important;
+          }
+          .sheet-page-2 {
+            page-break-before: always !important;
+            break-before: page !important;
+            display: block !important;
+          }
+        }
+      `}</style>
+
       {/* ============================================================== */}
       {/* 📄 الورقة الأولى (Sheet 1) - مطابقة تماماً للصورة الأولى         */}
       {/* ============================================================== */}
-      <div className="bg-white border-2 border-black p-4 sm:p-6 rounded-none shadow-sm space-y-3.5 print:border-2 print:border-black print:p-5 print:shadow-none print:w-full print:break-after-page">
+      <div className="sheet-page-1 bg-white border-2 border-black p-4 sm:p-5 rounded-none shadow-sm space-y-3 print:border-2 print:border-black print:p-4 print:shadow-none print:w-full">
         {/* الترويسة العلوية: File NO | Name | Date */}
         <div className="border border-black grid grid-cols-12 text-[13px]">
           <div className="col-span-3 border-r border-black p-1.5 flex items-baseline gap-1">
@@ -317,12 +342,12 @@ export function EntPaperSheet({
             <span className="font-bold text-[13px] underline block">Examination :</span>
           </div>
 
-          <div className="grid grid-cols-12 gap-2 items-start">
+          <div className="grid grid-cols-12 gap-1.5 items-start">
             {/* القائمة اليسرى (Rt Ear) */}
-            <div className="col-span-3 space-y-1 text-[12px] pt-4">
+            <div className="col-span-2 space-y-1 text-[12px] pt-4">
               {earItems.map((it) => (
                 <div key={it.id} className="flex items-baseline gap-1">
-                  <span className="font-bold shrink-0 text-[11px]">- {it.label}:</span>
+                  <span className="font-bold shrink-0 text-[10px] sm:text-[11px]">- {it.label}:</span>
                   <input
                     type="text"
                     value={(examData.ear.rt as any)?.[it.id] || ''}
@@ -333,8 +358,8 @@ export function EntPaperSheet({
               ))}
             </div>
 
-            {/* في المنتصف: رسم الأذن التشريحي المكبّر واختبار ويبر مع إمكانية الرسم بالقلم */}
-            <div className="col-span-6 flex flex-col items-center justify-center">
+            {/* في المنتصف: رسم الأذن التشريحي المكبّر إلى أقصى حد ممكن واختبار ويبر مع إمكانية الرسم بالقلم */}
+            <div className="col-span-8 flex flex-col items-center justify-center">
               <EarAnatomyDiagram
                 selectedWeber={examData.ear.weber}
                 onSelectWeber={(val) =>
@@ -355,10 +380,10 @@ export function EntPaperSheet({
             </div>
 
             {/* القائمة اليمنى (Lt Ear) */}
-            <div className="col-span-3 space-y-1 text-[12px] pt-4">
+            <div className="col-span-2 space-y-1 text-[12px] pt-4">
               {earItems.map((it) => (
                 <div key={it.id} className="flex items-baseline gap-1">
-                  <span className="font-bold shrink-0 text-[11px]">- {it.label}:</span>
+                  <span className="font-bold shrink-0 text-[10px] sm:text-[11px]">- {it.label}:</span>
                   <input
                     type="text"
                     value={(examData.ear.lt as any)?.[it.id] || ''}
@@ -460,7 +485,7 @@ export function EntPaperSheet({
       {/* ============================================================== */}
       {/* 📄 الورقة الثانية (Sheet 2) - مطابقة تماماً للصورة الثانية       */}
       {/* ============================================================== */}
-      <div className="bg-white border-2 border-black p-4 sm:p-6 rounded-none shadow-sm space-y-3.5 print:border-2 print:border-black print:p-5 print:shadow-none print:w-full">
+      <div className="sheet-page-2 bg-white border-2 border-black p-4 sm:p-5 rounded-none shadow-sm space-y-3 print:border-2 print:border-black print:p-4 print:shadow-none print:w-full">
         {/* عنوان فحص الأنف (Nose) في المنتصف */}
         <div className="text-center font-bold text-[16px] underline">
           Nose
